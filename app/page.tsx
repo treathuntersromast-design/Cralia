@@ -1,0 +1,15 @@
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+
+export default async function HomePage() {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // ログイン済みならダッシュボードへ
+  if (user) {
+    redirect('/dashboard')
+  }
+
+  // 未ログインならログインページへ
+  redirect('/login')
+}
