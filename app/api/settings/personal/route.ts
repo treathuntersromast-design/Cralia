@@ -24,8 +24,21 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 
-  const body = await request.json()
+  let body: Record<string, unknown>
+  try { body = await request.json() }
+  catch { return NextResponse.json({ error: 'リクエストの形式が正しくありません' }, { status: 400 }) }
+
   const { realName, companyName, postalCode, prefecture, address, phoneNumber } = body
+
+  if (realName && typeof realName === 'string' && realName.trim().length > 100) {
+    return NextResponse.json({ error: '氏名は100文字以内にしてください' }, { status: 400 })
+  }
+  if (companyName && typeof companyName === 'string' && companyName.trim().length > 100) {
+    return NextResponse.json({ error: '会社名は100文字以内にしてください' }, { status: 400 })
+  }
+  if (address && typeof address === 'string' && address.trim().length > 200) {
+    return NextResponse.json({ error: '住所は200文字以内にしてください' }, { status: 400 })
+  }
 
   const { error } = await supabase
     .from('user_personal_info')

@@ -4,7 +4,13 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import ProfilePageClient from '@/components/ProfilePageClient'
 
-export default async function ProfilePage({ params }: { params: { id: string } }) {
+export default async function ProfilePage({
+  params,
+  searchParams,
+}: {
+  params: { id: string }
+  searchParams: { back?: string }
+}) {
   const supabase = createClient()
 
   // ログイン確認
@@ -35,7 +41,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
   const formatLastSeen = (dateStr: string | null): string => {
     if (!dateStr) return '不明'
     const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000)
-    if (diff === 0) return '今日'
+    if (diff <= 0) return '今日'
     if (diff === 1) return '昨日'
     if (diff < 7) return `${diff}日前`
     if (diff < 30) return `${Math.floor(diff / 7)}週間前`
@@ -45,7 +51,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
 
   // creatorTypesの正規化（「その他（xxx）」→ 表示用にそのまま渡す）
   const creatorTypes: string[] = creator.creator_type ?? []
-  const snsLinks: { platform: string; id: string }[] = userRecord?.sns_links ?? []
+  const snsLinks: { platform: string; id: string }[] = Array.isArray(userRecord?.sns_links) ? userRecord.sns_links : []
   const entityType = userRecord?.entity_type === 'corporate' ? '法人・団体' : '個人'
 
   return (
@@ -59,9 +65,22 @@ export default async function ProfilePage({ params }: { params: { id: string } }
         <Link href="/dashboard" style={{ fontSize: '22px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
           CreMatch
         </Link>
-        <Link href="/dashboard" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>
-          ← ダッシュボードへ
-        </Link>
+        {(() => {
+          // back パラメータは /search で始まる内部パスのみ許可（外部リダイレクト・javascript: を防ぐ）
+          const backHref = searchParams.back
+          const safeBack = backHref && /^\/(search|clients)(\?.*)?$/.test(decodeURIComponent(backHref))
+            ? decodeURIComponent(backHref)
+            : null
+          return safeBack ? (
+            <Link href={safeBack} style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>
+              ← 検索結果へ戻る
+            </Link>
+          ) : (
+            <Link href="/dashboard" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>
+              ← ダッシュボードへ
+            </Link>
+          )
+        })()}
       </div>
 
       <ProfilePageClient

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@/lib/supabase/server'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -42,6 +43,10 @@ const SYSTEM_PROMPT = `あなたはクリエイターマッチングプラット
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+
     if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json({ error: 'AI機能が設定されていません（APIキー未設定）' }, { status: 503 })
     }
@@ -57,6 +62,14 @@ export async function POST(request: NextRequest) {
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: '不正なリクエストです' }, { status: 400 })
+    }
+    if (messages.length > 40) {
+      return NextResponse.json({ error: 'メッセージ履歴が長すぎます' }, { status: 400 })
+    }
+    for (const m of messages as { role?: unknown; content?: unknown }[]) {
+      if (typeof m.content !== 'string' || m.content.length > 2000) {
+        return NextResponse.json({ error: 'メッセージが長すぎます（1件2000文字以内）' }, { status: 400 })
+      }
     }
 
     // コンテキスト情報をシステムプロンプトに追加

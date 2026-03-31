@@ -14,14 +14,16 @@ export async function POST(request: NextRequest) {
   const file = formData.get('file') as File | null
   if (!file) return NextResponse.json({ error: 'ファイルが必要です' }, { status: 400 })
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
+  // Content-Type に "; charset=utf-8" 等が付いていても正しく判定できるよう正規化
+  const mimeType = file.type.split(';')[0].trim()
+  if (!ALLOWED_TYPES.includes(mimeType)) {
     return NextResponse.json({ error: 'JPEG・PNG・WebP・GIF のみ対応しています' }, { status: 400 })
   }
   if (file.size > MAX_SIZE) {
     return NextResponse.json({ error: 'ファイルサイズは2MB以内にしてください' }, { status: 400 })
   }
 
-  const ext = file.type.split('/')[1].replace('jpeg', 'jpg')
+  const ext = mimeType.split('/')[1].replace('jpeg', 'jpg')
   const path = `${user.id}/avatar.${ext}`
   const buffer = Buffer.from(await file.arrayBuffer())
 

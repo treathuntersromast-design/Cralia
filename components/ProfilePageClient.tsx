@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import AvatarUpload from './AvatarUpload'
 import AvailabilityEditor from './AvailabilityEditor'
 
@@ -17,20 +17,17 @@ const SKILL_SUGGESTIONS = [
 const SNS_PLATFORMS = [
   { label: 'X (Twitter)', prefix: '@', placeholder: 'username' },
   { label: 'Instagram', prefix: '@', placeholder: 'username' },
-  { label: 'YouTube', prefix: 'youtube.com/@', placeholder: 'channel' },
-  { label: 'niconico', prefix: 'nicovideo.jp/user/', placeholder: '12345678' },
   { label: 'TikTok', prefix: '@', placeholder: 'username' },
   { label: 'Twitch', prefix: 'twitch.tv/', placeholder: 'username' },
   { label: 'Bluesky', prefix: '@', placeholder: 'handle.bsky.social' },
 ]
 
 const SNS_ICONS: Record<string, string> = {
-  'X (Twitter)': '𝕏', Instagram: '📷', YouTube: '▶', niconico: '🎦',
+  'X (Twitter)': '𝕏', Instagram: '📷',
   TikTok: '🎵', Twitch: '🟣', Bluesky: '🦋',
 }
 const SNS_BASE_URLS: Record<string, string> = {
   'X (Twitter)': 'https://x.com/', Instagram: 'https://instagram.com/',
-  YouTube: 'https://youtube.com/@', niconico: 'https://nicovideo.jp/user/',
   TikTok: 'https://tiktok.com/@', Twitch: 'https://twitch.tv/', Bluesky: 'https://bsky.app/profile/',
 }
 
@@ -84,7 +81,7 @@ const cancelBtnStyle: React.CSSProperties = {
   color: '#a9a8c0', fontSize: '13px', cursor: 'pointer',
 }
 
-type Section = 'header' | 'skills' | 'pricing' | 'portfolios' | 'sns' | null
+type Section = 'header' | 'skills' | 'pricing' | 'portfolios' | 'sns' | 'homepage' | null
 
 export default function ProfilePageClient(props: Props) {
   const [editing, setEditing] = useState<Section>(null)
@@ -113,11 +110,58 @@ export default function ProfilePageClient(props: Props) {
   const [portfolios, setPortfolios] = useState<Portfolio[]>(props.portfolios)
   const [fetchingIdx, setFetchingIdx] = useState<number | null>(null)
 
-  // SNS
-  const [snsLinks, setSnsLinks] = useState<SnsEntry[]>(props.snsLinks)
+  // ホームページ（sns_links の platform='ホームページ' エントリとして保存）
+  const [homepageUrl, setHomepageUrl] = useState(() =>
+    props.snsLinks.find((s) => s.platform === 'ホームページ')?.id ?? ''
+  )
 
-  const startEdit = (section: Section) => { setEditing(section); setError(null) }
-  const cancelEdit = () => { setEditing(null); setError(null) }
+  // SNS（ホームページを除外）
+  const [snsLinks, setSnsLinks] = useState<SnsEntry[]>(
+    props.snsLinks.filter((s) => s.platform !== 'ホームページ')
+  )
+
+  // 保存済み確定値（キャンセル時のリセット用）
+  const committed = useRef({
+    displayName: props.displayName,
+    creatorTypes: props.creatorTypes,
+    otherType: (() => {
+      const o = props.creatorTypes.find((t) => t.startsWith('その他（'))
+      return o ? o.replace(/^その他（(.+)）$/, '$1') : ''
+    })(),
+    bio: props.bio ?? '',
+    skills: props.skills,
+    priceMin: props.priceMin != null ? String(props.priceMin) : '',
+    priceNote: props.priceNote ?? '',
+    deliveryDays: props.deliveryDays ?? '',
+    portfolios: props.portfolios,
+    homepageUrl: props.snsLinks.find((s) => s.platform === 'ホームページ')?.id ?? '',
+    snsLinks: props.snsLinks.filter((s) => s.platform !== 'ホームページ'),
+  })
+
+  const startEdit = (section: Section) => {
+    // 別セクションが編集中なら未保存変更をリセットしてから切り替える
+    if (editing && editing !== section) cancelEdit()
+    setEditing(section)
+    setError(null)
+  }
+  const cancelEdit = () => {
+    if (saving) return
+    const c = committed.current
+    setDisplayName(c.displayName)
+    setCreatorTypes(c.creatorTypes)
+    setOtherType(c.otherType)
+    setBio(c.bio)
+    setSkills(c.skills)
+    setSkillInput('')
+    setPriceMin(c.priceMin)
+    setPriceNote(c.priceNote)
+    setDeliveryDays(c.deliveryDays)
+    setPortfolios(c.portfolios)
+    setHomepageUrl(c.homepageUrl)
+    setSnsLinks(c.snsLinks)
+    setEditing(null)
+    setError(null)
+  }
 
   const patch = async (body: Record<string, unknown>) => {
     const res = await fetch('/api/profile/update', {
@@ -137,6 +181,7 @@ export default function ProfilePageClient(props: Props) {
         t === 'その他' && otherType.trim() ? `その他（${otherType.trim()}）` : t
       )
       await patch({ displayName, creatorTypes: normalizedTypes, bio })
+      committed.current = { ...committed.current, displayName, creatorTypes: normalizedTypes, otherType: otherType.trim(), bio }
       setEditing(null)
     } catch (e) { setError(e instanceof Error ? e.message : '更新に失敗しました') }
     finally { setSaving(false) }
@@ -152,7 +197,11 @@ export default function ProfilePageClient(props: Props) {
   }
   const saveSkills = async () => {
     setSaving(true); setError(null)
-    try { await patch({ skills }); setEditing(null) }
+    try {
+      await patch({ skills })
+      committed.current = { ...committed.current, skills }
+      setEditing(null)
+    }
     catch (e) { setError(e instanceof Error ? e.message : '更新に失敗しました') }
     finally { setSaving(false) }
   }
@@ -160,7 +209,11 @@ export default function ProfilePageClient(props: Props) {
   // ---- 希望条件保存 ----
   const savePricing = async () => {
     setSaving(true); setError(null)
-    try { await patch({ priceMin, priceNote, deliveryDays }); setEditing(null) }
+    try {
+      await patch({ priceMin, priceNote, deliveryDays })
+      committed.current = { ...committed.current, priceMin, priceNote, deliveryDays }
+      setEditing(null)
+    }
     catch (e) { setError(e instanceof Error ? e.message : '更新に失敗しました') }
     finally { setSaving(false) }
   }
@@ -179,7 +232,8 @@ export default function ProfilePageClient(props: Props) {
         next[index] = { ...next[index], title: data.title ?? next[index].title, thumbnail_url: data.thumbnail_url ?? undefined }
         return next
       })
-    } finally { setFetchingIdx(null) }
+    } catch { /* ネットワークエラーはサイレント無視 */ }
+    finally { setFetchingIdx(null) }
   }
   const savePortfolios = async () => {
     setSaving(true); setError(null)
@@ -191,16 +245,39 @@ export default function ProfilePageClient(props: Props) {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? '更新に失敗しました')
+      committed.current = { ...committed.current, portfolios }
       setEditing(null)
     } catch (e) { setError(e instanceof Error ? e.message : '更新に失敗しました') }
     finally { setSaving(false) }
   }
 
-  // ---- SNS保存 ----
+  // ---- ホームページ保存 ----
+  const saveHomepage = async () => {
+    setSaving(true); setError(null)
+    try {
+      const combined = [
+        ...snsLinks,
+        ...(homepageUrl.trim() ? [{ platform: 'ホームページ', id: homepageUrl.trim() }] : []),
+      ]
+      await patch({ snsLinks: combined })
+      committed.current = { ...committed.current, homepageUrl: homepageUrl.trim() }
+      setEditing(null)
+    } catch (e) { setError(e instanceof Error ? e.message : '更新に失敗しました') }
+    finally { setSaving(false) }
+  }
+
+  // ---- SNS保存（ホームページエントリを保持） ----
   const saveSns = async () => {
     setSaving(true); setError(null)
-    try { await patch({ snsLinks }); setEditing(null) }
-    catch (e) { setError(e instanceof Error ? e.message : '更新に失敗しました') }
+    try {
+      const combined = [
+        ...snsLinks,
+        ...(homepageUrl.trim() ? [{ platform: 'ホームページ', id: homepageUrl.trim() }] : []),
+      ]
+      await patch({ snsLinks: combined })
+      committed.current = { ...committed.current, snsLinks }
+      setEditing(null)
+    } catch (e) { setError(e instanceof Error ? e.message : '更新に失敗しました') }
     finally { setSaving(false) }
   }
 
@@ -314,7 +391,7 @@ export default function ProfilePageClient(props: Props) {
             </div>
             <p style={{ color: '#7c7b99', fontSize: '12px', margin: 0 }}>{skills.length}/20個</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {SKILL_SUGGESTIONS.filter((s) => !skills.includes(s)).map((s) => (
+              {SKILL_SUGGESTIONS.filter((s) => !skills.some((x) => x.toLowerCase() === s.toLowerCase())).map((s) => (
                 <button key={s} type="button" onClick={() => addSkill(s)}
                   style={{ padding: '5px 12px', borderRadius: '20px', border: '1px dashed rgba(199,125,255,0.3)', background: 'transparent', color: '#a9a8c0', fontSize: '12px', cursor: 'pointer' }}>
                   + {s}
@@ -341,7 +418,9 @@ export default function ProfilePageClient(props: Props) {
             <div>
               <label style={{ color: '#a9a8c0', fontSize: '13px', display: 'block', marginBottom: '6px' }}>希望単価（目安）</label>
               <div style={{ position: 'relative' }}>
-                <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder="5000" min={0} style={{ ...inputStyle, paddingRight: '32px' }} />
+                <input type="text" inputMode="numeric" value={priceMin}
+                  onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setPriceMin(v) }}
+                  placeholder="5000" style={{ ...inputStyle, paddingRight: '32px' }} />
                 <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#7c7b99', fontSize: '13px' }}>円</span>
               </div>
             </div>
@@ -355,9 +434,9 @@ export default function ProfilePageClient(props: Props) {
             </div>
             <EditActions onSave={savePricing} onCancel={cancelEdit} saving={saving} error={error} />
           </div>
-        ) : (priceMin || priceNote || deliveryDays) ? (
+        ) : (priceMin !== '' || priceNote || deliveryDays) ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {priceMin && (
+            {priceMin !== '' && (
               <Row label="希望単価"><span style={{ color: '#f0eff8', fontSize: '15px', fontWeight: '600' }}>¥{parseInt(priceMin).toLocaleString()} 〜</span></Row>
             )}
             {priceNote && (
@@ -411,25 +490,56 @@ export default function ProfilePageClient(props: Props) {
             <EditActions onSave={savePortfolios} onCancel={cancelEdit} saving={saving} error={error} />
           </div>
         ) : portfolios.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {portfolios.map((p, i) => (
-              <a key={i} href={p.url} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', textDecoration: 'none' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '14px' }}>
+            {portfolios.map((p, i) => {
+              let safeUrl = '#'
+              try { const u = new URL(p.url); if (u.protocol === 'https:' || u.protocol === 'http:') safeUrl = p.url } catch { /* invalid */ }
+              return (
+              <a key={i} href={safeUrl} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', textDecoration: 'none', overflow: 'hidden' }}>
                 {p.thumbnail_url ? (
-                  <img src={p.thumbnail_url} alt="" style={{ width: '96px', height: '54px', objectFit: 'cover', borderRadius: '6px', flexShrink: 0 }} />
+                  <img src={p.thumbnail_url} alt={p.title || p.platform}
+                    style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover' }} />
                 ) : (
-                  <div style={{ width: '96px', height: '54px', borderRadius: '6px', flexShrink: 0, background: 'rgba(199,125,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c77dff', fontSize: '22px' }}>🔗</div>
+                  <div style={{ width: '100%', aspectRatio: '16/9', background: 'rgba(199,125,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c77dff', fontSize: '36px' }}>🔗</div>
                 )}
-                <div style={{ flex: 1, overflow: 'hidden' }}>
-                  <div style={{ color: '#f0eff8', fontSize: '14px', fontWeight: '600', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title || p.url}</div>
-                  <div style={{ color: '#7c7b99', fontSize: '12px' }}>{p.platform}</div>
+                <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ color: '#f0eff8', fontSize: '13px', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title || p.url}</div>
+                    <div style={{ color: '#7c7b99', fontSize: '11px', marginTop: '2px' }}>{p.platform}</div>
+                  </div>
+                  <span style={{ color: '#7c7b99', fontSize: '16px', flexShrink: 0 }}>↗</span>
                 </div>
-                <span style={{ color: '#7c7b99', fontSize: '18px', flexShrink: 0 }}>↗</span>
               </a>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <p style={{ color: '#7c7b99', fontSize: '14px', fontStyle: 'italic', margin: 0 }}>ポートフォリオが未登録です</p>
+        )}
+      </Section>
+
+      {/* ===== ホームページ ===== */}
+      <Section title="ホームページ" onEdit={props.isOwner ? () => startEdit('homepage') : undefined} isEditing={editing === 'homepage'}>
+        {editing === 'homepage' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <input
+              type="url"
+              value={homepageUrl}
+              onChange={(e) => setHomepageUrl(e.target.value)}
+              placeholder="https://example.com"
+              maxLength={200}
+              style={inputStyle}
+            />
+            <EditActions onSave={saveHomepage} onCancel={cancelEdit} saving={saving} error={error} />
+          </div>
+        ) : homepageUrl.trim() ? (
+          <a href={homepageUrl} target="_blank" rel="noopener noreferrer"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#c77dff', fontSize: '14px', textDecoration: 'none', wordBreak: 'break-all' }}>
+            🌐 {homepageUrl}
+          </a>
+        ) : (
+          <p style={{ color: '#7c7b99', fontSize: '14px', fontStyle: 'italic', margin: 0 }}>ホームページが未登録です</p>
         )}
       </Section>
 
@@ -446,7 +556,7 @@ export default function ProfilePageClient(props: Props) {
                     {SNS_PLATFORMS.map(({ label }) => <option key={label} value={label} style={{ color: '#000', background: '#fff' }}>{label}</option>)}
                   </select>
                   <div style={{ display: 'flex', alignItems: 'center', flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', overflow: 'hidden' }}>
-                    <span style={{ padding: '10px', color: '#7c7b99', fontSize: '12px', whiteSpace: 'nowrap', borderRight: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>{meta.prefix}</span>
+                    {meta.prefix && <span style={{ padding: '10px', color: '#7c7b99', fontSize: '12px', whiteSpace: 'nowrap', borderRight: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>{meta.prefix}</span>}
                     <input type="text" value={s.id} onChange={(e) => setSnsLinks((prev) => { const next = [...prev]; next[i] = { ...next[i], id: e.target.value.replace(/^@/, '') }; return next })}
                       placeholder={meta.placeholder} maxLength={100}
                       style={{ flex: 1, padding: '10px 12px', background: 'transparent', border: 'none', color: '#f0eff8', fontSize: '14px', outline: 'none' }} />
@@ -466,14 +576,18 @@ export default function ProfilePageClient(props: Props) {
           </div>
         ) : snsLinks.filter((s) => s.id?.trim()).length > 0 ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-            {snsLinks.filter((s) => s.id?.trim()).map((s, i) => (
-              <a key={i} href={`${SNS_BASE_URLS[s.platform] ?? '#'}${s.id}`} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.04)', color: '#d0cfea', fontSize: '13px', textDecoration: 'none' }}>
-                <span>{SNS_ICONS[s.platform] ?? '🔗'}</span>
-                <span>{s.platform}</span>
-                <span style={{ color: '#7c7b99' }}>@{s.id}</span>
-              </a>
-            ))}
+            {snsLinks.filter((s) => s.id?.trim()).map((s, i) => {
+              const meta = SNS_PLATFORMS.find((p) => p.label === s.platform)
+              const prefix = meta?.prefix ?? ''
+              return (
+                <a key={i} href={`${SNS_BASE_URLS[s.platform] ?? '#'}${s.id}`} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.04)', color: '#d0cfea', fontSize: '13px', textDecoration: 'none' }}>
+                  <span>{SNS_ICONS[s.platform] ?? '🔗'}</span>
+                  <span>{s.platform}</span>
+                  <span style={{ color: '#7c7b99' }}>{prefix}{s.id}</span>
+                </a>
+              )
+            })}
           </div>
         ) : (
           <p style={{ color: '#7c7b99', fontSize: '14px', fontStyle: 'italic', margin: 0 }}>SNSが未登録です</p>

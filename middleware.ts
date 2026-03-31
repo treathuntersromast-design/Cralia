@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 // 認証が必要なパス（前方一致）
-const PROTECTED_PATHS = ['/dashboard', '/profile', '/chat', '/orders', '/settings']
+const PROTECTED_PATHS = ['/dashboard', '/profile', '/chat', '/orders', '/settings', '/clients', '/projects', '/notifications', '/messages']
 
 // 認証済みユーザーがアクセスすべきでないパス
 const AUTH_PATHS = ['/login', '/signup']

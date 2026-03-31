@@ -27,8 +27,6 @@ const SKILL_SUGGESTIONS = [
 const SNS_PLATFORMS = [
   { label: 'X (Twitter)', prefix: '@', placeholder: 'username' },
   { label: 'Instagram', prefix: '@', placeholder: 'username' },
-  { label: 'YouTube', prefix: 'youtube.com/@', placeholder: 'channel' },
-  { label: 'niconico', prefix: 'nicovideo.jp/user/', placeholder: '12345678' },
   { label: 'TikTok', prefix: '@', placeholder: 'username' },
   { label: 'Twitch', prefix: 'twitch.tv/', placeholder: 'username' },
   { label: 'Bluesky', prefix: '@', placeholder: 'handle.bsky.social' },
@@ -61,6 +59,7 @@ interface FormData {
   entityType: 'individual' | 'corporate' | ''
   roles: Roles
   displayName: string
+  homepageUrl: string
   snsLinks: SnsEntry[]
   creatorTypes: string[]
   skills: string[]
@@ -89,6 +88,7 @@ export default function ProfileSetupPage() {
     entityType: '',
     roles: [],
     displayName: '',
+    homepageUrl: '',
     snsLinks: [],
     creatorTypes: [],
     skills: [],
@@ -127,11 +127,13 @@ export default function ProfileSetupPage() {
         if (match) setOtherCreatorType(match[1])
       }
 
+      const allSnsLinks: SnsEntry[] = Array.isArray(userData.sns_links) ? (userData.sns_links as SnsEntry[]) : []
       setForm({
         entityType: (userData.entity_type as 'individual' | 'corporate') || 'individual',
         roles: (userData.roles as Roles) ?? [],
         displayName: userData.display_name ?? '',
-        snsLinks: (userData.sns_links as SnsEntry[]) ?? [],
+        homepageUrl: allSnsLinks.find((s) => s.platform === 'ホームページ')?.id ?? '',
+        snsLinks: allSnsLinks.filter((s) => s.platform !== 'ホームページ'),
         creatorTypes: normalizedTypes,
         skills: profile?.skills ?? [],
         bio: profile?.bio ?? '',
@@ -263,10 +265,15 @@ export default function ProfileSetupPage() {
         : t
     )
 
+    const snsLinksWithHomepage = [
+      ...form.snsLinks,
+      ...(form.homepageUrl.trim() ? [{ platform: 'ホームページ', id: form.homepageUrl.trim() }] : []),
+    ]
+
     const res = await fetch('/api/profile/setup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, creatorTypes }),
+      body: JSON.stringify({ ...form, creatorTypes, snsLinks: snsLinksWithHomepage }),
     })
 
     if (!res.ok) {
@@ -478,6 +485,21 @@ export default function ProfileSetupPage() {
                 </p>
               </div>
 
+              {/* ホームページ */}
+              <div>
+                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '6px' }}>
+                  ホームページ（任意）
+                </label>
+                <input
+                  type="url"
+                  value={form.homepageUrl}
+                  onChange={(e) => setForm((f) => ({ ...f, homepageUrl: e.target.value }))}
+                  placeholder="https://example.com"
+                  maxLength={200}
+                  style={inputStyle}
+                />
+              </div>
+
               {/* SNS リンク */}
               <div>
                 <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '10px' }}>
@@ -502,7 +524,7 @@ export default function ProfileSetupPage() {
                           ))}
                         </select>
                         <div style={{ display: 'flex', alignItems: 'center', flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', overflow: 'hidden' }}>
-                          <span style={{ padding: '10px 10px', color: '#7c7b99', fontSize: '12px', whiteSpace: 'nowrap', borderRight: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>{meta.prefix}</span>
+                          {meta.prefix && <span style={{ padding: '10px 10px', color: '#7c7b99', fontSize: '12px', whiteSpace: 'nowrap', borderRight: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>{meta.prefix}</span>}
                           <input
                             type="text"
                             value={entry.id}

@@ -17,13 +17,22 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 
-  const { portfolios } = await request.json()
+  let portfolios: unknown
+  try {
+    const body = await request.json()
+    portfolios = body.portfolios
+  } catch {
+    return NextResponse.json({ error: 'リクエストの形式が正しくありません' }, { status: 400 })
+  }
   if (!Array.isArray(portfolios)) return NextResponse.json({ error: '不正なリクエストです' }, { status: 400 })
   if (portfolios.length > 5) return NextResponse.json({ error: 'ポートフォリオは5件以内にしてください' }, { status: 400 })
 
-  const valid = portfolios.filter((p: { url: string }) => {
+  const valid = portfolios.filter((p: { url: string; platform?: string }) => {
     const url = p.url?.trim()
-    return url && isSafeUrl(url)
+    if (!url || !isSafeUrl(url)) return false
+    if (!p.platform || typeof p.platform !== 'string' || p.platform.trim().length === 0) return false
+    if (p.platform.trim().length > 50) return false
+    return true
   })
 
   // 重複チェック

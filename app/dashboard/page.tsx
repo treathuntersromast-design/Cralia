@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import LogoutButton from '@/components/LogoutButton'
 import AvatarUpload from '@/components/AvatarUpload'
 
+export const dynamic = 'force-dynamic'
+
 const ROLE_LABELS: Record<string, string> = {
   creator: 'クリエイター',
   client: '依頼者',
@@ -12,120 +14,137 @@ const ROLE_LABELS: Record<string, string> = {
 export default async function DashboardPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('roles, display_name, avatar_url')
-    .eq('id', user.id)
-    .single()
+  const [{ data: profileRows }, { count: unreadCount_ }, { data: recentProjects }] = await Promise.all([
+    supabase.from('users').select('roles, display_name, avatar_url').eq('id', user.id).limit(1),
+    supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).is('read_at', null),
+    supabase.from('project_boards').select('id, title, status').eq('owner_id', user.id).order('created_at', { ascending: false }).limit(3),
+  ])
 
-  // プロフィール未設定なら setup へ
-  if (!profile || !profile.roles || profile.roles.length === 0) {
-    redirect('/profile/setup')
-  }
+  const profile = profileRows?.[0] ?? null
+  if (!profile || !profile.roles || profile.roles.length === 0) redirect('/profile/setup')
 
   const roleLabels = (profile.roles as string[]).map((r) => ROLE_LABELS[r] ?? r).join(' / ')
+  const unreadCount = unreadCount_ ?? 0
+
+  const STATUS_COLORS: Record<string, string> = {
+    recruiting: '#4ade80', in_progress: '#60a5fa', completed: '#a9a8c0', cancelled: '#f87171',
+  }
+  const STATUS_LABELS: Record<string, string> = {
+    recruiting: '募集中', in_progress: '進行中', completed: '完了', cancelled: 'キャンセル',
+  }
 
   return (
-    <main style={{ minHeight: '100vh', background: '#0d0d14', color: '#f0eff8', padding: '40px' }}>
+    <main style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8' }}>
       {/* ヘッダー */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
-        <h1 style={{
-          fontSize: '28px',
-          fontWeight: '800',
-          background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          margin: 0,
-        }}>
+      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>
           CreMatch
         </h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{ color: '#a9a8c0', fontSize: '14px' }}>{user.email}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Link href="/notifications" style={{ position: 'relative', padding: '8px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', color: '#a9a8c0', textDecoration: 'none', fontSize: '18px', display: 'flex', alignItems: 'center' }}>
+            🔔
+            {unreadCount > 0 && (
+              <span style={{ position: 'absolute', top: '4px', right: '4px', width: '16px', height: '16px', borderRadius: '50%', background: '#ff6b9d', fontSize: '10px', fontWeight: '700', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </Link>
+          <Link href="/messages" style={{ padding: '8px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', color: '#a9a8c0', textDecoration: 'none', fontSize: '18px' }}>💬</Link>
+          <Link href="/settings" style={{ padding: '8px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', color: '#a9a8c0', textDecoration: 'none', fontSize: '18px' }}>⚙️</Link>
           <LogoutButton />
         </div>
       </div>
 
-      {/* ウェルカムカード */}
-      <div style={{
-        background: 'rgba(199,125,255,0.08)',
-        border: '1px solid rgba(199,125,255,0.2)',
-        borderRadius: '20px',
-        padding: '32px',
-        marginBottom: '32px',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '16px' }}>
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 24px' }}>
+        {/* ウェルカムカード */}
+        <div style={{ background: 'rgba(199,125,255,0.08)', border: '1px solid rgba(199,125,255,0.2)', borderRadius: '20px', padding: '28px 32px', marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
           <AvatarUpload
             currentUrl={profile.avatar_url ?? null}
             displayName={profile.display_name ?? user.email ?? '?'}
-            size={72}
-            onUploaded={() => {}}
+            size={68}
+            readonly
           />
-          <div>
-            <h2 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 4px 0' }}>
-              ようこそ、{profile.display_name ?? user.email?.split('@')[0]} さん 🎉
+          <div style={{ flex: 1 }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 4px' }}>
+              {profile.display_name ?? user.email?.split('@')[0]} さん、おかえりなさい
             </h2>
-            <p style={{ color: '#a9a8c0', margin: '0 0 4px' }}>
-              活動スタイル:{' '}
-              <strong style={{ color: '#c77dff' }}>{roleLabels}</strong>
+            <p style={{ color: '#a9a8c0', margin: '0 0 12px', fontSize: '14px' }}>
+              活動スタイル: <strong style={{ color: '#c77dff' }}>{roleLabels}</strong>
             </p>
-            <p style={{ color: '#7c7b99', fontSize: '12px', margin: '0 0 12px', fontFamily: 'monospace' }}>
-              ユーザーID: {user.id}
-            </p>
-            <Link
-              href={`/profile/${user.id}`}
-              style={{
-                display: 'inline-block',
-                padding: '10px 20px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
-                color: '#fff',
-                fontSize: '14px',
-                fontWeight: '700',
-                textDecoration: 'none',
-              }}
-            >
-              👤 プロフィールを見る
-            </Link>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <Link href={`/profile/${user.id}`} style={{ padding: '8px 18px', borderRadius: '10px', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '13px', fontWeight: '700', textDecoration: 'none' }}>
+                👤 プロフィール
+              </Link>
+              <Link href="/settings" style={{ padding: '8px 18px', borderRadius: '10px', border: '1px solid rgba(199,125,255,0.3)', background: 'transparent', color: '#c77dff', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>
+                ⚙️ 設定
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* 今後実装予定の機能カード */}
-      <h3 style={{ color: '#7c7b99', fontSize: '14px', marginBottom: '16px', letterSpacing: '0.05em' }}>
-        実装予定の機能
-      </h3>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
-        {[
-          { emoji: '👤', title: 'プロフィール公開ページ', desc: 'あなたのページを公開', week: 'Week 3-4' },
-          { emoji: '🔍', title: 'クリエイター検索', desc: '名前・スキル・日程で検索', week: 'Week 5-6' },
-          { emoji: '📅', title: 'カレンダー連携', desc: 'Googleカレンダーと連携', week: 'Week 7-8' },
-          { emoji: '📋', title: '依頼管理', desc: '依頼の送受信・チャット', week: 'Week 9-10' },
-          { emoji: '💳', title: '決済', desc: 'エスクロー前払い', week: 'Week 11-12' },
-          { emoji: '🤖', title: 'AI依頼文添削', desc: 'Claude APIで自動添削', week: 'Week 13-14' },
-        ].map(({ emoji, title, desc, week }) => (
-          <div key={title} style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '16px',
-            padding: '20px',
-          }}>
-            <div style={{ fontSize: '28px', marginBottom: '8px' }}>{emoji}</div>
-            <div style={{ fontWeight: '700', marginBottom: '4px' }}>{title}</div>
-            <div style={{ color: '#7c7b99', fontSize: '13px', marginBottom: '8px' }}>{desc}</div>
-            <span style={{
-              fontSize: '11px',
-              background: 'rgba(199,125,255,0.15)',
-              color: '#c77dff',
-              padding: '2px 8px',
-              borderRadius: '20px',
+        {/* クイックアクション */}
+        <h3 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 14px' }}>クイックアクション</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', marginBottom: '40px' }}>
+          {[
+            { href: '/search', icon: '🔍', label: 'クリエイターを探す', color: '#c77dff', bg: 'rgba(199,125,255,0.1)', border: 'rgba(199,125,255,0.3)' },
+            { href: '/clients', icon: '📣', label: '発注者を探す', color: '#ff6b9d', bg: 'rgba(255,107,157,0.1)', border: 'rgba(255,107,157,0.3)' },
+            { href: '/projects', icon: '🎯', label: 'マイプロジェクト', color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', border: 'rgba(96,165,250,0.3)' },
+            { href: '/orders', icon: '📋', label: '依頼管理', color: '#4ade80', bg: 'rgba(74,222,128,0.1)', border: 'rgba(74,222,128,0.3)' },
+            { href: '/messages', icon: '💬', label: 'メッセージ', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.3)' },
+            { href: '/notifications', icon: '🔔', label: `通知${unreadCount > 0 ? ` (${unreadCount})` : ''}`, color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.3)' },
+          ].map(({ href, icon, label, color, bg, border }) => (
+            <Link key={href} href={href} style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              padding: '14px 18px', borderRadius: '14px',
+              background: bg, border: `1px solid ${border}`,
+              color, fontSize: '14px', fontWeight: '700', textDecoration: 'none',
             }}>
-              {week}
-            </span>
+              <span style={{ fontSize: '18px' }}>{icon}</span>
+              <span style={{ fontSize: '13px' }}>{label}</span>
+            </Link>
+          ))}
+        </div>
+
+        {/* 最近のプロジェクト */}
+        {recentProjects && recentProjects.length > 0 && (
+          <div style={{ marginBottom: '40px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <h3 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: 0 }}>最近のプロジェクト</h3>
+              <Link href="/projects" style={{ color: '#c77dff', fontSize: '13px', textDecoration: 'none' }}>すべて見る →</Link>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {recentProjects.map((p) => (
+                <Link key={p.id} href={`/projects/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                    <span style={{ fontWeight: '600', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</span>
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: STATUS_COLORS[p.status] ?? '#a9a8c0', flexShrink: 0 }}>
+                      {STATUS_LABELS[p.status] ?? p.status}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
-        ))}
+        )}
+
+        {/* 開発中の機能 */}
+        <h3 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 14px' }}>開発中の機能</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
+          {[
+            { emoji: '📅', title: 'カレンダー連携', desc: 'Googleカレンダーと連携', week: 'Week 7-8' },
+            { emoji: '💳', title: 'エスクロー決済', desc: 'Stripe連携・前払い', week: 'Week 11-12' },
+            { emoji: '📝', title: 'AI依頼文添削', desc: 'Claude APIで自動添削', week: 'Week 13-14' },
+          ].map(({ emoji, title, desc, week }) => (
+            <div key={title} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', padding: '18px' }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>{emoji}</div>
+              <div style={{ fontWeight: '700', fontSize: '14px', marginBottom: '4px' }}>{title}</div>
+              <div style={{ color: '#7c7b99', fontSize: '12px', marginBottom: '8px' }}>{desc}</div>
+              <span style={{ fontSize: '11px', background: 'rgba(199,125,255,0.12)', color: '#c77dff', padding: '2px 8px', borderRadius: '20px' }}>{week}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </main>
   )
