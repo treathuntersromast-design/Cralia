@@ -25,13 +25,14 @@ import {
   type CreatorSchedule,
 } from '@/lib/calculateDeadline';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const dynamic = 'force-dynamic'
 
 // ─── トークン取得 + 自動リフレッシュ ───────────────────────
 async function getValidAccessToken(creatorId: string): Promise<string> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
   const { data, error } = await supabase
     .from('creator_tokens')
     .select('access_token, refresh_token, expires_at')
@@ -71,6 +72,10 @@ async function getValidAccessToken(creatorId: string): Promise<string> {
 
 // ─── プロフィールからスケジュール設定を取得 ────────────────
 async function getCreatorSchedule(creatorId: string): Promise<CreatorSchedule> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
   const { data } = await supabase
     .from('creator_profiles')
     .select('schedule')

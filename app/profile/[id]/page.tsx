@@ -51,7 +51,7 @@ export default async function ProfilePage({
 
   // creatorTypesの正規化（「その他（xxx）」→ 表示用にそのまま渡す）
   const creatorTypes: string[] = creator.creator_type ?? []
-  const snsLinks: { platform: string; id: string }[] = Array.isArray(userRecord?.sns_links) ? userRecord.sns_links : []
+  const snsLinks: { platform: string; id: string }[] = Array.isArray(userRecord?.sns_links) ? (userRecord!.sns_links as { platform: string; id: string }[]) : []
   const entityType = userRecord?.entity_type === 'corporate' ? '法人・団体' : '個人'
 
   return (

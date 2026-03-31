@@ -28,15 +28,20 @@ export async function POST(request: NextRequest) {
   try { body = await request.json() }
   catch { return NextResponse.json({ error: 'リクエストの形式が正しくありません' }, { status: 400 }) }
 
-  const { realName, companyName, postalCode, prefecture, address, phoneNumber } = body
+  const realName = typeof body.realName === 'string' ? body.realName : null
+  const companyName = typeof body.companyName === 'string' ? body.companyName : null
+  const postalCode = typeof body.postalCode === 'string' ? body.postalCode : null
+  const prefecture = typeof body.prefecture === 'string' ? body.prefecture : null
+  const address = typeof body.address === 'string' ? body.address : null
+  const phoneNumber = typeof body.phoneNumber === 'string' ? body.phoneNumber : null
 
-  if (realName && typeof realName === 'string' && realName.trim().length > 100) {
+  if (realName && realName.trim().length > 100) {
     return NextResponse.json({ error: '氏名は100文字以内にしてください' }, { status: 400 })
   }
-  if (companyName && typeof companyName === 'string' && companyName.trim().length > 100) {
+  if (companyName && companyName.trim().length > 100) {
     return NextResponse.json({ error: '会社名は100文字以内にしてください' }, { status: 400 })
   }
-  if (address && typeof address === 'string' && address.trim().length > 200) {
+  if (address && address.trim().length > 200) {
     return NextResponse.json({ error: '住所は200文字以内にしてください' }, { status: 400 })
   }
 

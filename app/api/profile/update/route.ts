@@ -75,7 +75,7 @@ export async function PATCH(request: NextRequest) {
     profilePatch.skills = skills
   }
   if (priceMin !== undefined) {
-    const parsed = priceMin === '' ? null : parseInt(priceMin, 10)
+    const parsed = priceMin === '' || priceMin === null ? null : parseInt(String(priceMin), 10)
     if (parsed !== null && (isNaN(parsed) || parsed < 0)) return NextResponse.json({ error: '単価は0以上の数値を入力してください' }, { status: 400 })
     if (parsed !== null && parsed > 100_000_000) return NextResponse.json({ error: '単価は1億円以内で入力してください' }, { status: 400 })
     profilePatch.price_min = parsed
