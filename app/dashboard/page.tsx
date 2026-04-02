@@ -16,10 +16,36 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [{ data: profileRows }, { count: unreadCount_ }, { data: recentProjects }] = await Promise.all([
+  const [
+    { data: profileRows },
+    { count: unreadCount_ },
+    { data: activeProjects },
+    { data: receivedOrders },
+    { data: sentOrders },
+  ] = await Promise.all([
     supabase.from('users').select('roles, display_name, avatar_url').eq('id', user.id).limit(1),
     supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).is('read_at', null),
-    supabase.from('project_boards').select('id, title, status').eq('owner_id', user.id).order('created_at', { ascending: false }).limit(3),
+    // 稼働中のプロジェクト（completed / cancelled を除外）
+    supabase.from('project_boards')
+      .select('id, title, status')
+      .eq('owner_id', user.id)
+      .in('status', ['recruiting', 'in_progress'])
+      .order('created_at', { ascending: false })
+      .limit(5),
+    // 受注中の依頼（completed / cancelled を除外）
+    supabase.from('projects')
+      .select('id, title, status, budget, deadline')
+      .eq('creator_id', user.id)
+      .not('status', 'in', '("completed","cancelled")')
+      .order('created_at', { ascending: false })
+      .limit(5),
+    // 発注中の依頼（completed / cancelled を除外）
+    supabase.from('projects')
+      .select('id, title, status, budget, deadline')
+      .eq('client_id', user.id)
+      .not('status', 'in', '("completed","cancelled")')
+      .order('created_at', { ascending: false })
+      .limit(5),
   ])
 
   const profile = profileRows?.[0] ?? null
@@ -28,12 +54,21 @@ export default async function DashboardPage() {
   const roleLabels = (profile.roles as string[]).map((r) => ROLE_LABELS[r] ?? r).join(' / ')
   const unreadCount = unreadCount_ ?? 0
 
-  const STATUS_COLORS: Record<string, string> = {
+  const PROJECT_STATUS_COLORS: Record<string, string> = {
     recruiting: '#4ade80', in_progress: '#60a5fa', completed: '#a9a8c0', cancelled: '#f87171',
   }
-  const STATUS_LABELS: Record<string, string> = {
+  const PROJECT_STATUS_LABELS: Record<string, string> = {
     recruiting: '募集中', in_progress: '進行中', completed: '完了', cancelled: 'キャンセル',
   }
+  const ORDER_STATUS_LABELS: Record<string, { label: string; color: string }> = {
+    draft:       { label: '下書き',       color: '#a9a8c0' },
+    pending:     { label: '提案中',       color: '#fbbf24' },
+    accepted:    { label: '承認済み',     color: '#60a5fa' },
+    in_progress: { label: '進行中',       color: '#c77dff' },
+    delivered:   { label: '納品済み',     color: '#4ade80' },
+    disputed:    { label: '異議申し立て', color: '#f87171' },
+  }
+  const hasActiveOrders = (receivedOrders && receivedOrders.length > 0) || (sentOrders && sentOrders.length > 0)
 
   return (
     <main style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8' }}>
@@ -107,24 +142,102 @@ export default async function DashboardPage() {
           ))}
         </div>
 
-        {/* 最近のプロジェクト */}
-        {recentProjects && recentProjects.length > 0 && (
-          <div style={{ marginBottom: '40px' }}>
+        {/* 稼働中のプロジェクト */}
+        {activeProjects && activeProjects.length > 0 && (
+          <div style={{ marginBottom: '32px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-              <h3 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: 0 }}>最近のプロジェクト</h3>
+              <h3 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: 0 }}>稼働中のプロジェクト</h3>
               <Link href="/projects" style={{ color: '#c77dff', fontSize: '13px', textDecoration: 'none' }}>すべて見る →</Link>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {recentProjects.map((p) => (
+              {activeProjects.map((p) => (
                 <Link key={p.id} href={`/projects/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                    <span style={{ fontWeight: '600', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</span>
-                    <span style={{ fontSize: '12px', fontWeight: '700', color: STATUS_COLORS[p.status] ?? '#a9a8c0', flexShrink: 0 }}>
-                      {STATUS_LABELS[p.status] ?? p.status}
+                  <div style={{
+                    background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(96,165,250,0.15)',
+                    borderRadius: '14px', padding: '14px 20px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden', flex: 1 }}>
+                      <span style={{ fontSize: '16px', flexShrink: 0 }}>🎯</span>
+                      <span style={{ fontWeight: '600', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</span>
+                    </div>
+                    <span style={{
+                      fontSize: '11px', fontWeight: '700', flexShrink: 0,
+                      padding: '3px 10px', borderRadius: '20px',
+                      color: PROJECT_STATUS_COLORS[p.status] ?? '#a9a8c0',
+                      background: `${PROJECT_STATUS_COLORS[p.status] ?? '#a9a8c0'}18`,
+                    }}>
+                      {PROJECT_STATUS_LABELS[p.status] ?? p.status}
                     </span>
                   </div>
                 </Link>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* アクティブな依頼 */}
+        {hasActiveOrders && (
+          <div style={{ marginBottom: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <h3 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: 0 }}>アクティブな依頼</h3>
+              <Link href="/orders" style={{ color: '#4ade80', fontSize: '13px', textDecoration: 'none' }}>すべて見る →</Link>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {(receivedOrders ?? []).map((o) => {
+                const st = ORDER_STATUS_LABELS[o.status] ?? { label: o.status, color: '#a9a8c0' }
+                return (
+                  <Link key={o.id} href="/orders" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <div style={{
+                      background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(74,222,128,0.15)',
+                      borderRadius: '14px', padding: '14px 20px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden', flex: 1 }}>
+                        <span style={{ fontSize: '16px', flexShrink: 0 }}>📩</span>
+                        <div style={{ overflow: 'hidden' }}>
+                          <p style={{ fontWeight: '600', fontSize: '14px', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.title}</p>
+                          <p style={{ margin: 0, fontSize: '11px', color: '#5c5b78' }}>
+                            受注
+                            {o.budget != null && ` · ¥${o.budget.toLocaleString()}`}
+                            {o.deadline && ` · 納期 ${new Date(o.deadline).toLocaleDateString('ja-JP')}`}
+                          </p>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '11px', fontWeight: '700', flexShrink: 0, padding: '3px 10px', borderRadius: '20px', color: st.color, background: `${st.color}18` }}>
+                        {st.label}
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
+              {(sentOrders ?? []).map((o) => {
+                const st = ORDER_STATUS_LABELS[o.status] ?? { label: o.status, color: '#a9a8c0' }
+                return (
+                  <Link key={o.id} href="/orders" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <div style={{
+                      background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,107,157,0.15)',
+                      borderRadius: '14px', padding: '14px 20px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden', flex: 1 }}>
+                        <span style={{ fontSize: '16px', flexShrink: 0 }}>📤</span>
+                        <div style={{ overflow: 'hidden' }}>
+                          <p style={{ fontWeight: '600', fontSize: '14px', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.title}</p>
+                          <p style={{ margin: 0, fontSize: '11px', color: '#5c5b78' }}>
+                            発注
+                            {o.budget != null && ` · ¥${o.budget.toLocaleString()}`}
+                            {o.deadline && ` · 納期 ${new Date(o.deadline).toLocaleDateString('ja-JP')}`}
+                          </p>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '11px', fontWeight: '700', flexShrink: 0, padding: '3px 10px', borderRadius: '20px', color: st.color, background: `${st.color}18` }}>
+                        {st.label}
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           </div>
         )}
