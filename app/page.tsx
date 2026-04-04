@@ -1,12 +1,6 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
 
-export default async function HomePage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) redirect('/dashboard')
-
+export default function HomePage() {
   return (
     <div style={{
       minHeight: '100vh',
@@ -47,6 +41,9 @@ export default async function HomePage() {
           </Link>
           <Link href="/search" style={{ padding: '16px 36px', borderRadius: '16px', border: '1px solid rgba(199,125,255,0.35)', background: 'transparent', color: '#c77dff', fontSize: '16px', fontWeight: '700', textDecoration: 'none' }}>
             クリエイターを探す
+          </Link>
+          <Link href="/login" style={{ padding: '16px 36px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#a9a8c0', fontSize: '16px', fontWeight: '700', textDecoration: 'none' }}>
+            ログイン
           </Link>
         </div>
       </section>
@@ -91,8 +88,14 @@ export default async function HomePage() {
             {
               icon: '🤖',
               title: 'AI支援機能',
-              desc: 'Claude AIがプロフィール文の作成をサポート。あなたの魅力を最大限に引き出します。',
+              desc: 'Claude AIがプロフィール文の作成や依頼文の作成をサポート。あなたの魅力・想いを最大限に引き出します。',
               color: '#f87171',
+            },
+            {
+              icon: '🎉',
+              title: '交流会への参加',
+              desc: 'CreMatchが企画するクリエイター交流会に参加しよう。オンライン・オフラインを問わず、新しい仲間や仕事のきっかけが生まれる場を提供します。',
+              color: '#34d399',
             },
           ].map(({ icon, title, desc, color }) => (
             <div key={title} style={{ background: 'rgba(22,22,31,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '28px' }}>

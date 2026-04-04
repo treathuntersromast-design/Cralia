@@ -39,10 +39,11 @@ interface Props {
   initialAvailability: string
   initialQ: string
   initialSkills: string[]
+  from?: string
 }
 
 export default function CreatorSearchClient({
-  creators, initialType, initialAvailability, initialQ, initialSkills,
+  creators, initialType, initialAvailability, initialQ, initialSkills, from,
 }: Props) {
   const router = useRouter()
   const pathname = usePathname()
@@ -114,9 +115,10 @@ export default function CreatorSearchClient({
     if (selectedAvail) params.set('availability', selectedAvail)
     if (query.trim()) params.set('q', query.trim())
     if (selectedSkills.length > 0) params.set('skills', selectedSkills.join(','))
+    if (from) params.set('from', from)
     const qs = params.toString()
     return encodeURIComponent(`${pathname}${qs ? `?${qs}` : ''}`)
-  }, [selectedType, selectedAvail, query, selectedSkills, pathname])
+  }, [selectedType, selectedAvail, query, selectedSkills, pathname, from])
 
   const filtered = useMemo(() => {
     return creators.filter((c) => {

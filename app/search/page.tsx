@@ -17,10 +17,26 @@ export type Creator = {
   thumbnails: string[]
 }
 
+const VALID_FROM_PATHS = ['/dashboard', '/orders', '/projects', '/messages', '/notifications', '/events']
+
+function resolveFrom(raw: string | undefined): { href: string; label: string } {
+  const decoded = raw ? decodeURIComponent(raw) : ''
+  const matched = VALID_FROM_PATHS.find((p) => decoded.startsWith(p))
+  if (!matched) return { href: '/dashboard', label: '← ダッシュボードへ' }
+  const labels: Record<string, string> = {
+    '/orders': '← 依頼一覧へ',
+    '/projects': '← プロジェクトへ',
+    '/messages': '← メッセージへ',
+    '/notifications': '← 通知へ',
+    '/events': '← 交流会へ',
+  }
+  return { href: decoded, label: labels[matched] ?? '← ダッシュボードへ' }
+}
+
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: { type?: string; availability?: string; q?: string; skills?: string }
+  searchParams: { type?: string; availability?: string; q?: string; skills?: string; from?: string }
 }) {
   const admin = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,6 +57,7 @@ export default async function SearchPage({
   const initialSkills = searchParams.skills
     ? searchParams.skills.split(',').filter(Boolean).slice(0, 20)
     : []
+  const { href: backHref, label: backLabel } = resolveFrom(searchParams.from)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query: any = admin
@@ -104,15 +121,15 @@ export default async function SearchPage({
         justifyContent: 'space-between',
       }}>
         <Link href="/dashboard" style={{
-          fontSize: '22px', fontWeight: '800',
+          fontSize: '24px', fontWeight: '800',
           background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           textDecoration: 'none',
         }}>
           CreMatch
         </Link>
-        <Link href="/dashboard" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>
-          ← ダッシュボードへ
+        <Link href={backHref} style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>
+          {backLabel}
         </Link>
       </div>
 
@@ -122,6 +139,7 @@ export default async function SearchPage({
         initialAvailability={availFilter}
         initialQ={initialQ}
         initialSkills={initialSkills}
+        from={searchParams.from ? decodeURIComponent(searchParams.from) : undefined}
       />
     </div>
   )

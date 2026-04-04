@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import LogoutButton from '@/components/LogoutButton'
 import AvatarUpload from '@/components/AvatarUpload'
 
@@ -16,12 +17,18 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const db = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
   const [
     { data: profileRows },
     { count: unreadCount_ },
     { data: activeProjects },
     { data: receivedOrders },
     { data: sentOrders },
+    { data: calTokenRows },
   ] = await Promise.all([
     supabase.from('users').select('roles, display_name, avatar_url').eq('id', user.id).limit(1),
     supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).is('read_at', null),
@@ -46,10 +53,14 @@ export default async function DashboardPage() {
       .not('status', 'in', '("completed","cancelled")')
       .order('created_at', { ascending: false })
       .limit(5),
+    // Googleカレンダー連携確認
+    db.from('creator_tokens').select('creator_id').eq('creator_id', user.id).limit(1),
   ])
 
   const profile = profileRows?.[0] ?? null
-  if (!profile || !profile.roles || profile.roles.length === 0) redirect('/profile/setup')
+  if (!profile || !profile.roles || profile.roles.length === 0) redirect('/profile/setup-prompt')
+
+  const calConnected = (calTokenRows?.length ?? 0) > 0
 
   const roleLabels = (profile.roles as string[]).map((r) => ROLE_LABELS[r] ?? r).join(' / ')
   const unreadCount = unreadCount_ ?? 0
@@ -119,6 +130,38 @@ export default async function DashboardPage() {
           </div>
         </div>
 
+        {/* Googleカレンダー連携推奨バナー */}
+        {!calConnected && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
+            background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)',
+            borderRadius: '16px', padding: '16px 20px', marginBottom: '32px', flexWrap: 'wrap',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+              <span style={{ fontSize: '24px', flexShrink: 0 }}>📅</span>
+              <div>
+                <p style={{ margin: '0 0 2px', fontWeight: '700', fontSize: '14px', color: '#4ade80' }}>
+                  Googleカレンダーを連携しましょう
+                </p>
+                <p style={{ margin: 0, fontSize: '13px', color: '#7c7b99' }}>
+                  連携すると、クライアントからの依頼時にあなたの空き状況を考慮した納期提案が自動で行われます。
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/settings/calendar"
+              style={{
+                padding: '10px 20px', borderRadius: '10px', flexShrink: 0,
+                background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.35)',
+                color: '#4ade80', fontSize: '13px', fontWeight: '700', textDecoration: 'none',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              連携する →
+            </Link>
+          </div>
+        )}
+
         {/* クイックアクション */}
         <h3 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 14px' }}>クイックアクション</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', marginBottom: '40px' }}>
@@ -129,6 +172,7 @@ export default async function DashboardPage() {
             { href: '/orders', icon: '📋', label: '依頼管理', color: '#4ade80', bg: 'rgba(74,222,128,0.1)', border: 'rgba(74,222,128,0.3)' },
             { href: '/messages', icon: '💬', label: 'メッセージ', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.3)' },
             { href: '/notifications', icon: '🔔', label: `通知${unreadCount > 0 ? ` (${unreadCount})` : ''}`, color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.3)' },
+            { href: '/events', icon: '🎉', label: '交流会', color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.3)' },
           ].map(({ href, icon, label, color, bg, border }) => (
             <Link key={href} href={href} style={{
               display: 'flex', alignItems: 'center', gap: '10px',
@@ -246,7 +290,6 @@ export default async function DashboardPage() {
         <h3 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 14px' }}>開発中の機能</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
           {[
-            { emoji: '📅', title: 'カレンダー連携', desc: 'Googleカレンダーと連携', week: 'Week 7-8' },
             { emoji: '💳', title: 'エスクロー決済', desc: 'Stripe連携・前払い', week: 'Week 11-12' },
             { emoji: '📝', title: 'AI依頼文添削', desc: 'Claude APIで自動添削', week: 'Week 13-14' },
           ].map(({ emoji, title, desc, week }) => (

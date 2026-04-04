@@ -82,14 +82,22 @@ async function getCreatorSchedule(creatorId: string): Promise<CreatorSchedule> {
     .eq('creator_id', creatorId)
     .single();
 
-  // schedule.days: ["月","火","水","木","金"] → 曜日番号に変換
-  const dayMap: Record<string, number> = { 日: 0, 月: 1, 火: 2, 水: 3, 木: 4, 金: 5, 土: 6 };
-  const days: string[] = data?.schedule?.days ?? ['月', '火', '水', '木', '金'];
-  const workDays = days.map((d) => dayMap[d]).filter((n) => n !== undefined);
+  const schedule = data?.schedule ?? {}
+  const rawDays: unknown[] = Array.isArray(schedule.days) ? schedule.days : []
+
+  let workDays: number[]
+  if (rawDays.length > 0 && typeof rawDays[0] === 'number') {
+    workDays = rawDays as number[]
+  } else if (rawDays.length > 0 && typeof rawDays[0] === 'string') {
+    const dayMap: Record<string, number> = { 日: 0, 月: 1, 火: 2, 水: 3, 木: 4, 金: 5, 土: 6 }
+    workDays = (rawDays as string[]).map((d) => dayMap[d]).filter((n): n is number => n !== undefined)
+  } else {
+    workDays = [1, 2, 3, 4, 5]
+  }
 
   return {
-    workDays: workDays.length ? workDays : [1, 2, 3, 4, 5], // デフォルト平日
-    defaultWorkingDays: data?.schedule?.default_working_days ?? 10,
+    workDays: workDays.length ? workDays : [1, 2, 3, 4, 5],
+    defaultWorkingDays: (schedule.default_working_days as number) ?? 10,
   };
 }
 

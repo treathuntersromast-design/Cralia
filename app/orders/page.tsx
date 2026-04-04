@@ -44,7 +44,7 @@ export default async function OrdersPage() {
       color: '#f0eff8',
     }}>
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '22px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
+        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
           CreMatch
         </Link>
         <Link href="/dashboard" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>← ダッシュボードへ</Link>
@@ -54,18 +54,6 @@ export default async function OrdersPage() {
         <div style={{ marginBottom: '32px' }}>
           <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 6px' }}>依頼管理</h1>
           <p style={{ color: '#7c7b99', fontSize: '14px', margin: 0 }}>受け取った依頼・送った依頼を管理します</p>
-        </div>
-
-        {/* 開発中バナー */}
-        <div style={{
-          background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)',
-          borderRadius: '14px', padding: '14px 20px', marginBottom: '28px',
-          display: 'flex', alignItems: 'center', gap: '10px',
-        }}>
-          <span style={{ fontSize: '18px' }}>🚧</span>
-          <p style={{ margin: 0, fontSize: '13px', color: '#fbbf24' }}>
-            依頼の送受信機能は現在開発中です。クリエイター・発注者の検索から営業・依頼の流れを実装予定です。
-          </p>
         </div>
 
         {allEmpty ? (
@@ -114,29 +102,46 @@ export default async function OrdersPage() {
   )
 }
 
-function OrderCard({ order: o }: { order: { id: string; title: string; status: string; budget: number | null; deadline: string | null; created_at: string } }) {
+function OrderCard({ order: o }: { order: { id: string; title: string; status: string; order_type?: string; budget: number | null; deadline: string | null; created_at: string } }) {
   const st = STATUS_MAP[o.status] ?? STATUS_MAP.draft
+  const isPaid = o.order_type !== 'free'
   return (
-    <div style={{
-      background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(199,125,255,0.12)',
-      borderRadius: '16px', padding: '18px 22px',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
-    }}>
-      <div style={{ overflow: 'hidden', flex: 1 }}>
-        <p style={{ fontWeight: '700', fontSize: '15px', margin: '0 0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.title}</p>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          {o.budget != null && (
-            <span style={{ color: '#a9a8c0', fontSize: '12px' }}>¥{o.budget.toLocaleString()}</span>
-          )}
-          {o.deadline && (
-            <span style={{ color: '#a9a8c0', fontSize: '12px' }}>納期: {new Date(o.deadline).toLocaleDateString('ja-JP')}</span>
-          )}
-          <span style={{ color: '#5c5b78', fontSize: '12px' }}>{new Date(o.created_at).toLocaleDateString('ja-JP')} 作成</span>
+    <Link href={`/orders/${o.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+      <div style={{
+        background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(199,125,255,0.12)',
+        borderRadius: '16px', padding: '18px 22px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
+        transition: 'border-color 0.15s',
+      }}
+        onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'rgba(199,125,255,0.35)')}
+        onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(199,125,255,0.12)')}
+      >
+        <div style={{ overflow: 'hidden', flex: 1 }}>
+          <p style={{ fontWeight: '700', fontSize: '15px', margin: '0 0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.title}</p>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{
+              fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '20px',
+              color: isPaid ? '#c77dff' : '#60a5fa',
+              background: isPaid ? 'rgba(199,125,255,0.12)' : 'rgba(96,165,250,0.12)',
+            }}>
+              {isPaid ? '有償' : '無償'}
+            </span>
+            {o.budget != null && (
+              <span style={{ color: '#a9a8c0', fontSize: '12px' }}>¥{o.budget.toLocaleString()}</span>
+            )}
+            {o.deadline && (
+              <span style={{ color: '#a9a8c0', fontSize: '12px' }}>納期: {new Date(o.deadline).toLocaleDateString('ja-JP')}</span>
+            )}
+            <span style={{ color: '#5c5b78', fontSize: '12px' }}>{new Date(o.created_at).toLocaleDateString('ja-JP')} 作成</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <span style={{ padding: '5px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', color: st.color, background: st.bg }}>
+            {st.label}
+          </span>
+          <span style={{ color: '#5c5b78', fontSize: '16px' }}>›</span>
         </div>
       </div>
-      <span style={{ padding: '5px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', color: st.color, background: st.bg, whiteSpace: 'nowrap', flexShrink: 0 }}>
-        {st.label}
-      </span>
-    </div>
+    </Link>
   )
 }

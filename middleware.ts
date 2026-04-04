@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 // 認証が必要なパス（前方一致）
-const PROTECTED_PATHS = ['/dashboard', '/profile', '/chat', '/orders', '/settings', '/clients', '/projects', '/notifications', '/messages']
+const PROTECTED_PATHS = ['/dashboard', '/profile', '/chat', '/orders', '/settings', '/clients', '/projects', '/notifications', '/messages', '/events']
 
 // 認証済みユーザーがアクセスすべきでないパス
 const AUTH_PATHS = ['/login', '/signup']
 
 // プロフィール未設定でもアクセス可能な認証済み専用パス
-const SETUP_ALLOWED_PATHS = ['/profile/setup']
+const SETUP_ALLOWED_PATHS = ['/profile/setup', '/profile/setup-prompt']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -70,7 +70,7 @@ export async function middleware(request: NextRequest) {
       !profile.display_name
     )
     if (needsSetup) {
-      return NextResponse.redirect(new URL('/profile/setup', request.url))
+      return NextResponse.redirect(new URL('/profile/setup-prompt', request.url))
     }
   }
 

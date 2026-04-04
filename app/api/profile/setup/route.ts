@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 const ALLOWED_URL_SCHEMES = ['https:', 'http:']
 
@@ -13,12 +14,18 @@ function isSafeUrl(urlStr: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  // 認証確認はセッションクライアントで行う
   const supabase = createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
   }
+
+  // DB 操作はサービスロールクライアントで行う（RLS の INSERT ポリシー不足を回避）
+  const db = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
   let body: Record<string, unknown>
   try { body = await request.json() }
@@ -83,7 +90,7 @@ export async function POST(request: NextRequest) {
     : []
 
   // 1. users テーブルの roles・display_name・sns_links を更新（行がなければ作成）
-  const { error: userError } = await supabase
+  const { error: userError } = await db
     .from('users')
     .upsert({
       id: user.id,
@@ -126,7 +133,7 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     }
 
-    const { error: profileError } = await supabase
+    const { error: profileError } = await db
       .from('creator_profiles')
       .upsert(profileData, { onConflict: 'creator_id' })
 
@@ -144,7 +151,7 @@ export async function POST(request: NextRequest) {
 
       if (validPortfolios.length > 0) {
         // 既存のポートフォリオを削除
-        await supabase.from('portfolios').delete().eq('creator_id', user.id)
+        await db.from('portfolios').delete().eq('creator_id', user.id)
 
         const portfolioData = validPortfolios.map((p: { platform: string; url: string; title: string }, i: number) => ({
           creator_id: user.id,
@@ -154,7 +161,7 @@ export async function POST(request: NextRequest) {
           display_order: i,
         }))
 
-        const { error: portfolioError } = await supabase.from('portfolios').insert(portfolioData)
+        const { error: portfolioError } = await db.from('portfolios').insert(portfolioData)
         if (portfolioError) {
           return NextResponse.json({ error: 'ポートフォリオの保存に失敗しました' }, { status: 500 })
         }

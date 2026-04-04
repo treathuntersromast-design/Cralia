@@ -26,7 +26,7 @@ export default async function BillingPage() {
       color: '#f0eff8',
     }}>
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '22px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
+        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
           CreMatch
         </Link>
         <Link href="/settings" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>← 設定へ</Link>

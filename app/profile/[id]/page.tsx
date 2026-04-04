@@ -62,18 +62,28 @@ export default async function ProfilePage({
     }}>
       {/* ヘッダー */}
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '22px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
+        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
           CreMatch
         </Link>
         {(() => {
-          // back パラメータは /search で始まる内部パスのみ許可（外部リダイレクト・javascript: を防ぐ）
+          // back パラメータは許可された内部パスのみ許可（外部リダイレクト・javascript: を防ぐ）
           const backHref = searchParams.back
-          const safeBack = backHref && /^\/(search|clients)(\?.*)?$/.test(decodeURIComponent(backHref))
-            ? decodeURIComponent(backHref)
-            : null
+          const decoded = backHref ? decodeURIComponent(backHref) : ''
+          const ALLOWED_BACK = /^\/(search|clients|orders|projects|messages|notifications|events)(\?.*)?$/
+          const safeBack = decoded && ALLOWED_BACK.test(decoded) ? decoded : null
+          const backLabel = safeBack
+            ? safeBack.startsWith('/search')        ? '← 検索結果へ戻る'
+            : safeBack.startsWith('/clients')       ? '← 発注者一覧へ戻る'
+            : safeBack.startsWith('/orders')        ? '← 依頼一覧へ戻る'
+            : safeBack.startsWith('/projects')      ? '← プロジェクトへ戻る'
+            : safeBack.startsWith('/messages')      ? '← メッセージへ戻る'
+            : safeBack.startsWith('/notifications') ? '← 通知へ戻る'
+            : safeBack.startsWith('/events')        ? '← 交流会へ戻る'
+            : '← 戻る'
+            : '← ダッシュボードへ'
           return safeBack ? (
             <Link href={safeBack} style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>
-              ← 検索結果へ戻る
+              {backLabel}
             </Link>
           ) : (
             <Link href="/dashboard" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>

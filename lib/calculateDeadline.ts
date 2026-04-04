@@ -189,6 +189,10 @@ export async function calculateDeadline(
     cursor.setDate(cursor.getDate() + 1);
   }
 
+  if (workingDays.length === 0) {
+    throw new Error('有効な稼働日が見つかりませんでした（作業日数が0以下です）')
+  }
+
   const deadline = workingDays[workingDays.length - 1];
 
   // カレンダー登録用イベント生成

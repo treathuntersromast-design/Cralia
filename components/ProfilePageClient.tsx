@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Link from 'next/link'
 import AvatarUpload from './AvatarUpload'
 import AvailabilityEditor from './AvailabilityEditor'
 
@@ -356,9 +357,12 @@ export default function ProfilePageClient(props: Props) {
               {props.isOwner ? (
                 <button type="button" onClick={() => startEdit('header')} style={editBtnStyle}>✏️ 編集</button>
               ) : (
-                <button disabled style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: 'not-allowed', opacity: 0.7 }}>
-                  📩 依頼する（準備中）
-                </button>
+                <Link
+                  href={`/orders/new?creator=${props.profileId}&creatorName=${encodeURIComponent(props.displayName)}`}
+                  style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '14px', fontWeight: '700', textDecoration: 'none', display: 'inline-block' }}
+                >
+                  📩 依頼する
+                </Link>
               )}
             </div>
           </div>

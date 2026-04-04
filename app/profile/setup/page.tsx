@@ -1,10 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import BioChatModal from '@/components/BioChatModal'
 import AvatarUpload from '@/components/AvatarUpload'
 import { createClient } from '@/lib/supabase/client'
+import ScrollToTopButton from '@/components/ScrollToTopButton'
+
+const DRAFT_KEY = 'crematch_setup_draft'
 
 // ステップ定義
 const STEPS = ['個人・法人', '活動スタイル', '基本情報', 'スキル・自己紹介', 'ポートフォリオ', '希望条件'] as const
@@ -71,7 +75,7 @@ interface FormData {
   deliveryDays: string
 }
 
-export default function ProfileSetupPage() {
+function ProfileSetupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const nextPath = searchParams.get('next') ?? '/dashboard'
@@ -99,6 +103,8 @@ export default function ProfileSetupPage() {
     availability: 'open',
     deliveryDays: '',
   })
+  const [formReady, setFormReady] = useState(false)
+  const [pendingDraft, setPendingDraft] = useState<{ form: FormData; step: Step } | null>(null)
 
   const isCreator = form.roles.includes('creator')
 
@@ -148,9 +154,39 @@ export default function ProfileSetupPage() {
         availability: (profile?.availability as 'open' | 'one_slot' | 'full') ?? 'open',
         deliveryDays: (profile as Record<string, unknown>)?.delivery_days as string ?? '',
       })
+
+      // 下書きチェック
+      try {
+        const saved = localStorage.getItem(DRAFT_KEY)
+        if (saved) setPendingDraft(JSON.parse(saved))
+      } catch {
+        localStorage.removeItem(DRAFT_KEY)
+      }
+      setFormReady(true)
     })()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // 下書き自動保存（フォーム変更から 800ms 後）
+  useEffect(() => {
+    if (!formReady) return
+    const timer = setTimeout(() => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, step }))
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [form, step, formReady])
+
+  const restoreDraft = () => {
+    if (!pendingDraft) return
+    setForm(pendingDraft.form)
+    setStep(pendingDraft.step)
+    setPendingDraft(null)
+  }
+
+  const discardDraft = () => {
+    localStorage.removeItem(DRAFT_KEY)
+    setPendingDraft(null)
+  }
 
   // クリエイタータイプ切り替え
   const toggleCreatorType = (type: string) => {
@@ -283,6 +319,7 @@ export default function ProfileSetupPage() {
       return
     }
 
+    localStorage.removeItem(DRAFT_KEY)
     router.push(nextPath)
     router.refresh()
   }
@@ -300,9 +337,63 @@ export default function ProfileSetupPage() {
       justifyContent: 'center',
       padding: '40px 24px',
     }}>
+      {/* 下書き復元モーダル */}
+      {pendingDraft && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000,
+          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
+        }}>
+          <div style={{
+            background: 'rgba(22,22,31,0.98)',
+            border: '1px solid rgba(199,125,255,0.3)',
+            borderRadius: '20px', padding: '32px', maxWidth: '400px', width: '100%',
+            boxShadow: '0 8px 40px rgba(199,125,255,0.2)',
+          }}>
+            <div style={{ fontSize: '28px', marginBottom: '12px', textAlign: 'center' }}>💾</div>
+            <h3 style={{ color: '#f0eff8', fontSize: '18px', fontWeight: '700', margin: '0 0 10px', textAlign: 'center' }}>
+              前回の入力内容があります
+            </h3>
+            <p style={{ color: '#a9a8c0', fontSize: '14px', lineHeight: '1.7', margin: '0 0 24px', textAlign: 'center' }}>
+              前回途中まで入力したプロフィール情報が保存されています。<br />
+              続きから入力しますか？
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={discardDraft}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  background: 'transparent', color: '#a9a8c0',
+                  fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+                }}
+              >
+                最初から始める
+              </button>
+              <button
+                onClick={restoreDraft}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+                  color: '#fff', fontSize: '14px', fontWeight: '700', cursor: 'pointer',
+                }}
+              >
+                続きから入力する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ width: '100%', maxWidth: '560px' }}>
         {/* ヘッダー */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{ textAlign: 'left', marginBottom: '12px' }}>
+            <Link href="/" style={{ color: '#5c5b78', fontSize: '13px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              ← TOPに戻る
+            </Link>
+          </div>
           <h1 style={{
             fontSize: '32px',
             fontWeight: '800',
@@ -1007,6 +1098,8 @@ export default function ProfileSetupPage() {
           onClose={() => setShowBioChat(false)}
         />
       )}
+
+      <ScrollToTopButton alwaysShow />
     </div>
   )
 }
@@ -1055,4 +1148,12 @@ const addButtonStyle: React.CSSProperties = {
   fontSize: '15px',
   fontWeight: '600',
   cursor: 'pointer',
+}
+
+export default function ProfileSetupPage() {
+  return (
+    <Suspense>
+      <ProfileSetupContent />
+    </Suspense>
+  )
 }

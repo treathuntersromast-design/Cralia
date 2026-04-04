@@ -125,8 +125,8 @@ export default function PersonalInfoPage() {
 
         {/* ヘッダー */}
         <div style={{ marginBottom: '32px' }}>
-          <Link href="/dashboard" style={{ color: '#c77dff', fontSize: '14px', textDecoration: 'none', display: 'inline-block', marginBottom: '20px' }}>
-            ← ダッシュボードへ戻る
+          <Link href="/settings" style={{ color: '#c77dff', fontSize: '14px', textDecoration: 'none', display: 'inline-block', marginBottom: '20px' }}>
+            ← 設定へ戻る
           </Link>
           <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#f0eff8', marginBottom: '8px' }}>
             個人情報の登録
