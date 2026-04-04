@@ -10,6 +10,7 @@ export type Client = {
   avatar_url: string | null
   entity_type: string
   sns_links: { platform: string; id: string }[]
+  client_type?: string[]
   created_at: string
 }
 
@@ -48,7 +49,7 @@ export default async function ClientsPage({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query: any = admin
     .from('users')
-    .select('id, display_name, avatar_url, entity_type, sns_links, created_at')
+    .select('id, display_name, avatar_url, entity_type, sns_links, client_type, created_at')
     .contains('roles', ['client'])
     .not('display_name', 'is', null)
     .order('created_at', { ascending: false })

@@ -1,17 +1,22 @@
 -- ============================================================
 -- CreMatch - Auth Trigger
 -- 新規ユーザー登録時に public.users へ自動でレコードを作成する
--- 実行順序: 002_full_schema.sql の後に実行してください
+-- 実行順序: ddl/master/ → ddl/public/ の後に実行してください
+--
+-- ■ 変更履歴
+--   roles TEXT[] → activity_style_id SMALLINT（m_activity_style）
+--   プロフィール設定前は NULL（未設定）とする
 -- ============================================================
+BEGIN;
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.users (id, roles, display_name, avatar_url)
+  INSERT INTO public.users (id, activity_style_id, display_name, avatar_url)
   VALUES (
     NEW.id,
-    -- roles はプロフィール設定画面で後から設定するため、登録時は空配列
-    '{}',
+    -- activity_style_id はプロフィール設定画面で後から選択するため、登録時は NULL
+    NULL,
     -- Google OAuth の場合は full_name、メール登録の場合はメールアドレスを使用
     COALESCE(
       NEW.raw_user_meta_data->>'full_name',
@@ -33,3 +38,5 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE PROCEDURE public.handle_new_user();
+
+COMMIT;

@@ -1,19 +1,9 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { ORDER_STATUS_MAP } from '@/lib/constants/statuses'
 
 export const dynamic = 'force-dynamic'
-
-const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  draft:       { label: '下書き',     color: '#a9a8c0', bg: 'rgba(169,168,192,0.12)' },
-  pending:     { label: '提案中',     color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
-  accepted:    { label: '承認済み',   color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
-  in_progress: { label: '進行中',     color: '#c77dff', bg: 'rgba(199,125,255,0.12)' },
-  delivered:   { label: '納品済み',   color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
-  completed:   { label: '完了',       color: '#4ade80', bg: 'rgba(74,222,128,0.08)' },
-  cancelled:   { label: 'キャンセル', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
-  disputed:    { label: '異議申し立て', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
-}
 
 export default async function OrdersPage() {
   const supabase = createClient()
@@ -103,7 +93,7 @@ export default async function OrdersPage() {
 }
 
 function OrderCard({ order: o }: { order: { id: string; title: string; status: string; order_type?: string; budget: number | null; deadline: string | null; created_at: string } }) {
-  const st = STATUS_MAP[o.status] ?? STATUS_MAP.draft
+  const st = ORDER_STATUS_MAP[o.status] ?? ORDER_STATUS_MAP.draft
   const isPaid = o.order_type !== 'free'
   return (
     <Link href={`/orders/${o.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
@@ -126,7 +116,7 @@ function OrderCard({ order: o }: { order: { id: string; title: string; status: s
             }}>
               {isPaid ? '有償' : '無償'}
             </span>
-            {o.budget != null && (
+            {o.order_type !== 'free' && o.budget != null && (
               <span style={{ color: '#a9a8c0', fontSize: '12px' }}>¥{o.budget.toLocaleString()}</span>
             )}
             {o.deadline && (

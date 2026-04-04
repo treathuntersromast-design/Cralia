@@ -4,13 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import LogoutButton from '@/components/LogoutButton'
 import AvatarUpload from '@/components/AvatarUpload'
+import { activityStyleToLabel } from '@/lib/constants/activity'
+import { ORDER_STATUS_MAP, PROJECT_STATUS_MAP, INACTIVE_ORDER_STATUSES } from '@/lib/constants/statuses'
 
 export const dynamic = 'force-dynamic'
-
-const ROLE_LABELS: Record<string, string> = {
-  creator: 'クリエイター',
-  client: '依頼者',
-}
 
 export default async function DashboardPage() {
   const supabase = createClient()
@@ -30,7 +27,7 @@ export default async function DashboardPage() {
     { data: sentOrders },
     { data: calTokenRows },
   ] = await Promise.all([
-    supabase.from('users').select('roles, display_name, avatar_url').eq('id', user.id).limit(1),
+    supabase.from('users').select('activity_style_id, display_name, avatar_url').eq('id', user.id).limit(1),
     supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).is('read_at', null),
     // 稼働中のプロジェクト（completed / cancelled を除外）
     supabase.from('project_boards')
@@ -43,14 +40,14 @@ export default async function DashboardPage() {
     supabase.from('projects')
       .select('id, title, status, budget, deadline')
       .eq('creator_id', user.id)
-      .not('status', 'in', '("completed","cancelled")')
+      .not('status', 'in', INACTIVE_ORDER_STATUSES)
       .order('created_at', { ascending: false })
       .limit(5),
     // 発注中の依頼（completed / cancelled を除外）
     supabase.from('projects')
       .select('id, title, status, budget, deadline')
       .eq('client_id', user.id)
-      .not('status', 'in', '("completed","cancelled")')
+      .not('status', 'in', INACTIVE_ORDER_STATUSES)
       .order('created_at', { ascending: false })
       .limit(5),
     // Googleカレンダー連携確認
@@ -58,27 +55,13 @@ export default async function DashboardPage() {
   ])
 
   const profile = profileRows?.[0] ?? null
-  if (!profile || !profile.roles || profile.roles.length === 0) redirect('/profile/setup-prompt')
+  if (!profile || !profile.activity_style_id) redirect('/profile/setup-prompt')
 
   const calConnected = (calTokenRows?.length ?? 0) > 0
 
-  const roleLabels = (profile.roles as string[]).map((r) => ROLE_LABELS[r] ?? r).join(' / ')
+  const roleLabels = activityStyleToLabel(profile.activity_style_id as number)
   const unreadCount = unreadCount_ ?? 0
 
-  const PROJECT_STATUS_COLORS: Record<string, string> = {
-    recruiting: '#4ade80', in_progress: '#60a5fa', completed: '#a9a8c0', cancelled: '#f87171',
-  }
-  const PROJECT_STATUS_LABELS: Record<string, string> = {
-    recruiting: '募集中', in_progress: '進行中', completed: '完了', cancelled: 'キャンセル',
-  }
-  const ORDER_STATUS_LABELS: Record<string, { label: string; color: string }> = {
-    draft:       { label: '下書き',       color: '#a9a8c0' },
-    pending:     { label: '提案中',       color: '#fbbf24' },
-    accepted:    { label: '承認済み',     color: '#60a5fa' },
-    in_progress: { label: '進行中',       color: '#c77dff' },
-    delivered:   { label: '納品済み',     color: '#4ade80' },
-    disputed:    { label: '異議申し立て', color: '#f87171' },
-  }
   const hasActiveOrders = (receivedOrders && receivedOrders.length > 0) || (sentOrders && sentOrders.length > 0)
 
   return (
@@ -167,12 +150,14 @@ export default async function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', marginBottom: '40px' }}>
           {[
             { href: '/search', icon: '🔍', label: 'クリエイターを探す', color: '#c77dff', bg: 'rgba(199,125,255,0.1)', border: 'rgba(199,125,255,0.3)' },
-            { href: '/clients', icon: '📣', label: '発注者を探す', color: '#ff6b9d', bg: 'rgba(255,107,157,0.1)', border: 'rgba(255,107,157,0.3)' },
-            { href: '/projects', icon: '🎯', label: 'マイプロジェクト', color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', border: 'rgba(96,165,250,0.3)' },
-            { href: '/orders', icon: '📋', label: '依頼管理', color: '#4ade80', bg: 'rgba(74,222,128,0.1)', border: 'rgba(74,222,128,0.3)' },
-            { href: '/messages', icon: '💬', label: 'メッセージ', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.3)' },
+            { href: '/clients', icon: '📣', label: 'お仕事募集中の依頼者', color: '#ff6b9d', bg: 'rgba(255,107,157,0.1)', border: 'rgba(255,107,157,0.3)' },
+            { href: '/jobs', icon: '📋', label: '案件を探す', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.3)' },
+            { href: '/jobs/new', icon: '📣', label: 'クリエイターを募集する', color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', border: 'rgba(96,165,250,0.3)' },
+            { href: '/projects', icon: '🎯', label: 'マイプロジェクト', color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.3)' },
+            { href: '/orders', icon: '🤝', label: '依頼管理', color: '#4ade80', bg: 'rgba(74,222,128,0.1)', border: 'rgba(74,222,128,0.3)' },
+            { href: '/messages', icon: '💬', label: 'メッセージ', color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.3)' },
             { href: '/notifications', icon: '🔔', label: `通知${unreadCount > 0 ? ` (${unreadCount})` : ''}`, color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.3)' },
-            { href: '/events', icon: '🎉', label: '交流会', color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.3)' },
+            { href: '/events', icon: '🎉', label: '交流会', color: '#f0d080', bg: 'rgba(240,208,128,0.1)', border: 'rgba(240,208,128,0.3)' },
           ].map(({ href, icon, label, color, bg, border }) => (
             <Link key={href} href={href} style={{
               display: 'flex', alignItems: 'center', gap: '10px',
@@ -208,10 +193,10 @@ export default async function DashboardPage() {
                     <span style={{
                       fontSize: '11px', fontWeight: '700', flexShrink: 0,
                       padding: '3px 10px', borderRadius: '20px',
-                      color: PROJECT_STATUS_COLORS[p.status] ?? '#a9a8c0',
-                      background: `${PROJECT_STATUS_COLORS[p.status] ?? '#a9a8c0'}18`,
+                      color: PROJECT_STATUS_MAP[p.status]?.color ?? '#a9a8c0',
+                      background: PROJECT_STATUS_MAP[p.status]?.bg ?? 'rgba(169,168,192,0.12)',
                     }}>
-                      {PROJECT_STATUS_LABELS[p.status] ?? p.status}
+                      {PROJECT_STATUS_MAP[p.status]?.label ?? p.status}
                     </span>
                   </div>
                 </Link>
@@ -229,7 +214,7 @@ export default async function DashboardPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {(receivedOrders ?? []).map((o) => {
-                const st = ORDER_STATUS_LABELS[o.status] ?? { label: o.status, color: '#a9a8c0' }
+                const st = ORDER_STATUS_MAP[o.status] ?? { label: o.status, color: '#a9a8c0' }
                 return (
                   <Link key={o.id} href="/orders" style={{ textDecoration: 'none', color: 'inherit' }}>
                     <div style={{
@@ -256,7 +241,7 @@ export default async function DashboardPage() {
                 )
               })}
               {(sentOrders ?? []).map((o) => {
-                const st = ORDER_STATUS_LABELS[o.status] ?? { label: o.status, color: '#a9a8c0' }
+                const st = ORDER_STATUS_MAP[o.status] ?? { label: o.status, color: '#a9a8c0' }
                 return (
                   <Link key={o.id} href="/orders" style={{ textDecoration: 'none', color: 'inherit' }}>
                     <div style={{

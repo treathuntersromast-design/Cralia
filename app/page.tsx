@@ -27,7 +27,7 @@ export default function HomePage() {
           <span style={{ color: '#c77dff', fontSize: '13px', fontWeight: '600' }}>🎨 クリエイターのためのマッチングプラットフォーム</span>
         </div>
         <h1 style={{ fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: '900', lineHeight: '1.15', margin: '0 0 24px' }}>
-          クリエイターと発注者を<br />
+          クリエイターと依頼者を<br />
           <span style={{ background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             つなぐ場所
           </span>
@@ -69,9 +69,15 @@ export default function HomePage() {
             },
             {
               icon: '📣',
-              title: '発注者を探す',
-              desc: 'クリエイターとして仕事を探す。発注者にダイレクトに営業をかけましょう。',
+              title: 'お仕事募集中の依頼者',
+              desc: 'クリエイターとして仕事を探す。依頼者のプロフィールを確認してダイレクトに営業をかけましょう。',
               color: '#ff6b9d',
+            },
+            {
+              icon: '📋',
+              title: '案件を探す・募集する',
+              desc: 'クリエイターは公開中の案件を検索して応募。依頼者はクリエイター募集の案件を投稿して広く応募を受け付けられます。',
+              color: '#fbbf24',
             },
             {
               icon: '💬',

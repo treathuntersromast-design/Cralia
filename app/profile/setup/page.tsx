@@ -7,6 +7,9 @@ import BioChatModal from '@/components/BioChatModal'
 import AvatarUpload from '@/components/AvatarUpload'
 import { createClient } from '@/lib/supabase/client'
 import ScrollToTopButton from '@/components/ScrollToTopButton'
+import { CREATOR_TYPES, CLIENT_TYPES, SKILL_SUGGESTIONS, SNS_PLATFORMS, PORTFOLIO_PLATFORMS } from '@/lib/constants/lists'
+import { activityStyleToRoles, rolesToActivityStyleId } from '@/lib/constants/activity'
+import { VALIDATION } from '@/lib/constants/validation'
 
 const DRAFT_KEY = 'crematch_setup_draft'
 
@@ -14,36 +17,8 @@ const DRAFT_KEY = 'crematch_setup_draft'
 const STEPS = ['個人・法人', '活動スタイル', '基本情報', 'スキル・自己紹介', 'ポートフォリオ', '希望条件'] as const
 type Step = 0 | 1 | 2 | 3 | 4 | 5
 
-const CREATOR_TYPES = ['VTuber', 'ボカロP', 'イラストレーター', '動画編集者', '楽曲制作関係', '3Dモデラー', 'デザイナー', 'その他']
-
-// 動画 → イラスト → 楽曲 → その他 の順（作業内容ベース）
-const SKILL_SUGGESTIONS = [
-  // 動画
-  'MV制作', '動画編集', '3DCGアニメ', 'Live2D', 'アニメーション',
-  // イラスト
-  'キャラクターデザイン', 'イラスト制作', '背景イラスト', 'サムネイル制作', 'ロゴデザイン', '3Dモデル制作',
-  // 楽曲
-  '楽曲制作', '作曲', '作詞', 'BGM制作', 'ミキシング・マスタリング', 'ボーカルミックス', '歌唱', 'コーラス', '声優',
-  // その他
-  'シナリオ・脚本',
-]
-
-const SNS_PLATFORMS = [
-  { label: 'X (Twitter)', prefix: '@', placeholder: 'username' },
-  { label: 'Instagram', prefix: '@', placeholder: 'username' },
-  { label: 'TikTok', prefix: '@', placeholder: 'username' },
-  { label: 'Twitch', prefix: 'twitch.tv/', placeholder: 'username' },
-  { label: 'Bluesky', prefix: '@', placeholder: 'handle.bsky.social' },
-]
-
-const PLATFORMS = [
-  { label: 'YouTube', placeholder: 'https://youtube.com/...' },
-  { label: 'pixiv', placeholder: 'https://pixiv.net/...' },
-  { label: 'niconico', placeholder: 'https://nicovideo.jp/...' },
-  { label: 'X (Twitter)', placeholder: 'https://x.com/...' },
-  { label: 'Instagram', placeholder: 'https://instagram.com/...' },
-  { label: 'その他', placeholder: 'https://...' },
-]
+// PORTFOLIO_PLATFORMS を従来の PLATFORMS 形式にエイリアス
+const PLATFORMS = PORTFOLIO_PLATFORMS
 
 type Roles = ('creator' | 'client')[]
 
@@ -66,6 +41,7 @@ interface FormData {
   homepageUrl: string
   snsLinks: SnsEntry[]
   creatorTypes: string[]
+  clientTypes: string[]
   skills: string[]
   bio: string
   portfolios: Portfolio[]
@@ -95,6 +71,7 @@ function ProfileSetupContent() {
     homepageUrl: '',
     snsLinks: [],
     creatorTypes: [],
+    clientTypes: [],
     skills: [],
     bio: '',
     portfolios: [],
@@ -107,6 +84,7 @@ function ProfileSetupContent() {
   const [pendingDraft, setPendingDraft] = useState<{ form: FormData; step: Step } | null>(null)
 
   const isCreator = form.roles.includes('creator')
+  const isClient  = form.roles.includes('client')
 
   // 既存プロフィールをフォームに反映
   useEffect(() => {
@@ -116,13 +94,17 @@ function ProfileSetupContent() {
       if (!user) return
 
       const [{ data: userData }, { data: profile }, { data: portfolios }] = await Promise.all([
-        supabase.from('users').select('entity_type, roles, display_name, sns_links, avatar_url').eq('id', user.id).single(),
+        supabase.from('users').select('entity_type, activity_style_id, display_name, sns_links, avatar_url, client_type').eq('id', user.id).single(),
         supabase.from('creator_profiles').select('*').eq('creator_id', user.id).single(),
         supabase.from('portfolios').select('*').eq('creator_id', user.id).order('display_order'),
       ])
 
       if (!userData) return
       if (userData.avatar_url) setAvatarUrl(userData.avatar_url)
+
+      const rawClientTypes: string[] = Array.isArray((userData as Record<string, unknown>).client_type)
+        ? ((userData as Record<string, unknown>).client_type as string[])
+        : []
 
       // 「その他（xxx）」形式のクリエイタータイプを分離
       const rawTypes: string[] = profile?.creator_type ?? []
@@ -136,11 +118,15 @@ function ProfileSetupContent() {
       const allSnsLinks: SnsEntry[] = Array.isArray(userData.sns_links) ? (userData.sns_links as SnsEntry[]) : []
       setForm({
         entityType: (userData.entity_type as 'individual' | 'corporate') || 'individual',
-        roles: (userData.roles as Roles) ?? [],
+        roles: (() => {
+          const r = activityStyleToRoles((userData as Record<string, unknown>).activity_style_id as number | null)
+          return (r.length > 0 ? r : ['creator']) as Roles
+        })(),
         displayName: userData.display_name ?? '',
         homepageUrl: allSnsLinks.find((s) => s.platform === 'ホームページ')?.id ?? '',
         snsLinks: allSnsLinks.filter((s) => s.platform !== 'ホームページ'),
         creatorTypes: normalizedTypes,
+        clientTypes: rawClientTypes,
         skills: profile?.skills ?? [],
         bio: profile?.bio ?? '',
         portfolios: (portfolios ?? []).map((p) => ({
@@ -198,10 +184,20 @@ function ProfileSetupContent() {
     }))
   }
 
+  // 依頼者タイプ切り替え
+  const toggleClientType = (type: string) => {
+    setForm((f) => ({
+      ...f,
+      clientTypes: f.clientTypes.includes(type)
+        ? f.clientTypes.filter((t) => t !== type)
+        : [...f.clientTypes, type],
+    }))
+  }
+
   // スキルタグ追加
   const addSkill = (skill: string) => {
     const trimmed = skill.trim()
-    if (!trimmed || trimmed.length > 50 || form.skills.length >= 20) return
+    if (!trimmed || trimmed.length > VALIDATION.SKILL_TAG_MAX || form.skills.length >= VALIDATION.SKILLS_MAX) return
     if (form.skills.some((s) => s.toLowerCase() === trimmed.toLowerCase())) return
     setForm((f) => ({ ...f, skills: [...f.skills, trimmed] }))
     setSkillInput('')
@@ -209,7 +205,7 @@ function ProfileSetupContent() {
 
   // ポートフォリオ追加
   const addPortfolio = () => {
-    if (form.portfolios.length >= 5) return
+    if (form.portfolios.length >= VALIDATION.PORTFOLIOS_MAX) return
     setForm((f) => ({ ...f, portfolios: [...f.portfolios, { platform: 'YouTube', url: '', title: '' }] }))
   }
 
@@ -496,7 +492,7 @@ function ProfileSetupContent() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {([
                   { role: 'creator' as const, emoji: '🎨', label: 'クリエイター（受注者）', desc: '依頼を受けて制作・提供する' },
-                  { role: 'client' as const, emoji: '💼', label: '依頼者（発注者）', desc: 'クリエイターに制作を依頼する' },
+                  { role: 'client' as const, emoji: '💼', label: '依頼者（依頼者）', desc: 'クリエイターに制作を依頼する' },
                   { role: 'both' as const, emoji: '🔄', label: 'クリエイターかつ依頼者', desc: '制作依頼を受けながら、他のクリエイターにも依頼する' },
                 ]).map(({ role, emoji, label, desc }) => {
                   const isSelected = role === 'both'
@@ -567,7 +563,7 @@ function ProfileSetupContent() {
                   type="text"
                   value={form.displayName}
                   onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
-                  maxLength={30}
+                  maxLength={VALIDATION.DISPLAY_NAME_MAX}
                   placeholder="例: クリエイター太郎"
                   style={inputStyle}
                 />
@@ -638,7 +634,7 @@ function ProfileSetupContent() {
                     )
                   })}
                 </div>
-                {form.snsLinks.length < 7 && (
+                {form.snsLinks.length < VALIDATION.SNS_LINKS_MAX && (
                   <button
                     type="button"
                     onClick={() => setForm((f) => ({ ...f, snsLinks: [...f.snsLinks, { platform: 'X (Twitter)', id: '' }] }))}
@@ -683,7 +679,7 @@ function ProfileSetupContent() {
                         value={otherCreatorType}
                         onChange={(e) => setOtherCreatorType(e.target.value)}
                         placeholder="具体的な活動内容を入力してください（例: 作詞家、作曲家、声優）"
-                        maxLength={50}
+                        maxLength={VALIDATION.SKILL_TAG_MAX}
                         style={{ ...inputStyle, marginTop: '10px', borderColor: !otherCreatorType.trim() ? 'rgba(255,107,157,0.5)' : 'rgba(199,125,255,0.25)' }}
                       />
                       {!otherCreatorType.trim() && (
@@ -693,6 +689,36 @@ function ProfileSetupContent() {
                       )}
                     </>
                   )}
+                </div>
+              )}
+
+              {isClient && (
+                <div>
+                  <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '10px' }}>
+                    依頼者タイプ（複数選択可・任意）
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {CLIENT_TYPES.map(({ value, label }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => toggleClientType(value)}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '20px',
+                          border: form.clientTypes.includes(value) ? '2px solid #ff6b9d' : '1px solid rgba(255,255,255,0.15)',
+                          background: form.clientTypes.includes(value) ? 'rgba(255,107,157,0.2)' : 'transparent',
+                          color: form.clientTypes.includes(value) ? '#ff6b9d' : '#a9a8c0',
+                          fontSize: '14px',
+                          fontWeight: form.clientTypes.includes(value) ? '700' : '400',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -743,7 +769,7 @@ function ProfileSetupContent() {
                     </span>
                   ))}
                   {/* テキスト入力（タグの後ろに続く） */}
-                  {form.skills.length < 20 && (
+                  {form.skills.length < VALIDATION.SKILLS_MAX && (
                     <input
                       id="skill-input"
                       type="text"
@@ -770,7 +796,7 @@ function ProfileSetupContent() {
                   )}
                 </div>
                 <p style={{ color: '#7c7b99', fontSize: '12px', marginTop: '4px' }}>
-                  {form.skills.length} / 20 個　※ Backspace で最後のタグを削除できます
+                  {form.skills.length} / {VALIDATION.SKILLS_MAX} 個　※ Backspace で最後のタグを削除できます
                 </p>
                 {/* サジェスト */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
@@ -807,7 +833,7 @@ function ProfileSetupContent() {
                 <textarea
                   value={form.bio}
                   onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-                  maxLength={400}
+                  maxLength={VALIDATION.BIO_MAX}
                   rows={5}
                   placeholder={`あなたの活動やスタイルを紹介してください。\n例）はじめまして！イラストレーターの〇〇です。アニメ・ゲーム系のキャラクターデザインを得意としており、VTuberのキャラクターデザインやLive2Dモデル用イラストの制作実績が多数あります。丁寧なヒアリングをもとに、ご要望に合ったデザインをご提案します。お気軽にご相談ください！`}
                   style={{ ...inputStyle, resize: 'vertical' }}
@@ -910,7 +936,7 @@ function ProfileSetupContent() {
                 </div>
               ))}
 
-              {form.portfolios.length < 5 && (
+              {form.portfolios.length < VALIDATION.PORTFOLIOS_MAX && (
                 <button type="button" onClick={addPortfolio} style={addButtonStyle}>
                   + ポートフォリオを追加
                 </button>
@@ -1002,7 +1028,7 @@ function ProfileSetupContent() {
                     value={form.deliveryDays}
                     onChange={(e) => setForm((f) => ({ ...f, deliveryDays: e.target.value }))}
                     placeholder="例: 2〜4週間"
-                    maxLength={30}
+                    maxLength={VALIDATION.DELIVERY_DAYS_MAX}
                     style={inputStyle}
                   />
                 </div>
@@ -1094,7 +1120,7 @@ function ProfileSetupContent() {
         <BioChatModal
           creatorTypes={form.creatorTypes}
           skills={form.skills}
-          onApply={(bio) => setForm((f) => ({ ...f, bio: bio.slice(0, 400) }))}
+          onApply={(bio) => setForm((f) => ({ ...f, bio: bio.slice(0, VALIDATION.BIO_MAX) }))}
           onClose={() => setShowBioChat(false)}
         />
       )}

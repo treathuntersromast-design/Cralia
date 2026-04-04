@@ -3,20 +3,9 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import OrderActions from './OrderActions'
+import { ORDER_STATUS_MAP, ORDER_STATUS_STEPS } from '@/lib/constants/statuses'
 
 export const dynamic = 'force-dynamic'
-
-const STATUS_MAP: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  pending:     { label: '提案中',       color: '#fbbf24', bg: 'rgba(251,191,36,0.12)',   border: 'rgba(251,191,36,0.3)'   },
-  accepted:    { label: '承認済み',     color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',   border: 'rgba(96,165,250,0.3)'   },
-  in_progress: { label: '進行中',       color: '#c77dff', bg: 'rgba(199,125,255,0.12)',  border: 'rgba(199,125,255,0.3)'  },
-  delivered:   { label: '納品済み',     color: '#4ade80', bg: 'rgba(74,222,128,0.12)',   border: 'rgba(74,222,128,0.3)'   },
-  completed:   { label: '完了',         color: '#4ade80', bg: 'rgba(74,222,128,0.08)',   border: 'rgba(74,222,128,0.2)'   },
-  cancelled:   { label: 'キャンセル',   color: '#f87171', bg: 'rgba(248,113,113,0.12)',  border: 'rgba(248,113,113,0.3)'  },
-  disputed:    { label: '異議申し立て', color: '#f87171', bg: 'rgba(248,113,113,0.12)',  border: 'rgba(248,113,113,0.3)'  },
-}
-
-const STEPS = ['pending', 'accepted', 'in_progress', 'delivered', 'completed'] as const
 
 export default async function OrderDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
@@ -44,9 +33,9 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
   const isClient  = order.client_id  === user.id
   const isCreator = order.creator_id === user.id
-  const st = STATUS_MAP[order.status] ?? STATUS_MAP.pending
+  const st = ORDER_STATUS_MAP[order.status] ?? ORDER_STATUS_MAP.pending
   const isClosed = ['completed', 'cancelled', 'disputed'].includes(order.status)
-  const currentStep = STEPS.indexOf(order.status as typeof STEPS[number])
+  const currentStep = ORDER_STATUS_STEPS.indexOf(order.status as typeof ORDER_STATUS_STEPS[number])
 
   return (
     <main style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -85,19 +74,19 @@ export default async function OrderDetailPage({ params }: { params: { id: string
         {!isClosed && (
           <div style={{ background: 'rgba(22,22,31,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '20px 24px', marginBottom: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-              {STEPS.map((step, i) => {
+              {ORDER_STATUS_STEPS.map((step, i) => {
                 const done   = currentStep > i
                 const active = currentStep === i
                 const labels: Record<string, string> = { pending: '提案中', accepted: '承認', in_progress: '進行中', delivered: '納品', completed: '完了' }
                 return (
-                  <div key={step} style={{ display: 'flex', alignItems: 'center', flex: i < STEPS.length - 1 ? 1 : undefined }}>
+                  <div key={step} style={{ display: 'flex', alignItems: 'center', flex: i < ORDER_STATUS_STEPS.length - 1 ? 1 : undefined }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                       <div style={{ width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', background: done ? '#c77dff' : active ? 'rgba(199,125,255,0.3)' : 'rgba(255,255,255,0.06)', border: active ? '2px solid #c77dff' : 'none', color: done ? '#fff' : active ? '#c77dff' : '#5c5b78' }}>
                         {done ? '✓' : i + 1}
                       </div>
                       <span style={{ fontSize: '10px', color: active ? '#c77dff' : done ? '#a9a8c0' : '#5c5b78', whiteSpace: 'nowrap' }}>{labels[step]}</span>
                     </div>
-                    {i < STEPS.length - 1 && (
+                    {i < ORDER_STATUS_STEPS.length - 1 && (
                       <div style={{ flex: 1, height: '2px', background: done ? '#c77dff' : 'rgba(255,255,255,0.08)', margin: '0 4px 16px' }} />
                     )}
                   </div>
@@ -130,12 +119,14 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           <p style={{ color: '#d0cfea', fontSize: '14px', lineHeight: '1.8', margin: '0 0 20px', whiteSpace: 'pre-wrap' }}>{order.description}</p>
 
           <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
-            <div>
-              <p style={{ color: '#7c7b99', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.06em' }}>予算</p>
-              <p style={{ color: '#f0eff8', fontSize: '15px', fontWeight: '700', margin: 0 }}>
-                {order.budget != null ? `¥${order.budget.toLocaleString()}` : '未定'}
-              </p>
-            </div>
+            {(order as Record<string, unknown>).order_type !== 'free' && (
+              <div>
+                <p style={{ color: '#7c7b99', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.06em' }}>予算</p>
+                <p style={{ color: '#f0eff8', fontSize: '15px', fontWeight: '700', margin: 0 }}>
+                  {order.budget != null ? `¥${order.budget.toLocaleString()}` : '未定'}
+                </p>
+              </div>
+            )}
             <div>
               <p style={{ color: '#7c7b99', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.06em' }}>希望納期</p>
               <p style={{ color: '#f0eff8', fontSize: '15px', fontWeight: '700', margin: 0 }}>

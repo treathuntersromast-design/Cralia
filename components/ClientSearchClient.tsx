@@ -109,10 +109,10 @@ export default function ClientSearchClient({ clients, initialEntity, initialQ }:
       {/* タイトル */}
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: '800', margin: '0 0 6px' }}>
-          発注者を探す
+          お仕事募集中の依頼者
         </h1>
         <p style={{ color: '#7c7b99', fontSize: '14px', margin: 0 }}>
-          {filtered.length} 人の発注者が見つかりました
+          {filtered.length} 人の依頼者が見つかりました
         </p>
       </div>
 
@@ -174,7 +174,7 @@ export default function ClientSearchClient({ clients, initialEntity, initialQ }:
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '80px 0', color: '#7c7b99' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-          <p style={{ fontSize: '16px', margin: 0 }}>条件に一致する発注者が見つかりませんでした</p>
+          <p style={{ fontSize: '16px', margin: 0 }}>条件に一致する依頼者がいませんでした</p>
           <p style={{ fontSize: '13px', margin: '8px 0 0', color: '#5c5b78' }}>検索ワードやフィルターを変えてみてください</p>
         </div>
       ) : (
@@ -235,6 +235,26 @@ function ClientCard({ client: c }: { client: Client }) {
           {entityLabel}
         </span>
       </div>
+
+      {/* 依頼者タイプバッジ */}
+      {(c.client_type ?? []).length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          {(c.client_type ?? []).slice(0, 4).map((t) => (
+            <span key={t} style={{
+              padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700',
+              background: 'rgba(255,107,157,0.12)', color: '#ff6b9d',
+              border: '1px solid rgba(255,107,157,0.25)',
+            }}>
+              {t}
+            </span>
+          ))}
+          {(c.client_type ?? []).length > 4 && (
+            <span style={{ color: '#7c7b99', fontSize: '11px', alignSelf: 'center' }}>
+              +{(c.client_type ?? []).length - 4}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* SNS リンク */}
       {snsList.length > 0 ? (

@@ -58,7 +58,7 @@ export default async function MessagesPage() {
                 クリエイターを探す
               </Link>
               <Link href="/clients" style={{ padding: '10px 24px', borderRadius: '12px', border: '1px solid rgba(199,125,255,0.3)', background: 'transparent', color: '#c77dff', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}>
-                発注者を探す
+                お仕事募集中の依頼者
               </Link>
             </div>
           </div>

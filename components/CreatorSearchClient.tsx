@@ -5,17 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import type { Creator } from '@/app/search/page'
 
-const CREATOR_TYPES = [
-  'VTuber', 'ボカロP', 'イラストレーター', '動画編集者',
-  '楽曲制作関係', '3Dモデラー', 'デザイナー', 'その他',
-]
-
-const SKILL_SUGGESTIONS = [
-  'MV制作', '動画編集', '3DCGアニメ', 'Live2D', 'アニメーション',
-  'キャラクターデザイン', 'イラスト制作', '背景イラスト', 'サムネイル制作', 'ロゴデザイン', '3Dモデル制作',
-  '楽曲制作', '作曲', '作詞', 'BGM制作', 'ミキシング・マスタリング', 'ボーカルミックス', '歌唱', 'コーラス', '声優',
-  'シナリオ・脚本',
-]
+import { CREATOR_TYPES, SKILL_SUGGESTIONS } from '@/lib/constants/lists'
 
 const AVAIL_OPTIONS = [
   { value: 'open',     label: '受付中',      color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },

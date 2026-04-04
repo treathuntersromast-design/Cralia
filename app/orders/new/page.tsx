@@ -185,23 +185,25 @@ function NewOrderContent() {
           </div>
 
           {/* 予算・納期 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>
-                予算（任意）
-              </label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#7c7b99', fontSize: '14px' }}>¥</span>
-                <input
-                  type="number"
-                  value={budget}
-                  onChange={(e) => setBudget(e.target.value)}
-                  placeholder="10000"
-                  min={0}
-                  style={{ ...inputStyle, paddingLeft: '28px' }}
-                />
+          <div style={{ display: 'grid', gridTemplateColumns: orderType === 'paid' ? '1fr 1fr' : '1fr', gap: '16px' }}>
+            {orderType === 'paid' && (
+              <div>
+                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>
+                  予算（任意）
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#7c7b99', fontSize: '14px' }}>¥</span>
+                  <input
+                    type="number"
+                    value={budget}
+                    onChange={(e) => setBudget(e.target.value)}
+                    placeholder="10000"
+                    min={0}
+                    style={{ ...inputStyle, paddingLeft: '28px' }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* 納期フィールド */}
             <div>

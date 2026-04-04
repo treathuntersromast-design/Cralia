@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { ACTIVITY_STYLE_ID } from '@/lib/constants/activity'
 
 // 認証が必要なパス（前方一致）
 const PROTECTED_PATHS = ['/dashboard', '/profile', '/chat', '/orders', '/settings', '/clients', '/projects', '/notifications', '/messages', '/events']
@@ -61,12 +62,12 @@ export async function middleware(request: NextRequest) {
   if (isProtected) {
     const { data: profile } = await supabase
       .from('users')
-      .select('roles, display_name')
+      .select('activity_style_id, display_name')
       .eq('id', user.id)
       .single()
 
     const needsSetup = !profile || (
-      (!profile.roles || profile.roles.length === 0) &&
+      !Object.values(ACTIVITY_STYLE_ID).includes(profile.activity_style_id as number) &&
       !profile.display_name
     )
     if (needsSetup) {

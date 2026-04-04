@@ -9,15 +9,13 @@ export default async function BillingPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?next=/settings/billing')
 
-  const { data: subscriptions } = await supabase
-    .from('subscriptions')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .limit(1)
+  const { data: userData } = await supabase
+    .from('users')
+    .select('entity_type')
+    .eq('id', user.id)
+    .single()
 
-  const subscription = subscriptions?.[0] ?? null
-  const isPro = subscription?.status === 'active'
+  const isCorporate = userData?.entity_type === 'corporate'
 
   return (
     <div style={{
@@ -33,97 +31,140 @@ export default async function BillingPage() {
       </div>
 
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '40px 24px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 32px' }}>プランと請求</h1>
+        <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 8px' }}>プランと請求</h1>
+        <p style={{ color: '#7c7b99', fontSize: '14px', margin: '0 0 32px' }}>ご利用中のプランと今後の機能予定</p>
+
+        {/* ベータ版バナー */}
+        <div style={{
+          background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.3)',
+          borderRadius: '16px', padding: '18px 22px', marginBottom: '32px',
+          display: 'flex', alignItems: 'flex-start', gap: '14px',
+        }}>
+          <span style={{ fontSize: '22px', flexShrink: 0 }}>🎉</span>
+          <div>
+            <p style={{ fontWeight: '800', fontSize: '15px', margin: '0 0 4px', color: '#4ade80' }}>ベータ版期間中は全機能を無料でご利用いただけます</p>
+            <p style={{ color: '#86efac', fontSize: '13px', margin: 0, lineHeight: '1.7' }}>
+              正式リリース後は個人向け・法人向けのプランを提供予定です。ベータ版終了の際は事前にお知らせします。
+            </p>
+          </div>
+        </div>
 
         {/* 現在のプラン */}
         <section style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#a9a8c0', margin: '0 0 14px', letterSpacing: '0.05em' }}>現在のプラン</h2>
-          <div style={{ background: isPro ? 'rgba(199,125,255,0.08)' : 'rgba(22,22,31,0.9)', border: `1px solid ${isPro ? 'rgba(199,125,255,0.3)' : 'rgba(255,255,255,0.08)'}`, borderRadius: '20px', padding: '28px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '14px', fontWeight: '700', color: '#7c7b99', margin: '0 0 14px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>現在のプラン</h2>
+          <div style={{ background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: '20px', padding: '28px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <div>
-                <p style={{ fontSize: '22px', fontWeight: '800', margin: '0 0 4px' }}>
-                  {isPro ? 'スタンダードプラン' : '無料プラン'}
-                </p>
-                <p style={{ color: '#a9a8c0', fontSize: '14px', margin: 0 }}>
-                  {isPro ? '¥500 / 月（税抜）' : '¥0 / 月'}
-                </p>
+                <p style={{ fontSize: '22px', fontWeight: '800', margin: '0 0 4px' }}>ベータプラン</p>
+                <p style={{ color: '#4ade80', fontSize: '15px', fontWeight: '700', margin: 0 }}>¥0 / 月（ベータ期間中）</p>
               </div>
-              <span style={{
-                padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '700',
-                background: isPro ? 'rgba(199,125,255,0.2)' : 'rgba(169,168,192,0.15)',
-                color: isPro ? '#c77dff' : '#a9a8c0',
-              }}>
-                {isPro ? '利用中' : 'フリー'}
+              <span style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '700', background: 'rgba(74,222,128,0.15)', color: '#4ade80' }}>
+                利用中
               </span>
             </div>
-
-            {isPro && subscription?.current_period_end && (
-              <p style={{ color: '#7c7b99', fontSize: '13px', margin: '0 0 20px' }}>
-                次回更新日: {new Date(subscription.current_period_end).toLocaleDateString('ja-JP')}
-              </p>
-            )}
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {[
-                { label: 'プロフィール公開', available: true },
-                { label: 'クリエイター検索に表示', available: true },
-                { label: 'ポートフォリオ掲載（5件まで）', available: true },
-                { label: '依頼の受け取り・管理', available: isPro },
-                { label: 'プロジェクトボード（無制限）', available: isPro },
-                { label: 'AI自己紹介文作成', available: isPro },
-              ].map(({ label, available }) => (
+                'プロフィール公開・クリエイター検索',
+                'ポートフォリオ掲載',
+                '依頼の送受信・管理',
+                'プロジェクトボード',
+                'クリエイター・依頼者検索',
+                'イベント参加',
+              ].map((label) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ color: available ? '#4ade80' : '#3c3c54', fontSize: '14px' }}>{available ? '✓' : '✗'}</span>
-                  <span style={{ color: available ? '#f0eff8' : '#5c5b78', fontSize: '14px' }}>{label}</span>
+                  <span style={{ color: '#4ade80', fontSize: '14px' }}>✓</span>
+                  <span style={{ color: '#f0eff8', fontSize: '14px' }}>{label}</span>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* アップグレード or 解約 */}
-        {!isPro ? (
-          <section style={{ marginBottom: '32px' }}>
-            <div style={{ background: 'rgba(199,125,255,0.06)', border: '1px solid rgba(199,125,255,0.2)', borderRadius: '20px', padding: '28px', textAlign: 'center' }}>
-              <p style={{ fontSize: '20px', fontWeight: '800', margin: '0 0 8px' }}>スタンダードプランにアップグレード</p>
-              <p style={{ color: '#a9a8c0', fontSize: '14px', margin: '0 0 24px' }}>¥500 / 月（税抜）で全機能が使い放題</p>
-              <button disabled style={{
-                padding: '14px 40px', borderRadius: '14px', border: 'none',
-                background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
-                color: '#fff', fontSize: '16px', fontWeight: '700', cursor: 'not-allowed', opacity: 0.6,
-              }}>
-                アップグレード（準備中）
-              </button>
-              <p style={{ color: '#5c5b78', fontSize: '12px', margin: '12px 0 0' }}>Stripe決済連携は現在開発中です</p>
+        {/* 今後のプラン予定 */}
+        <section style={{ marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '14px', fontWeight: '700', color: '#7c7b99', margin: '0 0 14px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>正式リリース後のプラン（予定）</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+            {/* 個人プラン */}
+            <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(199,125,255,0.15)', borderRadius: '18px', padding: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                <div>
+                  <p style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 2px' }}>個人プラン</p>
+                  <p style={{ color: '#7c7b99', fontSize: '13px', margin: 0 }}>個人クリエイター・フリーランス向け</p>
+                </div>
+                <span style={{ padding: '5px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: 'rgba(199,125,255,0.1)', color: '#c77dff' }}>
+                  準備中
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {['無制限のポートフォリオ掲載', 'エスクロー決済', 'AI自己紹介文作成', '優先サポート'].map((f) => (
+                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: '#c77dff', fontSize: '13px' }}>○</span>
+                    <span style={{ color: '#a9a8c0', fontSize: '13px' }}>{f}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </section>
-        ) : (
+
+            {/* 法人プラン */}
+            <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(96,165,250,0.2)', borderRadius: '18px', padding: '24px', position: 'relative', overflow: 'hidden' }}>
+              {isCorporate && (
+                <div style={{ position: 'absolute', top: '12px', right: '12px', padding: '4px 12px', borderRadius: '20px', background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.3)', fontSize: '11px', fontWeight: '700', color: '#60a5fa' }}>
+                  あなたのアカウントタイプ
+                </div>
+              )}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                <div>
+                  <p style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 2px' }}>法人プラン</p>
+                  <p style={{ color: '#7c7b99', fontSize: '13px', margin: 0 }}>企業・団体・サークル向け</p>
+                </div>
+                <span style={{ padding: '5px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: 'rgba(96,165,250,0.1)', color: '#60a5fa' }}>
+                  準備中
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {[
+                  '個人プランの全機能',
+                  'チームアカウント・担当者管理',
+                  '発注承認ワークフロー',
+                  '請求書払い（銀行振込）対応',
+                  '発注履歴CSVエクスポート・領収書PDF発行',
+                  '専任サポート・SLA対応',
+                ].map((f) => (
+                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: '#60a5fa', fontSize: '13px' }}>○</span>
+                    <span style={{ color: '#a9a8c0', fontSize: '13px' }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 法人向け早期アクセス */}
+        {isCorporate && (
           <section style={{ marginBottom: '32px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#a9a8c0', margin: '0 0 14px', letterSpacing: '0.05em' }}>請求情報</h2>
-            <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '20px 24px' }}>
-              <p style={{ color: '#a9a8c0', fontSize: '14px', margin: 0 }}>支払い方法・請求履歴の管理は準備中です。</p>
+            <div style={{ background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.2)', borderRadius: '16px', padding: '22px', textAlign: 'center' }}>
+              <p style={{ fontWeight: '800', fontSize: '16px', margin: '0 0 6px' }}>法人向けプランの早期アクセス登録</p>
+              <p style={{ color: '#7c7b99', fontSize: '13px', margin: '0 0 16px', lineHeight: '1.7' }}>
+                正式リリース前に法人プランのご案内を希望される場合はお問い合わせください。
+              </p>
+              <button disabled style={{
+                padding: '10px 28px', borderRadius: '12px', border: '1px solid rgba(96,165,250,0.3)',
+                background: 'rgba(96,165,250,0.08)', color: '#60a5fa',
+                fontSize: '14px', fontWeight: '700', cursor: 'not-allowed', opacity: 0.7,
+              }}>
+                お問い合わせ（準備中）
+              </button>
             </div>
           </section>
         )}
 
-        {/* プラン特典一覧 */}
-        <section>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#a9a8c0', margin: '0 0 14px', letterSpacing: '0.05em' }}>スタンダードプランの特典</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
-            {[
-              { icon: '📩', title: '依頼管理', desc: '受け取った依頼を一元管理' },
-              { icon: '🎯', title: 'プロジェクト無制限', desc: 'プロジェクトを何件でも作成' },
-              { icon: '🤖', title: 'AI自己紹介文', desc: 'Claude AIで自己紹介を自動生成' },
-              { icon: '💳', title: 'エスクロー決済', desc: '安心の前払い・後払いシステム' },
-            ].map(({ icon, title, desc }) => (
-              <div key={title} style={{ background: 'rgba(22,22,31,0.7)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', padding: '16px' }}>
-                <div style={{ fontSize: '24px', marginBottom: '8px' }}>{icon}</div>
-                <p style={{ fontWeight: '700', fontSize: '14px', margin: '0 0 4px' }}>{title}</p>
-                <p style={{ color: '#7c7b99', fontSize: '12px', margin: 0 }}>{desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+        {/* 注意書き */}
+        <p style={{ color: '#5c5b78', fontSize: '12px', lineHeight: '1.8', textAlign: 'center' }}>
+          プラン内容・価格はベータ期間終了前に正式発表予定です。<br />
+          ご不明点は <Link href="/settings" style={{ color: '#7c7b99' }}>設定ページ</Link> からお問い合わせください。
+        </p>
       </div>
     </div>
   )

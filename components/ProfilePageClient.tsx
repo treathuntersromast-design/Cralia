@@ -4,40 +4,16 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import AvatarUpload from './AvatarUpload'
 import AvailabilityEditor from './AvailabilityEditor'
+import {
+  CREATOR_TYPES, SKILL_SUGGESTIONS,
+  SNS_PLATFORMS, SNS_ICONS, SNS_BASE_URLS,
+  PORTFOLIO_PLATFORMS,
+} from '@/lib/constants/lists'
+import { VALIDATION } from '@/lib/constants/validation'
 
-// ---- 定数 ----
-const CREATOR_TYPES = ['VTuber', 'ボカロP', 'イラストレーター', '動画編集者', '楽曲制作関係', '3Dモデラー', 'デザイナー', 'その他']
-
-const SKILL_SUGGESTIONS = [
-  'MV制作', '動画編集', '3DCGアニメ', 'Live2D', 'アニメーション',
-  'キャラクターデザイン', 'イラスト制作', '背景イラスト', 'サムネイル制作', 'ロゴデザイン', '3Dモデル制作',
-  '楽曲制作', '作曲', '作詞', 'BGM制作', 'ミキシング・マスタリング', 'ボーカルミックス', '歌唱', 'コーラス', '声優',
-  'シナリオ・脚本',
-]
-
-const SNS_PLATFORMS = [
-  { label: 'X (Twitter)', prefix: '@', placeholder: 'username' },
-  { label: 'Instagram', prefix: '@', placeholder: 'username' },
-  { label: 'TikTok', prefix: '@', placeholder: 'username' },
-  { label: 'Twitch', prefix: 'twitch.tv/', placeholder: 'username' },
-  { label: 'Bluesky', prefix: '@', placeholder: 'handle.bsky.social' },
-]
-
-const SNS_ICONS: Record<string, string> = {
-  'X (Twitter)': '𝕏', Instagram: '📷',
-  TikTok: '🎵', Twitch: '🟣', Bluesky: '🦋',
-}
-const SNS_BASE_URLS: Record<string, string> = {
-  'X (Twitter)': 'https://x.com/', Instagram: 'https://instagram.com/',
-  TikTok: 'https://tiktok.com/@', Twitch: 'https://twitch.tv/', Bluesky: 'https://bsky.app/profile/',
-}
-
-const PLATFORMS = ['YouTube', 'pixiv', 'niconico', 'X (Twitter)', 'Instagram', 'その他']
-const PLATFORM_PLACEHOLDERS: Record<string, string> = {
-  YouTube: 'https://youtube.com/...', pixiv: 'https://pixiv.net/...',
-  niconico: 'https://nicovideo.jp/...', 'X (Twitter)': 'https://x.com/...',
-  Instagram: 'https://instagram.com/...', その他: 'https://...',
-}
+// ポートフォリオプラットフォームを旧形式（label/placeholder分離）に変換
+const PLATFORMS        = PORTFOLIO_PLATFORMS.map((p) => p.label)
+const PLATFORM_PLACEHOLDERS = Object.fromEntries(PORTFOLIO_PLATFORMS.map((p) => [p.label, p.placeholder]))
 
 // ---- 型 ----
 interface Portfolio { platform: string; url: string; title: string; thumbnail_url?: string }
@@ -58,6 +34,12 @@ interface Props {
   deliveryDays: string | null
   portfolios: Portfolio[]
   snsLinks: SnsEntry[]
+  roles: string[]
+  companyName: string | null
+  hasCorporateNumber: boolean
+  invoiceNumber: string | null
+  hasActiveReceivedOrders: boolean
+  hasActiveSentOrders: boolean
   lastSeen: string
 }
 
@@ -82,7 +64,7 @@ const cancelBtnStyle: React.CSSProperties = {
   color: '#a9a8c0', fontSize: '13px', cursor: 'pointer',
 }
 
-type Section = 'header' | 'skills' | 'pricing' | 'portfolios' | 'sns' | 'homepage' | null
+type Section = 'header' | 'roles' | 'skills' | 'pricing' | 'portfolios' | 'sns' | 'homepage' | null
 
 export default function ProfilePageClient(props: Props) {
   const [editing, setEditing] = useState<Section>(null)
@@ -111,6 +93,9 @@ export default function ProfilePageClient(props: Props) {
   const [portfolios, setPortfolios] = useState<Portfolio[]>(props.portfolios)
   const [fetchingIdx, setFetchingIdx] = useState<number | null>(null)
 
+  // 活動スタイル
+  const [roles, setRoles] = useState<string[]>(props.roles)
+
   // ホームページ（sns_links の platform='ホームページ' エントリとして保存）
   const [homepageUrl, setHomepageUrl] = useState(() =>
     props.snsLinks.find((s) => s.platform === 'ホームページ')?.id ?? ''
@@ -125,6 +110,7 @@ export default function ProfilePageClient(props: Props) {
   const committed = useRef({
     displayName: props.displayName,
     creatorTypes: props.creatorTypes,
+    roles: props.roles,
     otherType: (() => {
       const o = props.creatorTypes.find((t) => t.startsWith('その他（'))
       return o ? o.replace(/^その他（(.+)）$/, '$1') : ''
@@ -152,6 +138,7 @@ export default function ProfilePageClient(props: Props) {
     setCreatorTypes(c.creatorTypes)
     setOtherType(c.otherType)
     setBio(c.bio)
+    setRoles(c.roles)
     setSkills(c.skills)
     setSkillInput('')
     setPriceMin(c.priceMin)
@@ -174,15 +161,52 @@ export default function ProfilePageClient(props: Props) {
     if (!res.ok) throw new Error(data.error ?? '更新に失敗しました')
   }
 
-  // ---- ヘッダー保存 ----
+  // ---- ヘッダー保存（ロール変更も兼ねる） ----
   const saveHeader = async () => {
     setSaving(true); setError(null)
     try {
       const normalizedTypes = creatorTypes.map((t) =>
         t === 'その他' && otherType.trim() ? `その他（${otherType.trim()}）` : t
       )
+
+      const rolesChanged =
+        JSON.stringify([...roles].sort()) !== JSON.stringify([...committed.current.roles].sort())
+
+      if (rolesChanged) {
+        const removingCreator = committed.current.roles.includes('creator') && !roles.includes('creator')
+        const removingClient  = committed.current.roles.includes('client')  && !roles.includes('client')
+
+        if (removingCreator && props.hasActiveReceivedOrders) {
+          setError('未完了の受注依頼があるため、クリエイターの役割を外せません。受注依頼をすべて完了してから変更してください。')
+          setSaving(false); return
+        }
+        if (removingClient && props.hasActiveSentOrders) {
+          setError('未完了の発注依頼があるため、依頼者の役割を外せません。発注依頼をすべて完了してから変更してください。')
+          setSaving(false); return
+        }
+
+        const confirmed = window.confirm(
+          '活動スタイルを変更します。\n\n変更後はプロフィールの表示や機能が変わることがあります。\n続けてもよろしいですか？'
+        )
+        if (!confirmed) { setSaving(false); return }
+      }
+
       await patch({ displayName, creatorTypes: normalizedTypes, bio })
-      committed.current = { ...committed.current, displayName, creatorTypes: normalizedTypes, otherType: otherType.trim(), bio }
+
+      if (rolesChanged) {
+        const res = await fetch('/api/profile/roles', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roles, previousRoles: committed.current.roles }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error ?? '活動スタイルの更新に失敗しました')
+      }
+
+      committed.current = {
+        ...committed.current,
+        displayName, creatorTypes: normalizedTypes, otherType: otherType.trim(), bio, roles,
+      }
       setEditing(null)
     } catch (e) { setError(e instanceof Error ? e.message : '更新に失敗しました') }
     finally { setSaving(false) }
@@ -191,7 +215,7 @@ export default function ProfilePageClient(props: Props) {
   // ---- スキル保存 ----
   const addSkill = (s: string) => {
     const t = s.trim()
-    if (!t || t.length > 50 || skills.length >= 20) return
+    if (!t || t.length > VALIDATION.SKILL_TAG_MAX || skills.length >= VALIDATION.SKILLS_MAX) return
     if (skills.some((x) => x.toLowerCase() === t.toLowerCase())) return
     setSkills((prev) => [...prev, t])
     setSkillInput('')
@@ -306,6 +330,38 @@ export default function ProfilePageClient(props: Props) {
               <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={30} style={inputStyle} />
               <p style={{ color: '#7c7b99', fontSize: '12px', marginTop: '4px' }}>{displayName.length}/30</p>
             </div>
+            {/* 活動スタイル */}
+            <div>
+              <label style={{ color: '#a9a8c0', fontSize: '13px', display: 'block', marginBottom: '8px' }}>活動スタイル</label>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                {([
+                  { value: 'creator', label: 'クリエイター', desc: '依頼を受ける', color: '#c77dff', bg: 'rgba(199,125,255,0.15)', border: 'rgba(199,125,255,0.5)' },
+                  { value: 'client',  label: '依頼者',       desc: '依頼を送る',  color: '#ff6b9d', bg: 'rgba(255,107,157,0.15)', border: 'rgba(255,107,157,0.5)' },
+                ] as const).map(({ value, label, desc, color, bg, border }) => {
+                  const active = roles.includes(value)
+                  return (
+                    <button key={value} type="button"
+                      onClick={() => setRoles((prev) =>
+                        prev.includes(value)
+                          ? prev.length > 1 ? prev.filter((r) => r !== value) : prev
+                          : [...prev, value]
+                      )}
+                      style={{
+                        flex: 1, padding: '10px 12px', borderRadius: '10px', textAlign: 'left', cursor: 'pointer',
+                        border: `2px solid ${active ? border : 'rgba(255,255,255,0.1)'}`,
+                        background: active ? bg : 'rgba(255,255,255,0.03)', transition: 'all 0.15s',
+                      }}
+                    >
+                      <p style={{ margin: '0 0 2px', fontWeight: '700', fontSize: '13px', color: active ? color : '#f0eff8' }}>{label}</p>
+                      <p style={{ margin: 0, fontSize: '11px', color: '#7c7b99' }}>{desc}</p>
+                    </button>
+                  )
+                })}
+              </div>
+              <p style={{ color: '#f0d080', fontSize: '12px', margin: 0, lineHeight: '1.6' }}>
+                ⚠️ ロールの変更は保存時に確認ダイアログを表示します
+              </p>
+            </div>
             {/* クリエイタータイプ */}
             <div>
               <label style={{ color: '#a9a8c0', fontSize: '13px', display: 'block', marginBottom: '8px' }}>クリエイタータイプ</label>
@@ -334,24 +390,86 @@ export default function ProfilePageClient(props: Props) {
         ) : (
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
             <AvatarUpload currentUrl={props.avatarUrl} displayName={displayName} size={80} readonly />
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+
+              {/* 受付状況 + 名前 */}
               <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', color: avail.color, background: avail.bg, marginBottom: '12px' }}>
                 ● {avail.label}
               </span>
-              <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 8px' }}>{displayName}</h1>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
-                <span style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '13px', background: 'rgba(255,255,255,0.07)', color: '#a9a8c0' }}>{props.entityType}</span>
-                {creatorTypes.filter((t) => !t.startsWith('その他（')).concat(
-                  creatorTypes.filter((t) => t.startsWith('その他（'))
-                ).map((type) => (
-                  <span key={type} style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '13px', background: 'rgba(199,125,255,0.15)', color: '#c77dff', fontWeight: '600' }}>{type}</span>
-                ))}
+              <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 16px' }}>{displayName}</h1>
+
+              {/* カテゴリ別ラベル行 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+
+                {/* 個人/法人 */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                  <span style={{ color: '#5c5b78', fontSize: '11px', fontWeight: '700', letterSpacing: '0.06em', minWidth: '88px', flexShrink: 0, paddingTop: '4px' }}>個人 / 法人</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ padding: '3px 12px', borderRadius: '20px', fontSize: '12px', background: 'rgba(255,255,255,0.07)', color: '#a9a8c0', alignSelf: 'flex-start' }}>{props.entityType}</span>
+                      {props.hasCorporateNumber && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', background: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.3)' }}>
+                          ✓ 法人番号登録済み
+                        </span>
+                      )}
+                    </div>
+                    {props.companyName && (
+                      <span style={{ color: '#a9a8c0', fontSize: '12px', paddingLeft: '2px' }}>{props.companyName}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* インボイス登録番号 */}
+                {props.invoiceNumber && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ color: '#5c5b78', fontSize: '11px', fontWeight: '700', letterSpacing: '0.06em', minWidth: '88px', flexShrink: 0 }}>インボイス</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 12px', borderRadius: '20px', fontSize: '12px', background: 'rgba(74,222,128,0.1)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.25)', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+                      ✓ {props.invoiceNumber}
+                    </span>
+                  </div>
+                )}
+
+                {/* 活動スタイル（クリエイター/依頼者） */}
+                {roles.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    <span style={{ color: '#5c5b78', fontSize: '11px', fontWeight: '700', letterSpacing: '0.06em', minWidth: '88px', flexShrink: 0 }}>活動スタイル</span>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {roles.includes('creator') && (
+                        <span style={{ padding: '3px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: 'rgba(199,125,255,0.15)', color: '#c77dff', border: '1px solid rgba(199,125,255,0.3)' }}>🎨 クリエイター</span>
+                      )}
+                      {roles.includes('client') && (
+                        <span style={{ padding: '3px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', background: 'rgba(255,107,157,0.15)', color: '#ff6b9d', border: '1px solid rgba(255,107,157,0.3)' }}>📋 依頼者</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* クリエイタータイプ */}
+                {creatorTypes.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+                    <span style={{ color: '#5c5b78', fontSize: '11px', fontWeight: '700', letterSpacing: '0.06em', minWidth: '88px', flexShrink: 0, paddingTop: '4px' }}>タイプ</span>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {creatorTypes.filter((t) => !t.startsWith('その他（')).concat(
+                        creatorTypes.filter((t) => t.startsWith('その他（'))
+                      ).map((type) => (
+                        <span key={type} style={{ padding: '3px 12px', borderRadius: '20px', fontSize: '12px', background: 'rgba(199,125,255,0.12)', color: '#c77dff', border: '1px solid rgba(199,125,255,0.2)' }}>{type}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
               </div>
+
+              {/* 自己紹介 */}
               {bio ? (
-                <p style={{ color: '#d0cfea', fontSize: '14px', lineHeight: '1.8', margin: 0, whiteSpace: 'pre-wrap' }}>{bio}</p>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
+                  <p style={{ color: '#5c5b78', fontSize: '11px', fontWeight: '700', letterSpacing: '0.06em', margin: '0 0 8px' }}>自己紹介</p>
+                  <p style={{ color: '#d0cfea', fontSize: '14px', lineHeight: '1.8', margin: 0, whiteSpace: 'pre-wrap' }}>{bio}</p>
+                </div>
               ) : props.isOwner ? (
                 <p style={{ color: '#7c7b99', fontSize: '14px', fontStyle: 'italic', margin: 0 }}>自己紹介が未入力です</p>
               ) : null}
+
             </div>
             <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
               {props.isOwner ? (
@@ -386,14 +504,14 @@ export default function ProfilePageClient(props: Props) {
                   <button type="button" onClick={() => setSkills((prev) => prev.filter((x) => x !== s))} style={{ background: 'none', border: 'none', color: '#c77dff', cursor: 'pointer', padding: '0', lineHeight: 1 }}>×</button>
                 </span>
               ))}
-              {skills.length < 20 && (
+              {skills.length < VALIDATION.SKILLS_MAX && (
                 <input value={skillInput} onChange={(e) => setSkillInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSkill(skillInput) } if (e.key === 'Backspace' && skillInput === '' && skills.length > 0) setSkills((prev) => prev.slice(0, -1)) }}
                   placeholder={skills.length === 0 ? 'スキルを入力して Enter' : ''}
                   style={{ flex: '1 1 120px', minWidth: '100px', background: 'none', border: 'none', outline: 'none', color: '#f0eff8', fontSize: '14px', padding: '2px 4px' }} />
               )}
             </div>
-            <p style={{ color: '#7c7b99', fontSize: '12px', margin: 0 }}>{skills.length}/20個</p>
+            <p style={{ color: '#7c7b99', fontSize: '12px', margin: 0 }}>{skills.length}/{VALIDATION.SKILLS_MAX}個</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {SKILL_SUGGESTIONS.filter((s) => !skills.some((x) => x.toLowerCase() === s.toLowerCase())).map((s) => (
                 <button key={s} type="button" onClick={() => addSkill(s)}
@@ -485,7 +603,7 @@ export default function ProfilePageClient(props: Props) {
                   placeholder="タイトル" maxLength={100} style={inputStyle} />
               </div>
             ))}
-            {portfolios.length < 5 && (
+            {portfolios.length < VALIDATION.PORTFOLIOS_MAX && (
               <button type="button" onClick={() => setPortfolios((prev) => [...prev, { platform: 'YouTube', url: '', title: '' }])}
                 style={{ padding: '10px', borderRadius: '10px', border: '1px dashed rgba(199,125,255,0.3)', background: 'transparent', color: '#c77dff', fontSize: '13px', cursor: 'pointer' }}>
                 + ポートフォリオを追加
