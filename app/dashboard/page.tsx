@@ -6,6 +6,7 @@ import LogoutButton from '@/components/LogoutButton'
 import AvatarUpload from '@/components/AvatarUpload'
 import { activityStyleToLabel } from '@/lib/constants/activity'
 import { ORDER_STATUS_MAP, PROJECT_STATUS_MAP, INACTIVE_ORDER_STATUSES } from '@/lib/constants/statuses'
+import DashboardCalendar from '@/components/DashboardCalendar'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,6 +27,7 @@ export default async function DashboardPage() {
     { data: receivedOrders },
     { data: sentOrders },
     { data: calTokenRows },
+    { data: completedAsCreator },
   ] = await Promise.all([
     supabase.from('users').select('activity_style_id, display_name, avatar_url').eq('id', user.id).limit(1),
     supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).is('read_at', null),
@@ -52,7 +54,18 @@ export default async function DashboardPage() {
       .limit(5),
     // Googleカレンダー連携確認
     db.from('creator_tokens').select('creator_id').eq('creator_id', user.id).limit(1),
+    // 受注実績（完了済み・クリエイターとして）
+    db.from('projects')
+      .select('id, budget, order_type')
+      .eq('creator_id', user.id)
+      .eq('status', 'completed'),
   ])
+
+  // 受注完了案件へのレビュー取得
+  const completedIds = (completedAsCreator ?? []).map((p) => p.id)
+  const { data: reviewsAsCreator } = completedIds.length > 0
+    ? await db.from('reviews').select('rating').in('project_id', completedIds)
+    : { data: [] }
 
   const profile = profileRows?.[0] ?? null
   if (!profile || !profile.activity_style_id) redirect('/profile/setup-prompt')
@@ -63,6 +76,17 @@ export default async function DashboardPage() {
   const unreadCount = unreadCount_ ?? 0
 
   const hasActiveOrders = (receivedOrders && receivedOrders.length > 0) || (sentOrders && sentOrders.length > 0)
+
+  // クリエイター統計
+  const totalCompleted = completedAsCreator?.length ?? 0
+  const totalEarnings  = (completedAsCreator ?? [])
+    .filter((p) => p.order_type !== 'free' && p.budget != null)
+    .reduce((sum, p) => sum + (p.budget as number), 0)
+  const ratings        = (reviewsAsCreator ?? []).map((r) => r.rating as number)
+  const avgRating      = ratings.length > 0
+    ? Math.round((ratings.reduce((s, r) => s + r, 0) / ratings.length) * 10) / 10
+    : null
+  const isCreatorRole  = [1, 3].includes(profile.activity_style_id as number)
 
   return (
     <main style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8' }}>
@@ -113,35 +137,46 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Googleカレンダー連携推奨バナー */}
-        {!calConnected && (
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
-            background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)',
-            borderRadius: '16px', padding: '16px 20px', marginBottom: '32px', flexWrap: 'wrap',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-              <span style={{ fontSize: '24px', flexShrink: 0 }}>📅</span>
-              <div>
-                <p style={{ margin: '0 0 2px', fontWeight: '700', fontSize: '14px', color: '#4ade80' }}>
-                  Googleカレンダーを連携しましょう
-                </p>
-                <p style={{ margin: 0, fontSize: '13px', color: '#7c7b99' }}>
-                  連携すると、クライアントからの依頼時にあなたの空き状況を考慮した納期提案が自動で行われます。
-                </p>
-              </div>
+        {/* クリエイター受注実績 */}
+        {isCreatorRole && (
+          <div style={{ marginBottom: '32px' }}>
+            <h3 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 14px' }}>受注実績</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px' }}>
+              {[
+                {
+                  icon: '✅',
+                  label: '完了件数',
+                  value: `${totalCompleted} 件`,
+                  color: '#4ade80',
+                  bg: 'rgba(74,222,128,0.08)',
+                  border: 'rgba(74,222,128,0.2)',
+                },
+                {
+                  icon: '⭐',
+                  label: '平均評価',
+                  value: avgRating != null ? `${avgRating} / 5.0` : '評価なし',
+                  sub: avgRating != null ? `(${ratings.length}件のレビュー)` : undefined,
+                  color: '#fbbf24',
+                  bg: 'rgba(251,191,36,0.08)',
+                  border: 'rgba(251,191,36,0.2)',
+                },
+                {
+                  icon: '💰',
+                  label: '有償案件収益（合計）',
+                  value: totalEarnings > 0 ? `¥${totalEarnings.toLocaleString()}` : '—',
+                  color: '#c77dff',
+                  bg: 'rgba(199,125,255,0.08)',
+                  border: 'rgba(199,125,255,0.2)',
+                },
+              ].map(({ icon, label, value, sub, color, bg, border }) => (
+                <div key={label} style={{ background: bg, border: `1px solid ${border}`, borderRadius: '16px', padding: '18px 20px' }}>
+                  <div style={{ fontSize: '22px', marginBottom: '8px' }}>{icon}</div>
+                  <p style={{ color: '#7c7b99', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.05em' }}>{label}</p>
+                  <p style={{ color, fontSize: '18px', fontWeight: '800', margin: 0 }}>{value}</p>
+                  {sub && <p style={{ color: '#5c5b78', fontSize: '11px', margin: '2px 0 0' }}>{sub}</p>}
+                </div>
+              ))}
             </div>
-            <Link
-              href="/settings/calendar"
-              style={{
-                padding: '10px 20px', borderRadius: '10px', flexShrink: 0,
-                background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.35)',
-                color: '#4ade80', fontSize: '13px', fontWeight: '700', textDecoration: 'none',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              連携する →
-            </Link>
           </div>
         )}
 
@@ -270,6 +305,9 @@ export default async function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* カレンダー */}
+        <DashboardCalendar calConnected={calConnected} />
 
         {/* 開発中の機能 */}
         <h3 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 14px' }}>開発中の機能</h3>

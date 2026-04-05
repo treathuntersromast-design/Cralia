@@ -28,28 +28,32 @@ interface Props {
   initialType: string
   initialAvailability: string
   initialQ: string
+  initialId: string
   initialSkills: string[]
   from?: string
 }
 
 export default function CreatorSearchClient({
-  creators, initialType, initialAvailability, initialQ, initialSkills, from,
+  creators, initialType, initialAvailability, initialQ, initialId, initialSkills, from,
 }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const [, startTransition] = useTransition()
 
-  const [query, setQuery] = useState(initialQ)
-  const [selectedType, setSelectedType] = useState(initialType)
+  const [query,         setQuery]         = useState(initialQ)
+  const [idQuery,       setIdQuery]       = useState(initialId)
+  const [searchMode,    setSearchMode]    = useState<'keyword' | 'id'>(initialId ? 'id' : 'keyword')
+  const [selectedType,  setSelectedType]  = useState(initialType)
   const [selectedAvail, setSelectedAvail] = useState(initialAvailability)
   const [selectedSkills, setSelectedSkills] = useState<string[]>(initialSkills)
 
   // 現在の全フィルター状態を URL に書き込む
-  const pushUrl = useCallback((type: string, avail: string, q: string, skills: string[]) => {
+  const pushUrl = useCallback((type: string, avail: string, q: string, id: string, skills: string[]) => {
     const params = new URLSearchParams()
     if (type) params.set('type', type)
     if (avail) params.set('availability', avail)
     if (q.trim()) params.set('q', q.trim())
+    if (id.trim()) params.set('id', id.trim())
     if (skills.length > 0) params.set('skills', skills.join(','))
     const qs = params.toString()
     startTransition(() => {
@@ -68,20 +72,29 @@ export default function CreatorSearchClient({
     setQuery(value)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      pushUrl(selectedType, selectedAvail, value, selectedSkills)
+      pushUrl(selectedType, selectedAvail, value, '', selectedSkills)
+    }, 400)
+  }
+
+  const handleIdChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 8)
+    setIdQuery(digits)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      pushUrl('', '', '', digits, [])
     }, 400)
   }
 
   const toggleType = (t: string) => {
     const next = selectedType === t ? '' : t
     setSelectedType(next)
-    pushUrl(next, selectedAvail, query, selectedSkills)
+    pushUrl(next, selectedAvail, query, '', selectedSkills)
   }
 
   const toggleAvail = (a: string) => {
     const next = selectedAvail === a ? '' : a
     setSelectedAvail(next)
-    pushUrl(selectedType, next, query, selectedSkills)
+    pushUrl(selectedType, next, query, '', selectedSkills)
   }
 
   const toggleSkill = (s: string) => {
@@ -89,12 +102,12 @@ export default function CreatorSearchClient({
       ? selectedSkills.filter((x) => x !== s)
       : [...selectedSkills, s]
     setSelectedSkills(next)
-    pushUrl(selectedType, selectedAvail, query, next)
+    pushUrl(selectedType, selectedAvail, query, '', next)
   }
 
   const clearSkills = () => {
     setSelectedSkills([])
-    pushUrl(selectedType, selectedAvail, query, [])
+    pushUrl(selectedType, selectedAvail, query, '', [])
   }
 
   // プロフィールリンクに付与する back URL（現在の検索状態を保存）
@@ -111,8 +124,12 @@ export default function CreatorSearchClient({
   }, [selectedType, selectedAvail, query, selectedSkills, pathname, from])
 
   const filtered = useMemo(() => {
+    // IDモード：display_id が完全一致するものだけ表示
+    if (searchMode === 'id' && idQuery.trim()) {
+      return creators.filter((c) => c.display_id === idQuery.trim())
+    }
     return creators.filter((c) => {
-      // テキスト検索
+      // キーワード検索（名前・スキル・タイプ・自己紹介）
       if (query.trim()) {
         const q = query.trim().toLowerCase()
         const hit =
@@ -122,14 +139,13 @@ export default function CreatorSearchClient({
           (c.bio ?? '').toLowerCase().includes(q)
         if (!hit) return false
       }
-      // スキルフィルター（いずれか1つ以上一致）
+      // スキルフィルター
       if (selectedSkills.length > 0) {
-        const hasSkill = selectedSkills.some((s) => (c.skills ?? []).includes(s))
-        if (!hasSkill) return false
+        if (!selectedSkills.some((s) => (c.skills ?? []).includes(s))) return false
       }
       return true
     })
-  }, [creators, query, selectedSkills])
+  }, [creators, query, idQuery, searchMode, selectedSkills])
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 24px' }}>
@@ -144,33 +160,71 @@ export default function CreatorSearchClient({
         </p>
       </div>
 
-      {/* 検索バー */}
-      <div style={{ position: 'relative', marginBottom: '28px' }}>
-        <span style={{
-          position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)',
-          fontSize: '18px', pointerEvents: 'none',
-        }}>🔍</span>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => handleQueryChange(e.target.value)}
-          placeholder="名前・スキル・クリエイタータイプで検索..."
-          style={{
-            width: '100%', padding: '14px 16px 14px 48px', borderRadius: '14px',
-            border: '1px solid rgba(199,125,255,0.25)',
-            background: 'rgba(255,255,255,0.05)',
-            color: '#f0eff8', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
-          }}
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={() => handleQueryChange('')}
-            style={{
-              position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)',
-              background: 'none', border: 'none', color: '#7c7b99', cursor: 'pointer', fontSize: '18px',
-            }}
-          >×</button>
+      {/* 検索モード切替 + 検索バー */}
+      <div style={{ marginBottom: '28px' }}>
+        {/* タブ */}
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
+          {(['keyword', 'id'] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setSearchMode(mode)}
+              style={{
+                padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '600',
+                border: searchMode === mode ? 'none' : '1px solid rgba(255,255,255,0.12)',
+                background: searchMode === mode ? 'rgba(199,125,255,0.2)' : 'transparent',
+                color: searchMode === mode ? '#c77dff' : '#7c7b99', cursor: 'pointer',
+              }}
+            >
+              {mode === 'keyword' ? '🔍 キーワード検索' : '🔢 ID検索'}
+            </button>
+          ))}
+        </div>
+
+        {searchMode === 'keyword' ? (
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '18px', pointerEvents: 'none' }}>🔍</span>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => handleQueryChange(e.target.value)}
+              placeholder="名前・スキル・クリエイタータイプ・自己紹介で検索..."
+              style={{
+                width: '100%', padding: '14px 16px 14px 48px', borderRadius: '14px',
+                border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(255,255,255,0.05)',
+                color: '#f0eff8', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+            {query && (
+              <button type="button" onClick={() => handleQueryChange('')}
+                style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#7c7b99', cursor: 'pointer', fontSize: '18px' }}>
+                ×
+              </button>
+            )}
+          </div>
+        ) : (
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '18px', pointerEvents: 'none' }}>🔢</span>
+            <input
+              type="text"
+              value={idQuery}
+              onChange={(e) => handleIdChange(e.target.value)}
+              placeholder="8桁のユーザーIDを入力（例: 00123456）"
+              maxLength={8}
+              style={{
+                width: '100%', padding: '14px 16px 14px 48px', borderRadius: '14px',
+                border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(255,255,255,0.05)',
+                color: '#f0eff8', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
+                fontFamily: 'monospace', letterSpacing: '0.1em',
+              }}
+            />
+            {idQuery && (
+              <button type="button" onClick={() => { setIdQuery(''); pushUrl('', '', '', '', []) }}
+                style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#7c7b99', cursor: 'pointer', fontSize: '18px' }}>
+                ×
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -339,8 +393,13 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
               <div style={{ fontWeight: '700', fontSize: '15px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {c.display_name}
               </div>
-              <div style={{ fontSize: '11px', color: '#7c7b99', marginTop: '1px' }}>
-                {c.entity_type === 'corporate' ? '法人・団体' : '個人'}
+              <div style={{ fontSize: '11px', color: '#7c7b99', marginTop: '1px', display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <span>{c.entity_type === 'corporate' ? '法人・団体' : '個人'}</span>
+                {c.display_id && (
+                  <span style={{ fontFamily: 'monospace', letterSpacing: '0.05em', color: '#5c5b78' }}>
+                    ID: {c.display_id}
+                  </span>
+                )}
               </div>
             </div>
             <span style={{

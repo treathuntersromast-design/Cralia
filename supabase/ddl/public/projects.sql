@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS public.projects (
   -- ステータス FK → m_project_status(value)
   status      TEXT        NOT NULL DEFAULT 'draft'
                           REFERENCES public.m_project_status(value),
+  -- ポートフォリオ掲載許可（クリエイターが納品物をポートフォリオに使用できるか）
+  portfolio_allowed BOOLEAN NOT NULL DEFAULT false,
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
@@ -31,7 +33,8 @@ CREATE POLICY "projects_update_participant" ON public.projects FOR UPDATE USING 
 CREATE POLICY "projects_service_role"       ON public.projects FOR ALL TO service_role USING (true);
 
 -- ── コメント ─────────────────────────────────────────────────
-COMMENT ON COLUMN public.projects.order_type IS 'FK → m_order_type.value（paid / free）';
-COMMENT ON COLUMN public.projects.status     IS 'FK → m_project_status.value（draft〜disputed）';
+COMMENT ON COLUMN public.projects.order_type         IS 'FK → m_order_type.value（paid / free）';
+COMMENT ON COLUMN public.projects.status             IS 'FK → m_project_status.value（draft〜disputed）';
+COMMENT ON COLUMN public.projects.portfolio_allowed  IS 'クリエイターが納品物をポートフォリオとして公開することを依頼者が許可するか（デフォルト: false）';
 
 COMMIT;

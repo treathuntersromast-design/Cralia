@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   try { body = await request.json() }
   catch { return NextResponse.json({ error: 'リクエストの形式が正しくありません' }, { status: 400 }) }
 
-  const { creatorId, title, description, budget, deadline, orderType } = body
+  const { creatorId, title, description, budget, deadline, orderType, portfolioAllowed, copyrightAgreed } = body
 
   if (typeof creatorId !== 'string' || !creatorId) {
     return NextResponse.json({ error: '依頼先クリエイターを指定してください' }, { status: 400 })
@@ -35,7 +35,9 @@ export async function POST(request: NextRequest) {
   const parsedBudget = budget !== '' && budget != null ? parseInt(String(budget), 10) : null
   const safeBudget = parsedBudget !== null && !isNaN(parsedBudget) && parsedBudget >= 0 ? parsedBudget : null
   const safeDeadline = typeof deadline === 'string' && deadline ? deadline : null
-  const safeOrderType = orderType === 'free' ? 'free' : 'paid'
+  const safeOrderType        = orderType === 'free' ? 'free' : 'paid'
+  const safePortfolioAllowed = portfolioAllowed === true
+  const safeCopyrightAgreed  = copyrightAgreed === true
 
   const db = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -54,14 +56,16 @@ export async function POST(request: NextRequest) {
   }
 
   const insertPayload = {
-    client_id: user.id,
-    creator_id: creatorId,
-    title: title.trim(),
-    description: description.trim(),
-    budget: safeBudget,
-    deadline: safeDeadline,
-    status: 'pending',
-    order_type: safeOrderType,
+    client_id:         user.id,
+    creator_id:        creatorId,
+    title:             title.trim(),
+    description:       description.trim(),
+    budget:            safeBudget,
+    deadline:          safeDeadline,
+    status:            'pending',
+    order_type:        safeOrderType,
+    portfolio_allowed: safePortfolioAllowed,
+    copyright_agreed:  safeCopyrightAgreed,
   }
 
   let { data: order, error } = await db
@@ -70,9 +74,9 @@ export async function POST(request: NextRequest) {
     .select('id')
     .single()
 
-  // order_typeカラム未作成の場合（マイグレーション未実行）はフォールバック
+  // 未作成カラムがある場合（マイグレーション未実行）はフォールバック
   if (error?.code === '42703') {
-    const { order_type: _removed, ...payloadWithoutType } = insertPayload;
+    const { order_type: _t, portfolio_allowed: _p, copyright_agreed: _c, ...payloadWithoutType } = insertPayload;
     ({ data: order, error } = await db
       .from('projects')
       .insert(payloadWithoutType)

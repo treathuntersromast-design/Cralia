@@ -19,6 +19,10 @@ CREATE TABLE IF NOT EXISTS public.creator_profiles (
   availability  TEXT        NOT NULL DEFAULT 'open'
                             REFERENCES public.m_availability(value),
   schedule      JSONB       NOT NULL DEFAULT '{"days": [1, 2, 3, 4, 5], "default_working_days": 10}'::jsonb,
+  -- 同時受注可能な最大件数（NULL = 制限なし）
+  order_limit   SMALLINT    CHECK (order_limit > 0),
+  -- 料金プラン一覧 [{name, price, description, delivery_days}]
+  pricing_plans JSONB       NOT NULL DEFAULT '[]'::jsonb,
   registered_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at    TIMESTAMPTZ DEFAULT NOW()
 );

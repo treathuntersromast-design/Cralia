@@ -5,11 +5,12 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 export default function SignupPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState(false)
+  const [email,        setEmail]        = useState('')
+  const [password,     setPassword]     = useState('')
+  const [termsAgreed,  setTermsAgreed]  = useState(false)
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState<string | null>(null)
+  const [done,         setDone]         = useState(false)
 
   const supabase = createClient()
 
@@ -128,6 +129,7 @@ export default function SignupPage() {
 
       {/* Googleで登録 */}
       <button
+        type="button"
         onClick={handleGoogleSignup}
         disabled={loading}
         style={{
@@ -214,6 +216,22 @@ export default function SignupPage() {
           />
         </div>
 
+        {/* 利用規約・プライバシーポリシー同意 */}
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={termsAgreed}
+            onChange={(e) => setTermsAgreed(e.target.checked)}
+            style={{ marginTop: '3px', flexShrink: 0, accentColor: '#c77dff', width: '16px', height: '16px' }}
+          />
+          <span style={{ fontSize: '13px', color: '#a9a8c0', lineHeight: '1.6' }}>
+            <Link href="/terms" target="_blank" style={{ color: '#c77dff', textDecoration: 'none', fontWeight: '600' }}>利用規約</Link>
+            {' '}および{' '}
+            <Link href="/privacy" target="_blank" style={{ color: '#c77dff', textDecoration: 'none', fontWeight: '600' }}>プライバシーポリシー</Link>
+            に同意します（18歳未満の方は保護者の同意が必要です）
+          </span>
+        </label>
+
         {error && (
           <p style={{
             color: '#ff6b9d',
@@ -230,7 +248,7 @@ export default function SignupPage() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !termsAgreed}
           style={{
             width: '100%',
             padding: '14px',

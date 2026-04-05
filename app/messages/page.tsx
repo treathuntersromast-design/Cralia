@@ -36,18 +36,6 @@ export default async function MessagesPage() {
           <p style={{ color: '#7c7b99', fontSize: '14px', margin: 0 }}>依頼に紐づいたチャットスレッド</p>
         </div>
 
-        {/* 開発中バナー */}
-        <div style={{
-          background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)',
-          borderRadius: '14px', padding: '14px 20px', marginBottom: '28px',
-          display: 'flex', alignItems: 'center', gap: '10px',
-        }}>
-          <span style={{ fontSize: '18px' }}>🚧</span>
-          <p style={{ margin: 0, fontSize: '13px', color: '#fbbf24' }}>
-            メッセージ機能は現在開発中です。依頼が確立されると自動でチャットスレッドが作成されます。
-          </p>
-        </div>
-
         {!orders || orders.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 24px', background: 'rgba(22,22,31,0.8)', borderRadius: '20px', border: '1px dashed rgba(199,125,255,0.2)' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>💬</div>
@@ -65,7 +53,7 @@ export default async function MessagesPage() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {orders.map((o) => (
-              <Link key={o.id} href={`/orders/${o.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Link key={o.id} href={`/messages/${o.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div style={{
                   background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(199,125,255,0.12)',
                   borderRadius: '16px', padding: '18px 22px',

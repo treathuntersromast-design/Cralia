@@ -27,9 +27,9 @@ export default function HomePage() {
           <span style={{ color: '#c77dff', fontSize: '13px', fontWeight: '600' }}>🎨 クリエイターのためのマッチングプラットフォーム</span>
         </div>
         <h1 style={{ fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: '900', lineHeight: '1.15', margin: '0 0 24px' }}>
-          クリエイターと依頼者を<br />
+          すべてのクリエイターが<br />
           <span style={{ background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            つなぐ場所
+            つながる場所
           </span>
         </h1>
         <p style={{ fontSize: '18px', color: '#a9a8c0', lineHeight: '1.7', margin: '0 0 40px', maxWidth: '560px', marginLeft: 'auto', marginRight: 'auto' }}>

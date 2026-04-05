@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import RequestDraftAssistant from '@/components/RequestDraftAssistant'
 
 function NewOrderContent() {
   const router = useRouter()
@@ -14,9 +15,45 @@ function NewOrderContent() {
   const [description, setDescription] = useState('')
   const [budget,      setBudget]      = useState('')
   const [deadline,    setDeadline]    = useState('')
-  const [orderType,   setOrderType]   = useState<'paid' | 'free'>('paid')
-  const [loading,     setLoading]     = useState(false)
-  const [error,       setError]       = useState<string | null>(null)
+  const [orderType,         setOrderType]         = useState<'paid' | 'free'>('paid')
+  const [portfolioAllowed,  setPortfolioAllowed]  = useState(false)
+  const [copyrightAgreed,   setCopyrightAgreed]   = useState(false)
+  const [loading,           setLoading]           = useState(false)
+  const [error,             setError]             = useState<string | null>(null)
+  const [displayName,       setDisplayName]       = useState('')
+  const [draftSaved,        setDraftSaved]        = useState(false)
+
+  const DRAFT_KEY = `order_draft_${creatorId}`
+
+  // localStorage から下書き復元
+  useEffect(() => {
+    if (!creatorId) return
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY)
+      if (!raw) return
+      const draft = JSON.parse(raw) as Record<string, unknown>
+      if (typeof draft.title       === 'string') setTitle(draft.title)
+      if (typeof draft.description === 'string') setDescription(draft.description)
+      if (typeof draft.budget      === 'string') setBudget(draft.budget)
+      if (typeof draft.deadline    === 'string') setDeadline(draft.deadline)
+      if (draft.orderType === 'free' || draft.orderType === 'paid') setOrderType(draft.orderType)
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [creatorId])
+
+  // フィールド変更時に自動保存（debounce: 800ms）
+  useEffect(() => {
+    if (!creatorId) return
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ title, description, budget, deadline, orderType }))
+        setDraftSaved(true)
+        setTimeout(() => setDraftSaved(false), 2000)
+      } catch { /* ignore */ }
+    }, 800)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, description, budget, deadline, orderType])
 
   // Googleカレンダー連携チェック
   const [calConnected,    setCalConnected]    = useState(false)
@@ -25,6 +62,12 @@ function NewOrderContent() {
   const [suggestError,    setSuggestError]    = useState<string | null>(null)
   const [workingDays,     setWorkingDays]     = useState(10)
 
+  // 納期チェック
+  const [deadlineWarning, setDeadlineWarning] = useState<{
+    level: 'danger' | 'caution'
+    message: string
+  } | null>(null)
+
   useEffect(() => {
     if (!creatorId) return
     fetch(`/api/calendar/status?creatorId=${encodeURIComponent(creatorId)}`)
@@ -32,6 +75,30 @@ function NewOrderContent() {
       .then((d) => setCalConnected(d.connected ?? false))
       .catch(() => setCalConnected(false))
   }, [creatorId])
+
+  // ログインユーザーの表示名を取得（AI添削に使用）
+  useEffect(() => {
+    fetch('/api/profile/me')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.display_name) setDisplayName(d.display_name) })
+      .catch(() => {})
+  }, [])
+
+  // 納期が変わるたびに実現可能性をチェック
+  useEffect(() => {
+    if (!deadline || !creatorId) { setDeadlineWarning(null); return }
+    const params = new URLSearchParams({ creatorId, deadline })
+    fetch(`/api/orders/check-deadline?${params}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.warningLevel) {
+          setDeadlineWarning({ level: d.warningLevel, message: d.message })
+        } else {
+          setDeadlineWarning(null)
+        }
+      })
+      .catch(() => setDeadlineWarning(null))
+  }, [deadline, creatorId])
 
   if (!creatorId) {
     return (
@@ -81,7 +148,7 @@ function NewOrderContent() {
     const res = await fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ creatorId, title, description, budget, deadline, orderType }),
+      body: JSON.stringify({ creatorId, title, description, budget, deadline, orderType, portfolioAllowed, copyrightAgreed }),
     })
 
     const data = await res.json()
@@ -91,6 +158,7 @@ function NewOrderContent() {
       return
     }
 
+    try { localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
     router.push(`/orders/${data.id}`)
   }
 
@@ -118,6 +186,9 @@ function NewOrderContent() {
           <p style={{ color: '#a9a8c0', margin: 0, fontSize: '14px' }}>
             依頼先：<span style={{ color: '#c77dff', fontWeight: '700' }}>{creatorName}</span> さん
           </p>
+          {draftSaved && (
+            <p style={{ color: '#4ade80', fontSize: '12px', margin: '6px 0 0' }}>✓ 下書きを自動保存しました</p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -220,6 +291,33 @@ function NewOrderContent() {
             </div>
           </div>
 
+          {/* 納期タイトネスアラート（依頼者向け） */}
+          {deadlineWarning && (
+            <div style={{
+              display: 'flex', gap: '12px', alignItems: 'flex-start',
+              padding: '14px 16px', borderRadius: '12px',
+              background: deadlineWarning.level === 'danger'
+                ? 'rgba(248,113,113,0.08)' : 'rgba(251,191,36,0.08)',
+              border: `1px solid ${deadlineWarning.level === 'danger'
+                ? 'rgba(248,113,113,0.35)' : 'rgba(251,191,36,0.35)'}`,
+            }}>
+              <span style={{ fontSize: '18px', flexShrink: 0, marginTop: '1px' }}>
+                {deadlineWarning.level === 'danger' ? '⚠️' : '💡'}
+              </span>
+              <div>
+                <p style={{
+                  margin: '0 0 2px', fontWeight: '700', fontSize: '13px',
+                  color: deadlineWarning.level === 'danger' ? '#f87171' : '#fbbf24',
+                }}>
+                  {deadlineWarning.level === 'danger' ? '納期がタイトです' : '納期の余裕がやや少ないです'}
+                </p>
+                <p style={{ margin: 0, fontSize: '13px', color: '#a9a8c0', lineHeight: '1.6' }}>
+                  {deadlineWarning.message}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Googleカレンダー連携クリエイター向け：納期提案ブロック */}
           {calConnected && (
             <div style={{ background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: '14px', padding: '18px 20px' }}>
@@ -298,6 +396,80 @@ function NewOrderContent() {
             </div>
           )}
 
+          {/* ポートフォリオ掲載許可 */}
+          <div style={{ background: 'rgba(22,22,31,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '18px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+              <div>
+                <p style={{ margin: '0 0 4px', fontWeight: '700', fontSize: '14px', color: '#f0eff8' }}>
+                  ポートフォリオへの掲載許可
+                </p>
+                <p style={{ margin: 0, fontSize: '12px', color: '#7c7b99', lineHeight: '1.6' }}>
+                  クリエイターが納品物を自身のポートフォリオとして公開することを許可します
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPortfolioAllowed(v => !v)}
+                style={{
+                  flexShrink: 0,
+                  width: '52px', height: '28px', borderRadius: '14px', border: 'none',
+                  background: portfolioAllowed ? 'linear-gradient(135deg, #ff6b9d, #c77dff)' : 'rgba(255,255,255,0.12)',
+                  cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
+                }}
+                aria-checked={portfolioAllowed ? 'true' : 'false'}
+                aria-label="ポートフォリオへの掲載許可"
+                role="switch"
+              >
+                <span style={{
+                  position: 'absolute', top: '4px',
+                  left: portfolioAllowed ? '28px' : '4px',
+                  width: '20px', height: '20px', borderRadius: '50%',
+                  background: '#fff', transition: 'left 0.2s',
+                }} />
+              </button>
+            </div>
+            <p style={{
+              margin: '10px 0 0', fontSize: '12px', lineHeight: '1.6', padding: '8px 12px', borderRadius: '8px',
+              background: portfolioAllowed ? 'rgba(199,125,255,0.08)' : 'rgba(255,255,255,0.03)',
+              color: portfolioAllowed ? '#c77dff' : '#5c5b78',
+              border: `1px solid ${portfolioAllowed ? 'rgba(199,125,255,0.2)' : 'rgba(255,255,255,0.06)'}`,
+            }}>
+              {portfolioAllowed
+                ? '✅ 掲載を許可します — クリエイターは納品物をポートフォリオに使用できます'
+                : '🔒 掲載を許可しない（初期設定）— 納品物の外部公開はできません'}
+            </p>
+          </div>
+
+          {/* AI 依頼文アシスタント */}
+          <RequestDraftAssistant
+            creatorName={creatorName}
+            displayName={displayName}
+            existingDraft={description}
+            onApplyDraft={(draft) => setDescription(draft)}
+          />
+
+          {/* 著作権・権利同意 */}
+          <div style={{ background: 'rgba(22,22,31,0.8)', border: `1px solid ${copyrightAgreed ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.07)'}`, borderRadius: '14px', padding: '18px 20px' }}>
+            <p style={{ margin: '0 0 10px', fontWeight: '700', fontSize: '14px', color: '#f0eff8' }}>著作権・権利に関する同意事項</p>
+            <ul style={{ color: '#a9a8c0', fontSize: '13px', lineHeight: '1.8', margin: '0 0 14px', paddingLeft: '20px' }}>
+              <li>クリエイターの著作者人格権（氏名表示権・同一性保持権）は譲渡できないことを理解しています</li>
+              <li>成果物の著作権の帰属（譲渡か利用許諾か）は別途クリエイターと合意します</li>
+              <li>第三者の著作物を含む依頼の場合、著作権侵害のリスクは依頼者が負います</li>
+              <li>依頼内容が法令・公序良俗に違反しないことを確認しています</li>
+            </ul>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={copyrightAgreed}
+                onChange={(e) => setCopyrightAgreed(e.target.checked)}
+                style={{ marginTop: '2px', accentColor: '#c77dff', width: '16px', height: '16px', flexShrink: 0, cursor: 'pointer' }}
+              />
+              <span style={{ color: copyrightAgreed ? '#4ade80' : '#a9a8c0', fontSize: '13px', fontWeight: '600', lineHeight: '1.5' }}>
+                上記の著作権・権利に関する事項を確認し、同意します <span style={{ color: '#f87171' }}>*</span>
+              </span>
+            </label>
+          </div>
+
           {/* 注意事項 */}
           <div style={{ background: 'rgba(199,125,255,0.06)', border: '1px solid rgba(199,125,255,0.15)', borderRadius: '12px', padding: '16px' }}>
             <p style={{ color: '#a9a8c0', fontSize: '13px', lineHeight: '1.7', margin: 0 }}>
@@ -321,8 +493,8 @@ function NewOrderContent() {
             </Link>
             <button
               type="submit"
-              disabled={loading}
-              style={{ flex: 2, padding: '14px', borderRadius: '12px', border: 'none', background: loading ? 'rgba(199,125,255,0.4)' : 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer' }}
+              disabled={loading || !copyrightAgreed}
+              style={{ flex: 2, padding: '14px', borderRadius: '12px', border: 'none', background: loading || !copyrightAgreed ? 'rgba(199,125,255,0.4)' : 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: loading || !copyrightAgreed ? 'not-allowed' : 'pointer' }}
             >
               {loading ? '送信中...' : '依頼を送る'}
             </button>

@@ -5,16 +5,17 @@ import CreatorSearchClient from '@/components/CreatorSearchClient'
 export const dynamic = 'force-dynamic'
 
 export type Creator = {
-  creator_id: string
+  creator_id:   string
+  display_id:   string | null
   display_name: string
   creator_type: string[]
-  skills: string[]
-  bio: string | null
-  price_min: number | null
+  skills:       string[]
+  bio:          string | null
+  price_min:    number | null
   availability: 'open' | 'one_slot' | 'full'
-  avatar_url: string | null
-  entity_type: string
-  thumbnails: string[]
+  avatar_url:   string | null
+  entity_type:  string
+  thumbnails:   string[]
 }
 
 const VALID_FROM_PATHS = ['/dashboard', '/orders', '/projects', '/messages', '/notifications', '/events']
@@ -36,7 +37,7 @@ function resolveFrom(raw: string | undefined): { href: string; label: string } {
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: { type?: string; availability?: string; q?: string; skills?: string; from?: string }
+  searchParams: { type?: string; availability?: string; q?: string; skills?: string; from?: string; id?: string }
 }) {
   const admin = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -53,7 +54,8 @@ export default async function SearchPage({
   const rawAvail = searchParams.availability ?? ''
   const typeFilter = VALID_TYPES.includes(rawType) ? rawType : ''
   const availFilter = VALID_AVAIL.includes(rawAvail) ? rawAvail : ''
-  const initialQ = (searchParams.q ?? '').slice(0, 200)
+  const initialQ      = (searchParams.q ?? '').slice(0, 200)
+  const initialId     = (searchParams.id ?? '').replace(/\D/g, '').slice(0, 8) // 数字のみ
   const initialSkills = searchParams.skills
     ? searchParams.skills.split(',').filter(Boolean).slice(0, 20)
     : []
@@ -70,8 +72,8 @@ export default async function SearchPage({
   if (typeFilter) query = query.contains('creator_type', [typeFilter])
 
   const { data: profiles } = await query
-  let creators: Creator[] = ((profiles ?? []) as Omit<Creator, 'avatar_url' | 'entity_type' | 'thumbnails'>[]).map(
-    (c) => ({ ...c, avatar_url: null, entity_type: 'individual', thumbnails: [] })
+  let creators: Creator[] = ((profiles ?? []) as Omit<Creator, 'avatar_url' | 'entity_type' | 'display_id' | 'thumbnails'>[]).map(
+    (c) => ({ ...c, avatar_url: null, entity_type: 'individual', display_id: null, thumbnails: [] })
   )
 
   if (creators.length > 0) {
@@ -79,7 +81,7 @@ export default async function SearchPage({
 
     // users テーブルから avatar_url・entity_type を取得（service role 必須）
     const [{ data: users }, { data: portfolios }] = await Promise.all([
-      admin.from('users').select('id, avatar_url, entity_type').in('id', ids),
+      admin.from('users').select('id, avatar_url, entity_type, display_id').in('id', ids),
       admin
         .from('portfolios')
         .select('creator_id, thumbnail_url, display_order')
@@ -100,9 +102,10 @@ export default async function SearchPage({
 
     creators = creators.map((c) => ({
       ...c,
-      avatar_url: userMap[c.creator_id]?.avatar_url ?? null,
+      avatar_url:  userMap[c.creator_id]?.avatar_url  ?? null,
       entity_type: userMap[c.creator_id]?.entity_type ?? 'individual',
-      thumbnails: thumbMap[c.creator_id] ?? [],
+      display_id:  userMap[c.creator_id]?.display_id  ?? null,
+      thumbnails:  thumbMap[c.creator_id] ?? [],
     }))
   }
 
@@ -138,6 +141,7 @@ export default async function SearchPage({
         initialType={typeFilter}
         initialAvailability={availFilter}
         initialQ={initialQ}
+        initialId={initialId}
         initialSkills={initialSkills}
         from={searchParams.from ? decodeURIComponent(searchParams.from) : undefined}
       />

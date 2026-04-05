@@ -20,8 +20,14 @@ CREATE TABLE IF NOT EXISTS public.users (
   sns_links         JSONB       DEFAULT '{}',
   -- 依頼者タイプ（m_client_type.value の複数選択）
   client_type       TEXT[]      NOT NULL DEFAULT '{}',
-  created_at        TIMESTAMPTZ DEFAULT NOW(),
-  updated_at        TIMESTAMPTZ DEFAULT NOW()
+  -- 公開ユーザーID（8桁数字、検索・プロフィール表示用）
+  display_id             CHAR(8)     UNIQUE,
+  -- 依頼者向けAIクリエイター提案機能の有効/無効
+  ai_suggestion_enabled  BOOLEAN     NOT NULL DEFAULT true,
+  -- 利用規約への同意日時
+  terms_agreed_at        TIMESTAMPTZ,
+  created_at             TIMESTAMPTZ DEFAULT NOW(),
+  updated_at             TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ── RLS ─────────────────────────────────────────────────────

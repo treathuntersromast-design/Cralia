@@ -44,6 +44,13 @@ export default async function SettingsPage() {
       color: '#4ade80',
     },
     {
+      href: '/settings/creator-profile',
+      icon: '🎨',
+      title: 'クリエイター設定',
+      desc: '同時受注上限・料金プランの設定',
+      color: '#c77dff',
+    },
+    {
       href: '/notifications',
       icon: '🔔',
       title: '通知',
