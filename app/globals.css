@@ -25,3 +25,9 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+/* ドロップダウン選択肢はOS描画のため、黒文字・白背景で統一 */
+option {
+  color: #000000;
+  background-color: #ffffff;
+}

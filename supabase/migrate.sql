@@ -212,10 +212,69 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 COMMIT;
 
 -- ================================================================
+-- STEP N+1: プロジェクトスケジュール機能
+-- ================================================================
+
+BEGIN;
+
+-- project_tasks に担当者・説明カラムを追加
+ALTER TABLE public.project_tasks
+  ADD COLUMN IF NOT EXISTS assigned_user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS description       TEXT;
+
+COMMENT ON COLUMN public.project_tasks.assigned_user_id IS '担当ユーザーID（スケジュール管理用）';
+COMMENT ON COLUMN public.project_tasks.description      IS 'タスクの詳細説明';
+
+-- タスク依存関係テーブル
+CREATE TABLE IF NOT EXISTS public.project_task_deps (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  task_id       UUID NOT NULL REFERENCES public.project_tasks(id) ON DELETE CASCADE,
+  depends_on_id UUID NOT NULL REFERENCES public.project_tasks(id) ON DELETE CASCADE,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT project_task_deps_no_self_ref CHECK (task_id <> depends_on_id),
+  UNIQUE(task_id, depends_on_id)
+);
+
+COMMENT ON TABLE  public.project_task_deps               IS 'タスク間の依存関係（task_id は depends_on_id が done になるまでブロック）';
+COMMENT ON COLUMN public.project_task_deps.task_id       IS 'このタスクは先行タスクが完了するまでブロックされる';
+COMMENT ON COLUMN public.project_task_deps.depends_on_id IS '先行タスクID';
+
+ALTER TABLE public.project_task_deps ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "task_deps_select" ON public.project_task_deps
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1
+      FROM public.project_tasks pt
+      JOIN public.project_boards pb ON pb.id = pt.project_id
+      WHERE pt.id = task_id
+        AND (pb.is_public = true OR pb.owner_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "task_deps_owner_write" ON public.project_task_deps
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1
+      FROM public.project_tasks pt
+      JOIN public.project_boards pb ON pb.id = pt.project_id
+      WHERE pt.id = task_id
+        AND pb.owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "task_deps_service_role" ON public.project_task_deps
+  FOR ALL TO service_role USING (true);
+
+COMMIT;
+
+-- ================================================================
 -- 【実行後の確認クエリ】
 --   SELECT id, display_id, ai_suggestion_enabled, terms_agreed_at FROM public.users LIMIT 5;
 --   SELECT * FROM public.ai_rate_limit LIMIT 1;
 --   SELECT * FROM public.receipts LIMIT 1;
 --   SELECT * FROM public.error_logs LIMIT 1;
 --   SELECT order_limit, pricing_plans FROM public.creator_profiles LIMIT 3;
+--   SELECT column_name FROM information_schema.columns WHERE table_name = 'project_tasks' AND column_name IN ('assigned_user_id','description');
+--   SELECT * FROM public.project_task_deps LIMIT 1;
 -- ================================================================
