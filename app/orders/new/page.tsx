@@ -163,13 +163,13 @@ function NewOrderContent() {
   }
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '12px 14px', borderRadius: '10px',
+    width: '100%', padding: '10px 14px', borderRadius: '10px',
     border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(255,255,255,0.05)',
-    color: '#f0eff8', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
+    color: '#f0eff8', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8' }}>
       {/* ヘッダー */}
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
@@ -182,7 +182,7 @@ function NewOrderContent() {
 
       <div style={{ maxWidth: '640px', margin: '0 auto', padding: '48px 24px' }}>
         <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 8px' }}>依頼を送る</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 8px' }}>依頼を送る</h1>
           <p style={{ color: '#a9a8c0', margin: 0, fontSize: '14px' }}>
             依頼先：<span style={{ color: '#c77dff', fontWeight: '700' }}>{creatorName}</span> さん
           </p>
@@ -487,14 +487,14 @@ function NewOrderContent() {
           <div style={{ display: 'flex', gap: '12px' }}>
             <Link
               href={`/profile/${creatorId}`}
-              style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#a9a8c0', fontSize: '15px', fontWeight: '600', textDecoration: 'none', textAlign: 'center' }}
+              style={{ flex: 1, padding: '12px 24px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#a9a8c0', fontSize: '14px', fontWeight: '600', textDecoration: 'none', textAlign: 'center' }}
             >
               キャンセル
             </Link>
             <button
               type="submit"
               disabled={loading || !copyrightAgreed}
-              style={{ flex: 2, padding: '14px', borderRadius: '12px', border: 'none', background: loading || !copyrightAgreed ? 'rgba(199,125,255,0.4)' : 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: loading || !copyrightAgreed ? 'not-allowed' : 'pointer' }}
+              style={{ flex: 2, padding: '12px 24px', borderRadius: '12px', border: 'none', background: loading || !copyrightAgreed ? 'rgba(199,125,255,0.4)' : 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: loading || !copyrightAgreed ? 'not-allowed' : 'pointer' }}
             >
               {loading ? '送信中...' : '依頼を送る'}
             </button>

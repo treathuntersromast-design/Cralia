@@ -32,12 +32,12 @@ export default async function MessagesPage() {
 
       <div style={{ maxWidth: '860px', margin: '0 auto', padding: '40px 24px' }}>
         <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 6px' }}>メッセージ</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 6px' }}>メッセージ</h1>
           <p style={{ color: '#7c7b99', fontSize: '14px', margin: 0 }}>依頼に紐づいたチャットスレッド</p>
         </div>
 
         {!orders || orders.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 24px', background: 'rgba(22,22,31,0.8)', borderRadius: '20px', border: '1px dashed rgba(199,125,255,0.2)' }}>
+          <div style={{ textAlign: 'center', padding: '80px 24px', background: 'rgba(22,22,31,0.9)', borderRadius: '20px', border: '1px dashed rgba(199,125,255,0.2)' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>💬</div>
             <p style={{ fontSize: '16px', margin: '0 0 8px', fontWeight: '700' }}>まだメッセージはありません</p>
             <p style={{ color: '#7c7b99', fontSize: '14px', margin: '0 0 24px' }}>依頼が成立するとチャットスレッドがここに表示されます</p>

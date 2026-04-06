@@ -58,9 +58,9 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> =
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '8px 12px', borderRadius: '8px',
+  width: '100%', padding: '10px 14px', borderRadius: '10px',
   border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(255,255,255,0.05)',
-  color: '#f0eff8', fontSize: '13px', outline: 'none', boxSizing: 'border-box',
+  color: '#f0eff8', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
 }
 
 // ── コンポーネント ────────────────────────────────────────────────

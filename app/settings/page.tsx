@@ -73,7 +73,7 @@ export default async function SettingsPage() {
       </div>
 
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '40px 24px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 8px' }}>設定</h1>
+        <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 8px' }}>設定</h1>
         <p style={{ color: '#7c7b99', fontSize: '14px', margin: '0 0 32px' }}>
           {profile?.display_name ?? user.email}
         </p>

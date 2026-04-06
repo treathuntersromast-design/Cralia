@@ -93,7 +93,7 @@ export default function CreatorProfileSettingsPage() {
   }
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '10px 12px', borderRadius: '8px',
+    width: '100%', padding: '10px 14px', borderRadius: '10px',
     border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(255,255,255,0.05)',
     color: '#f0eff8', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
   }
@@ -107,7 +107,7 @@ export default function CreatorProfileSettingsPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8' }}>
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
           CreMatch
@@ -117,13 +117,13 @@ export default function CreatorProfileSettingsPage() {
 
       <div style={{ maxWidth: '640px', margin: '0 auto', padding: '40px 24px' }}>
         <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '22px', fontWeight: '800', margin: '0 0 6px' }}>クリエイター設定</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 6px' }}>クリエイター設定</h1>
           <p style={{ color: '#7c7b99', fontSize: '14px', margin: 0 }}>受注上限・料金プランを設定します</p>
         </div>
 
         {/* 受注上限 */}
-        <div style={{ background: 'rgba(22,22,31,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
-          <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', margin: '0 0 16px' }}>同時受注上限</h2>
+        <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
+          <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 16px' }}>同時受注上限</h2>
           <p style={{ color: '#a9a8c0', fontSize: '13px', margin: '0 0 14px', lineHeight: '1.6' }}>
             同時に受け付ける依頼の最大件数を設定します。未設定の場合は無制限です。
           </p>
@@ -142,8 +142,8 @@ export default function CreatorProfileSettingsPage() {
         </div>
 
         {/* AIクリエイター提案トグル */}
-        <div style={{ background: 'rgba(22,22,31,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
-          <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', margin: '0 0 16px' }}>AIクリエイター提案</h2>
+        <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
+          <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 16px' }}>AIクリエイター提案</h2>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
             <div>
               <p style={{ margin: '0 0 4px', fontWeight: '700', fontSize: '14px', color: '#f0eff8' }}>
@@ -176,9 +176,9 @@ export default function CreatorProfileSettingsPage() {
         </div>
 
         {/* 料金プラン */}
-        <div style={{ background: 'rgba(22,22,31,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+        <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', margin: 0 }}>料金プラン</h2>
+            <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: 0 }}>料金プラン</h2>
             <span style={{ color: '#5c5b78', fontSize: '12px' }}>{plans.length}/10</span>
           </div>
           <p style={{ color: '#a9a8c0', fontSize: '13px', margin: '0 0 16px', lineHeight: '1.6' }}>
@@ -269,7 +269,7 @@ export default function CreatorProfileSettingsPage() {
           style={{
             width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
             background: loading ? 'rgba(199,125,255,0.4)' : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
-            color: '#fff', fontSize: '15px', fontWeight: '700',
+            color: '#fff', fontSize: '14px', fontWeight: '700',
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
