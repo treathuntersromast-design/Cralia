@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -72,7 +72,7 @@ function LoginContent() {
           WebkitTextFillColor: 'transparent',
           margin: 0,
         }}>
-          CreMatch
+          Cralia
         </h1>
         <p style={{ color: '#7c7b99', marginTop: '8px', fontSize: '14px' }}>
           クリエイターマッチングプラットフォーム

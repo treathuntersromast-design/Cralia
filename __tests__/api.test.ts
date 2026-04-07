@@ -1,5 +1,5 @@
-/**
- * CreMatch API ユニットテスト
+﻿/**
+ * Cralia API ユニットテスト
  * ハッピーケース + エッジケース
  *
  * 実行: npx jest (または: npx ts-jest)

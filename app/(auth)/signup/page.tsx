@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -116,7 +116,7 @@ export default function SignupPage() {
           WebkitTextFillColor: 'transparent',
           margin: 0,
         }}>
-          CreMatch
+          Cralia
         </h1>
         <p style={{ color: '#7c7b99', marginTop: '8px', fontSize: '14px' }}>
           クリエイターマッチングプラットフォーム

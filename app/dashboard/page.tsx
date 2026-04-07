@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+﻿import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
@@ -174,7 +174,7 @@ export default async function DashboardPage() {
       {/* ヘッダー */}
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>
-          CreMatch
+          Cralia
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Link href="/notifications" style={{ position: 'relative', padding: '8px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', color: '#a9a8c0', textDecoration: 'none', fontSize: '18px', display: 'flex', alignItems: 'center' }}>

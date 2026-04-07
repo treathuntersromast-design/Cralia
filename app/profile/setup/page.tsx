@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -11,7 +11,7 @@ import { CREATOR_TYPES, CLIENT_TYPES, SKILL_SUGGESTIONS, SNS_PLATFORMS, PORTFOLI
 import { activityStyleToRoles, rolesToActivityStyleId } from '@/lib/constants/activity'
 import { VALIDATION } from '@/lib/constants/validation'
 
-const DRAFT_KEY = 'crematch_setup_draft'
+const DRAFT_KEY = 'Cralia_setup_draft'
 
 // ステップ定義
 const STEPS = ['個人・法人', '活動スタイル', '基本情報', 'スキル・自己紹介', 'ポートフォリオ', '希望条件'] as const
@@ -398,7 +398,7 @@ function ProfileSetupContent() {
             WebkitTextFillColor: 'transparent',
             margin: '0 0 8px',
           }}>
-            CreMatch
+            Cralia
           </h1>
           <p style={{ color: '#a9a8c0', margin: 0 }}>プロフィールを設定しましょう</p>
         </div>

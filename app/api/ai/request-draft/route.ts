@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit, sanitizeAiResponse } from '@/lib/aiGuard'
@@ -6,7 +6,7 @@ import { logError } from '@/lib/logError'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-const SYSTEM_PROMPT = `あなたはクリエイターマッチングプラットフォーム「CreMatch」の依頼文作成・添削アシスタントです。
+const SYSTEM_PROMPT = `あなたはクリエイターマッチングプラットフォーム「Cralia」の依頼文作成・添削アシスタントです。
 依頼者がクリエイターに送る依頼文を、丁寧かつ伝わりやすい内容にするお手伝いをします。
 
 ## 利用可能なモード

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit, sanitizeAiResponse } from '@/lib/aiGuard'
@@ -6,7 +6,7 @@ import { logError } from '@/lib/logError'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-const SYSTEM_PROMPT = `あなたはクリエイターマッチングプラットフォーム「CreMatch」の自己紹介文作成アシスタントです。
+const SYSTEM_PROMPT = `あなたはクリエイターマッチングプラットフォーム「Cralia」の自己紹介文作成アシスタントです。
 クリエイターが依頼者に好印象を与える、魅力的な自己紹介文（400文字以内）を作成する手助けをします。
 
 ## 絶対に守るルール

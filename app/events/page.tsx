@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+﻿import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 
@@ -43,7 +43,7 @@ export default async function EventsPage() {
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           textDecoration: 'none',
         }}>
-          CreMatch
+          Cralia
         </Link>
         <Link href="/dashboard" style={{
           color: '#7c7b99', fontSize: '13px', textDecoration: 'none',
@@ -69,7 +69,7 @@ export default async function EventsPage() {
             交流会への参加
           </h1>
           <p style={{ color: '#a9a8c0', fontSize: '15px', lineHeight: '1.7', margin: 0 }}>
-            CreMatch が企画するクリエイター交流会の一覧です。<br />
+            Cralia が企画するクリエイター交流会の一覧です。<br />
             参加申込は<strong style={{ color: '#34d399' }}>先着順</strong>となります。気になるイベントはお早めにお申し込みください。
           </p>
         </div>

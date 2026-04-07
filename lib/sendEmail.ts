@@ -1,4 +1,4 @@
-/**
+﻿/**
  * メール通知スタブ
  * 実際の送信処理は未実装。email_logs テーブルに記録するのみ。
  * 将来的に Resend / SendGrid などのサービスと差し替える。
@@ -39,7 +39,7 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
 
   // ── 将来: ここに Resend / SendGrid などの実送信処理を追加 ──
   // const resend = new Resend(process.env.RESEND_API_KEY)
-  // await resend.emails.send({ from: 'noreply@crematch.com', to, subject, text: body })
+  // await resend.emails.send({ from: 'noreply@Cralia.com', to, subject, text: body })
 
   console.info(`[sendEmail] stub: to=${to} type=${type} subject="${subject}"`)
 
@@ -72,16 +72,16 @@ export function orderReceivedEmail(params: {
   return {
     to:      params.creatorEmail,
     type:    'order_received',
-    subject: `【CreMatch】新しい依頼が届きました「${params.orderTitle}」`,
+    subject: `【Cralia】新しい依頼が届きました「${params.orderTitle}」`,
     body:    [
       `${params.creatorName} さん、`,
       '',
       `${params.clientName} さんから「${params.orderTitle}」の依頼が届きました。`,
       '',
-      `依頼の確認: https://crematch.com/orders/${params.orderId}`,
+      `依頼の確認: https://Cralia.com/orders/${params.orderId}`,
       '',
       '---',
-      'CreMatch サポートチーム',
+      'Cralia サポートチーム',
     ].join('\n'),
     userId: params.creatorUserId,
     meta:   { orderId: params.orderId },
@@ -100,16 +100,16 @@ export function orderStatusChangedEmail(params: {
   return {
     to:      params.recipientEmail,
     type:    params.type,
-    subject: `【CreMatch】依頼ステータスが更新されました「${params.orderTitle}」`,
+    subject: `【Cralia】依頼ステータスが更新されました「${params.orderTitle}」`,
     body:    [
       `${params.recipientName} さん、`,
       '',
       `「${params.orderTitle}」のステータスが「${params.statusLabel}」に更新されました。`,
       '',
-      `詳細を確認: https://crematch.com/orders/${params.orderId}`,
+      `詳細を確認: https://Cralia.com/orders/${params.orderId}`,
       '',
       '---',
-      'CreMatch サポートチーム',
+      'Cralia サポートチーム',
     ].join('\n'),
     userId: params.recipientId,
     meta:   { orderId: params.orderId },

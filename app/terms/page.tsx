@@ -1,14 +1,14 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: '利用規約 | CreMatch',
+  title: '利用規約 | Cralia',
 }
 
 const SECTIONS = [
   {
     title: '第1条（適用）',
-    content: `本利用規約（以下「本規約」）は、CreMatch（以下「当社」）が提供するクリエイターマッチングサービス「CreMatch」（以下「本サービス」）の利用条件を定めるものです。登録ユーザーの皆さまには、本規約に従って本サービスをご利用いただきます。`,
+    content: `本利用規約（以下「本規約」）は、Cralia（以下「当社」）が提供するクリエイターマッチングサービス「Cralia」（以下「本サービス」）の利用条件を定めるものです。登録ユーザーの皆さまには、本規約に従って本サービスをご利用いただきます。`,
   },
   {
     title: '第2条（利用登録）',
@@ -109,7 +109,7 @@ export default function TermsPage() {
             制定日：2026年1月1日　最終改定日：2026年4月1日
           </p>
           <p style={{ color: '#c0bdd8', fontSize: '14px', lineHeight: '1.8', marginTop: '16px' }}>
-            CreMatch（以下「当社」）が提供するクリエイターマッチングサービス「CreMatch」をご利用いただくにあたり、以下の利用規約をお読みいただき、同意の上でご利用ください。
+            Cralia（以下「当社」）が提供するクリエイターマッチングサービス「Cralia」をご利用いただくにあたり、以下の利用規約をお読みいただき、同意の上でご利用ください。
           </p>
         </div>
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * POST /api/ai/suggest-creators
  * 依頼者の依頼内容から最適なクリエイタータイプ・スキルを提案する。
  * ai_suggestion_enabled = false のユーザーは利用不可。
@@ -13,7 +13,7 @@ import { CREATOR_TYPES, SKILL_SUGGESTIONS } from '@/lib/constants/lists'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-const SYSTEM_PROMPT = `あなたはクリエイターマッチングプラットフォーム「CreMatch」のクリエイター提案AIです。
+const SYSTEM_PROMPT = `あなたはクリエイターマッチングプラットフォーム「Cralia」のクリエイター提案AIです。
 依頼者が入力した依頼内容（タイトル・説明文）を読み、最適なクリエイタータイプとスキルタグを提案します。
 
 ## 回答形式（必ず守ること）

@@ -1,4 +1,4 @@
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+﻿import { createClient as createAdminClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import ClientSearchClient from '@/components/ClientSearchClient'
 
@@ -81,7 +81,7 @@ export default async function ClientsPage({
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           textDecoration: 'none',
         }}>
-          CreMatch
+          Cralia
         </Link>
         <Link href={backHref} style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>
           {backLabel}

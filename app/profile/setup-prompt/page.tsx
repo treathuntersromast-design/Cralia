@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-const DRAFT_KEY = 'crematch_setup_draft'
+const DRAFT_KEY = 'Cralia_setup_draft'
 
 export default function SetupPromptPage() {
   const router = useRouter()
@@ -64,7 +64,7 @@ export default function SetupPromptPage() {
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           margin: '0 0 28px',
         }}>
-          CreMatch
+          Cralia
         </h1>
 
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
@@ -86,7 +86,7 @@ export default function SetupPromptPage() {
               プロフィールの設定が完了していません
             </h2>
             <p style={{ color: '#a9a8c0', fontSize: '14px', lineHeight: '1.8', margin: '0 0 32px' }}>
-              CreMatch を利用するには<br />
+              Cralia を利用するには<br />
               プロフィールの設定が必要です。<br />
               今すぐ設定しますか？
             </p>

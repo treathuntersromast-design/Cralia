@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 
 export default function HomePage() {
   return (
@@ -11,7 +11,7 @@ export default function HomePage() {
       {/* ナビゲーション */}
       <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          CreMatch
+          Cralia
         </span>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <Link href="/login" style={{ color: '#a9a8c0', fontSize: '14px', fontWeight: '600', textDecoration: 'none' }}>ログイン</Link>
@@ -51,7 +51,7 @@ export default function HomePage() {
       {/* 機能セクション */}
       <section style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 24px 100px' }}>
         <h2 style={{ textAlign: 'center', fontSize: '28px', fontWeight: '800', margin: '0 0 48px' }}>
-          CreMatchでできること
+          Craliaでできること
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
           {[
@@ -100,7 +100,7 @@ export default function HomePage() {
             {
               icon: '🎉',
               title: '交流会への参加',
-              desc: 'CreMatchが企画するクリエイター交流会に参加しよう。オンライン・オフラインを問わず、新しい仲間や仕事のきっかけが生まれる場を提供します。',
+              desc: 'Craliaが企画するクリエイター交流会に参加しよう。オンライン・オフラインを問わず、新しい仲間や仕事のきっかけが生まれる場を提供します。',
               color: '#34d399',
             },
           ].map(({ icon, title, desc, color }) => (
@@ -129,7 +129,7 @@ export default function HomePage() {
           <Link href="/login" style={{ color: '#5c5b78', fontSize: '13px', textDecoration: 'none' }}>ログイン</Link>
           <Link href="/signup" style={{ color: '#5c5b78', fontSize: '13px', textDecoration: 'none' }}>新規登録</Link>
         </div>
-        <p style={{ color: '#3c3c54', fontSize: '12px', margin: 0 }}>© 2026 CreMatch. All rights reserved.</p>
+        <p style={{ color: '#3c3c54', fontSize: '12px', margin: 0 }}>© 2026 Cralia. All rights reserved.</p>
       </footer>
     </div>
   )

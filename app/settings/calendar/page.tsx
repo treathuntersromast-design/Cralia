@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -60,7 +60,7 @@ function CalendarSettingsContent() {
       {/* ヘッダー */}
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
-          CreMatch
+          Cralia
         </Link>
         <Link href="/settings" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>← 設定へ</Link>
       </div>
@@ -153,7 +153,7 @@ function CalendarSettingsContent() {
             <li>クライアント側の依頼フォームに「カレンダーを考慮した納期提案」ボタンが表示される</li>
           </ul>
           <p style={{ color: '#5c5b78', fontSize: '12px', margin: '12px 0 0' }}>
-            ※ 閲覧されるのは「終日の不在イベント」のみです。予定の詳細内容はCreMatchには共有されません。
+            ※ 閲覧されるのは「終日の不在イベント」のみです。予定の詳細内容はCraliaには共有されません。
           </p>
         </div>
 
