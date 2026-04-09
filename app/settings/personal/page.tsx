@@ -38,6 +38,16 @@ const hintStyle: React.CSSProperties = {
   marginTop: '4px',
 }
 
+const sectionHeadStyle: React.CSSProperties = {
+  fontSize: '13px',
+  fontWeight: '700',
+  color: '#c77dff',
+  letterSpacing: '0.06em',
+  marginBottom: '14px',
+  paddingBottom: '8px',
+  borderBottom: '1px solid rgba(199,125,255,0.15)',
+}
+
 export default function PersonalInfoPage() {
   const [form, setForm] = useState({
     realName: '',
@@ -46,6 +56,8 @@ export default function PersonalInfoPage() {
     prefecture: '',
     address: '',
     phoneNumber: '',
+    corporateNumber: '',
+    invoiceNumber: '',
   })
   const [entityType, setEntityType] = useState<'individual' | 'corporate'>('individual')
   const [loading, setLoading] = useState(false)
@@ -63,12 +75,14 @@ export default function PersonalInfoPage() {
         if (et) setEntityType(et)
         if (data) {
           setForm({
-            realName: data.real_name ?? '',
-            companyName: data.company_name ?? '',
-            postalCode: data.postal_code ?? '',
-            prefecture: data.prefecture ?? '',
-            address: data.address ?? '',
-            phoneNumber: data.phone_number ?? '',
+            realName:        data.real_name        ?? '',
+            companyName:     data.company_name     ?? '',
+            postalCode:      data.postal_code      ?? '',
+            prefecture:      data.prefecture       ?? '',
+            address:         data.address          ?? '',
+            phoneNumber:     data.phone_number     ?? '',
+            corporateNumber: data.corporate_number ?? '',
+            invoiceNumber:   data.invoice_number   ?? '',
           })
           setAgreed(true)
         }
@@ -107,6 +121,19 @@ export default function PersonalInfoPage() {
     setForm((f) => ({ ...f, postalCode: formatted }))
   }
 
+  // 法人番号: 数字のみ・13桁まで
+  const handleCorporateNumber = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 13)
+    setForm((f) => ({ ...f, corporateNumber: digits }))
+  }
+
+  // インボイス番号: 先頭Tを固定し、後ろ13桁
+  const handleInvoiceNumber = (value: string) => {
+    const raw = value.startsWith('T') ? value.slice(1) : value
+    const digits = raw.replace(/\D/g, '').slice(0, 13)
+    setForm((f) => ({ ...f, invoiceNumber: digits ? `T${digits}` : '' }))
+  }
+
   if (fetching) {
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -125,8 +152,8 @@ export default function PersonalInfoPage() {
 
         {/* ヘッダー */}
         <div style={{ marginBottom: '32px' }}>
-          <Link href="/dashboard" style={{ color: '#c77dff', fontSize: '14px', textDecoration: 'none', display: 'inline-block', marginBottom: '20px' }}>
-            ← ダッシュボードへ戻る
+          <Link href="/settings" style={{ color: '#c77dff', fontSize: '14px', textDecoration: 'none', display: 'inline-block', marginBottom: '20px' }}>
+            ← 設定へ戻る
           </Link>
           <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#f0eff8', marginBottom: '8px' }}>
             個人情報の登録
@@ -160,101 +187,157 @@ export default function PersonalInfoPage() {
           borderRadius: '16px',
           padding: '32px',
         }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-            {/* 法人の場合: 会社名 */}
+            {/* ── 基本情報 ── */}
+            <div>
+              <p style={sectionHeadStyle}>基本情報</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+                {/* 法人の場合: 会社名 */}
+                {isCorporate && (
+                  <div>
+                    <label style={labelStyle}>会社名・団体名</label>
+                    <input
+                      type="text"
+                      value={form.companyName}
+                      onChange={(e) => setForm((f) => ({ ...f, companyName: e.target.value }))}
+                      placeholder="株式会社〇〇 / △△サークル"
+                      maxLength={100}
+                      style={inputStyle}
+                    />
+                    <p style={hintStyle}>法人・団体として登録されています。正式名称を入力してください。</p>
+                  </div>
+                )}
+
+                {/* 氏名 */}
+                <div>
+                  <label style={labelStyle}>
+                    {isCorporate ? '担当者氏名' : '氏名'}
+                    <span style={{ color: '#ff6b9d', marginLeft: '4px', fontSize: '11px' }}>（有償取引時に必須）</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.realName}
+                    onChange={(e) => setForm((f) => ({ ...f, realName: e.target.value }))}
+                    placeholder="山田 太郎"
+                    maxLength={50}
+                    style={inputStyle}
+                  />
+                  <p style={hintStyle}>本名を入力してください。取引の本人確認に使用します。</p>
+                </div>
+
+                {/* 電話番号 */}
+                <div>
+                  <label style={labelStyle}>
+                    電話番号
+                    <span style={{ color: '#ff6b9d', marginLeft: '4px', fontSize: '11px' }}>（有償取引時に必須）</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={form.phoneNumber}
+                    onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))}
+                    placeholder="090-1234-5678"
+                    maxLength={15}
+                    style={inputStyle}
+                  />
+                  <p style={hintStyle}>本人確認のために使用します。他のユーザーには公開されません。</p>
+                </div>
+
+                {/* 郵便番号 */}
+                <div>
+                  <label style={labelStyle}>
+                    郵便番号
+                    <span style={{ color: '#ff6b9d', marginLeft: '4px', fontSize: '11px' }}>（有償取引時に必須）</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.postalCode}
+                    onChange={(e) => handlePostalCode(e.target.value)}
+                    placeholder="123-4567"
+                    style={{ ...inputStyle, maxWidth: '200px' }}
+                  />
+                </div>
+
+                {/* 都道府県 */}
+                <div>
+                  <label style={labelStyle}>都道府県</label>
+                  <select
+                    value={form.prefecture}
+                    onChange={(e) => setForm((f) => ({ ...f, prefecture: e.target.value }))}
+                    style={{ ...inputStyle, maxWidth: '200px' }}
+                  >
+                    <option value="" style={{ color: '#000', background: '#fff' }}>選択してください</option>
+                    {PREFECTURES.map((p) => (
+                      <option key={p} value={p} style={{ color: '#000', background: '#fff' }}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 住所（市区町村以降） */}
+                <div>
+                  <label style={labelStyle}>住所（市区町村・番地・建物名）</label>
+                  <input
+                    type="text"
+                    value={form.address}
+                    onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                    placeholder="渋谷区〇〇町1-2-3 △△ビル 101号室"
+                    maxLength={200}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ── 法人番号（法人のみ） ── */}
             {isCorporate && (
               <div>
-                <label style={labelStyle}>
-                  会社名・団体名
-                </label>
-                <input
-                  type="text"
-                  value={form.companyName}
-                  onChange={(e) => setForm((f) => ({ ...f, companyName: e.target.value }))}
-                  placeholder="株式会社〇〇 / △△サークル"
-                  maxLength={100}
-                  style={inputStyle}
-                />
-                <p style={hintStyle}>法人・団体として登録されています。正式名称を入力してください。</p>
+                <p style={sectionHeadStyle}>法人番号</p>
+                <div>
+                  <label style={labelStyle}>
+                    法人番号
+                    <span style={{ color: '#7c7b99', marginLeft: '6px', fontSize: '11px' }}>（任意）</span>
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={form.corporateNumber}
+                    onChange={(e) => handleCorporateNumber(e.target.value)}
+                    placeholder="1234567890123"
+                    maxLength={13}
+                    style={{ ...inputStyle, maxWidth: '240px', letterSpacing: '0.1em' }}
+                  />
+                  <p style={hintStyle}>
+                    国税庁が指定した13桁の番号です。登録するとプロフィールに「法人番号登録済み」バッジが表示されます。<br />
+                    <a href="https://www.houjin-bangou.nta.go.jp/" target="_blank" rel="noopener noreferrer" style={{ color: '#c77dff', textDecoration: 'none' }}>
+                      国税庁 法人番号公表サイト →
+                    </a>
+                  </p>
+                </div>
               </div>
             )}
 
-            {/* 氏名 */}
+            {/* ── インボイス登録番号 ── */}
             <div>
-              <label style={labelStyle}>
-                {isCorporate ? '担当者氏名' : '氏名'}
-                <span style={{ color: '#ff6b9d', marginLeft: '4px', fontSize: '11px' }}>（有償取引時に必須）</span>
-              </label>
-              <input
-                type="text"
-                value={form.realName}
-                onChange={(e) => setForm((f) => ({ ...f, realName: e.target.value }))}
-                placeholder="山田 太郎"
-                maxLength={50}
-                style={inputStyle}
-              />
-              <p style={hintStyle}>本名を入力してください。取引の本人確認に使用します。</p>
-            </div>
-
-            {/* 電話番号 */}
-            <div>
-              <label style={labelStyle}>
-                電話番号
-                <span style={{ color: '#ff6b9d', marginLeft: '4px', fontSize: '11px' }}>（有償取引時に必須）</span>
-              </label>
-              <input
-                type="tel"
-                value={form.phoneNumber}
-                onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))}
-                placeholder="090-1234-5678"
-                maxLength={15}
-                style={inputStyle}
-              />
-              <p style={hintStyle}>本人確認のために使用します。他のユーザーには公開されません。</p>
-            </div>
-
-            {/* 郵便番号 */}
-            <div>
-              <label style={labelStyle}>
-                郵便番号
-                <span style={{ color: '#ff6b9d', marginLeft: '4px', fontSize: '11px' }}>（有償取引時に必須）</span>
-              </label>
-              <input
-                type="text"
-                value={form.postalCode}
-                onChange={(e) => handlePostalCode(e.target.value)}
-                placeholder="123-4567"
-                style={{ ...inputStyle, maxWidth: '200px' }}
-              />
-            </div>
-
-            {/* 都道府県 */}
-            <div>
-              <label style={labelStyle}>都道府県</label>
-              <select
-                value={form.prefecture}
-                onChange={(e) => setForm((f) => ({ ...f, prefecture: e.target.value }))}
-                style={{ ...inputStyle, maxWidth: '200px' }}
-              >
-                <option value="" style={{ color: '#000', background: '#fff' }}>選択してください</option>
-                {PREFECTURES.map((p) => (
-                  <option key={p} value={p} style={{ color: '#000', background: '#fff' }}>{p}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* 住所（市区町村以降） */}
-            <div>
-              <label style={labelStyle}>住所（市区町村・番地・建物名）</label>
-              <input
-                type="text"
-                value={form.address}
-                onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                placeholder="渋谷区〇〇町1-2-3 △△ビル 101号室"
-                maxLength={200}
-                style={inputStyle}
-              />
+              <p style={sectionHeadStyle}>インボイス登録番号</p>
+              <div>
+                <label style={labelStyle}>
+                  適格請求書発行事業者登録番号
+                  <span style={{ color: '#7c7b99', marginLeft: '6px', fontSize: '11px' }}>（任意）</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.invoiceNumber}
+                  onChange={(e) => handleInvoiceNumber(e.target.value)}
+                  placeholder="T1234567890123"
+                  maxLength={14}
+                  style={{ ...inputStyle, maxWidth: '260px', letterSpacing: '0.08em' }}
+                />
+                <p style={hintStyle}>
+                  「T」＋13桁の登録番号（例: T1234567890123）。登録するとプロフィールにインボイス番号が表示され、取引先が仕入税額控除を利用できます。
+                  個人事業主・法人ともに登録可能です。
+                </p>
+              </div>
             </div>
 
             {/* プライバシーポリシー同意 */}
@@ -283,13 +366,9 @@ export default function PersonalInfoPage() {
             {/* エラー */}
             {error && (
               <p style={{
-                color: '#ff6b9d',
-                fontSize: '13px',
-                background: 'rgba(255,107,157,0.1)',
-                border: '1px solid rgba(255,107,157,0.3)',
-                borderRadius: '8px',
-                padding: '10px 14px',
-                margin: 0,
+                color: '#ff6b9d', fontSize: '13px',
+                background: 'rgba(255,107,157,0.1)', border: '1px solid rgba(255,107,157,0.3)',
+                borderRadius: '8px', padding: '10px 14px', margin: 0,
               }}>
                 {error}
               </p>
@@ -298,13 +377,9 @@ export default function PersonalInfoPage() {
             {/* 成功 */}
             {success && (
               <p style={{
-                color: '#4ade80',
-                fontSize: '13px',
-                background: 'rgba(74,222,128,0.1)',
-                border: '1px solid rgba(74,222,128,0.3)',
-                borderRadius: '8px',
-                padding: '10px 14px',
-                margin: 0,
+                color: '#4ade80', fontSize: '13px',
+                background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)',
+                borderRadius: '8px', padding: '10px 14px', margin: 0,
               }}>
                 保存しました。
               </p>
@@ -315,15 +390,9 @@ export default function PersonalInfoPage() {
               type="submit"
               disabled={loading || !agreed}
               style={{
-                padding: '14px',
-                borderRadius: '12px',
-                border: 'none',
-                background: loading || !agreed
-                  ? 'rgba(199,125,255,0.3)'
-                  : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
-                color: '#fff',
-                fontSize: '16px',
-                fontWeight: '700',
+                padding: '14px', borderRadius: '12px', border: 'none',
+                background: loading || !agreed ? 'rgba(199,125,255,0.3)' : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+                color: '#fff', fontSize: '16px', fontWeight: '700',
                 cursor: loading || !agreed ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s',
               }}

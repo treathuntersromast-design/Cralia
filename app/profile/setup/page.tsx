@@ -1,45 +1,24 @@
-'use client'
+﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import BioChatModal from '@/components/BioChatModal'
 import AvatarUpload from '@/components/AvatarUpload'
 import { createClient } from '@/lib/supabase/client'
+import ScrollToTopButton from '@/components/ScrollToTopButton'
+import { CREATOR_TYPES, CLIENT_TYPES, SKILL_SUGGESTIONS, SNS_PLATFORMS, PORTFOLIO_PLATFORMS } from '@/lib/constants/lists'
+import { activityStyleToRoles, rolesToActivityStyleId } from '@/lib/constants/activity'
+import { VALIDATION } from '@/lib/constants/validation'
+
+const DRAFT_KEY = 'Cralia_setup_draft'
 
 // ステップ定義
 const STEPS = ['個人・法人', '活動スタイル', '基本情報', 'スキル・自己紹介', 'ポートフォリオ', '希望条件'] as const
 type Step = 0 | 1 | 2 | 3 | 4 | 5
 
-const CREATOR_TYPES = ['VTuber', 'ボカロP', 'イラストレーター', '動画編集者', '楽曲制作関係', '3Dモデラー', 'デザイナー', 'その他']
-
-// 動画 → イラスト → 楽曲 → その他 の順（作業内容ベース）
-const SKILL_SUGGESTIONS = [
-  // 動画
-  'MV制作', '動画編集', '3DCGアニメ', 'Live2D', 'アニメーション',
-  // イラスト
-  'キャラクターデザイン', 'イラスト制作', '背景イラスト', 'サムネイル制作', 'ロゴデザイン', '3Dモデル制作',
-  // 楽曲
-  '楽曲制作', '作曲', '作詞', 'BGM制作', 'ミキシング・マスタリング', 'ボーカルミックス', '歌唱', 'コーラス', '声優',
-  // その他
-  'シナリオ・脚本',
-]
-
-const SNS_PLATFORMS = [
-  { label: 'X (Twitter)', prefix: '@', placeholder: 'username' },
-  { label: 'Instagram', prefix: '@', placeholder: 'username' },
-  { label: 'TikTok', prefix: '@', placeholder: 'username' },
-  { label: 'Twitch', prefix: 'twitch.tv/', placeholder: 'username' },
-  { label: 'Bluesky', prefix: '@', placeholder: 'handle.bsky.social' },
-]
-
-const PLATFORMS = [
-  { label: 'YouTube', placeholder: 'https://youtube.com/...' },
-  { label: 'pixiv', placeholder: 'https://pixiv.net/...' },
-  { label: 'niconico', placeholder: 'https://nicovideo.jp/...' },
-  { label: 'X (Twitter)', placeholder: 'https://x.com/...' },
-  { label: 'Instagram', placeholder: 'https://instagram.com/...' },
-  { label: 'その他', placeholder: 'https://...' },
-]
+// PORTFOLIO_PLATFORMS を従来の PLATFORMS 形式にエイリアス
+const PLATFORMS = PORTFOLIO_PLATFORMS
 
 type Roles = ('creator' | 'client')[]
 
@@ -62,6 +41,7 @@ interface FormData {
   homepageUrl: string
   snsLinks: SnsEntry[]
   creatorTypes: string[]
+  clientTypes: string[]
   skills: string[]
   bio: string
   portfolios: Portfolio[]
@@ -71,7 +51,7 @@ interface FormData {
   deliveryDays: string
 }
 
-export default function ProfileSetupPage() {
+function ProfileSetupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const nextPath = searchParams.get('next') ?? '/dashboard'
@@ -91,6 +71,7 @@ export default function ProfileSetupPage() {
     homepageUrl: '',
     snsLinks: [],
     creatorTypes: [],
+    clientTypes: [],
     skills: [],
     bio: '',
     portfolios: [],
@@ -99,8 +80,11 @@ export default function ProfileSetupPage() {
     availability: 'open',
     deliveryDays: '',
   })
+  const [formReady, setFormReady] = useState(false)
+  const [pendingDraft, setPendingDraft] = useState<{ form: FormData; step: Step } | null>(null)
 
   const isCreator = form.roles.includes('creator')
+  const isClient  = form.roles.includes('client')
 
   // 既存プロフィールをフォームに反映
   useEffect(() => {
@@ -110,13 +94,17 @@ export default function ProfileSetupPage() {
       if (!user) return
 
       const [{ data: userData }, { data: profile }, { data: portfolios }] = await Promise.all([
-        supabase.from('users').select('entity_type, roles, display_name, sns_links, avatar_url').eq('id', user.id).single(),
+        supabase.from('users').select('entity_type, activity_style_id, display_name, sns_links, avatar_url, client_type').eq('id', user.id).single(),
         supabase.from('creator_profiles').select('*').eq('creator_id', user.id).single(),
         supabase.from('portfolios').select('*').eq('creator_id', user.id).order('display_order'),
       ])
 
       if (!userData) return
       if (userData.avatar_url) setAvatarUrl(userData.avatar_url)
+
+      const rawClientTypes: string[] = Array.isArray((userData as Record<string, unknown>).client_type)
+        ? ((userData as Record<string, unknown>).client_type as string[])
+        : []
 
       // 「その他（xxx）」形式のクリエイタータイプを分離
       const rawTypes: string[] = profile?.creator_type ?? []
@@ -130,11 +118,15 @@ export default function ProfileSetupPage() {
       const allSnsLinks: SnsEntry[] = Array.isArray(userData.sns_links) ? (userData.sns_links as SnsEntry[]) : []
       setForm({
         entityType: (userData.entity_type as 'individual' | 'corporate') || 'individual',
-        roles: (userData.roles as Roles) ?? [],
+        roles: (() => {
+          const r = activityStyleToRoles((userData as Record<string, unknown>).activity_style_id as number | null)
+          return (r.length > 0 ? r : ['creator']) as Roles
+        })(),
         displayName: userData.display_name ?? '',
         homepageUrl: allSnsLinks.find((s) => s.platform === 'ホームページ')?.id ?? '',
         snsLinks: allSnsLinks.filter((s) => s.platform !== 'ホームページ'),
         creatorTypes: normalizedTypes,
+        clientTypes: rawClientTypes,
         skills: profile?.skills ?? [],
         bio: profile?.bio ?? '',
         portfolios: (portfolios ?? []).map((p) => ({
@@ -148,9 +140,39 @@ export default function ProfileSetupPage() {
         availability: (profile?.availability as 'open' | 'one_slot' | 'full') ?? 'open',
         deliveryDays: (profile as Record<string, unknown>)?.delivery_days as string ?? '',
       })
+
+      // 下書きチェック
+      try {
+        const saved = localStorage.getItem(DRAFT_KEY)
+        if (saved) setPendingDraft(JSON.parse(saved))
+      } catch {
+        localStorage.removeItem(DRAFT_KEY)
+      }
+      setFormReady(true)
     })()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // 下書き自動保存（フォーム変更から 800ms 後）
+  useEffect(() => {
+    if (!formReady) return
+    const timer = setTimeout(() => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, step }))
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [form, step, formReady])
+
+  const restoreDraft = () => {
+    if (!pendingDraft) return
+    setForm(pendingDraft.form)
+    setStep(pendingDraft.step)
+    setPendingDraft(null)
+  }
+
+  const discardDraft = () => {
+    localStorage.removeItem(DRAFT_KEY)
+    setPendingDraft(null)
+  }
 
   // クリエイタータイプ切り替え
   const toggleCreatorType = (type: string) => {
@@ -162,10 +184,20 @@ export default function ProfileSetupPage() {
     }))
   }
 
+  // 依頼者タイプ切り替え
+  const toggleClientType = (type: string) => {
+    setForm((f) => ({
+      ...f,
+      clientTypes: f.clientTypes.includes(type)
+        ? f.clientTypes.filter((t) => t !== type)
+        : [...f.clientTypes, type],
+    }))
+  }
+
   // スキルタグ追加
   const addSkill = (skill: string) => {
     const trimmed = skill.trim()
-    if (!trimmed || trimmed.length > 50 || form.skills.length >= 20) return
+    if (!trimmed || trimmed.length > VALIDATION.SKILL_TAG_MAX || form.skills.length >= VALIDATION.SKILLS_MAX) return
     if (form.skills.some((s) => s.toLowerCase() === trimmed.toLowerCase())) return
     setForm((f) => ({ ...f, skills: [...f.skills, trimmed] }))
     setSkillInput('')
@@ -173,7 +205,7 @@ export default function ProfileSetupPage() {
 
   // ポートフォリオ追加
   const addPortfolio = () => {
-    if (form.portfolios.length >= 5) return
+    if (form.portfolios.length >= VALIDATION.PORTFOLIOS_MAX) return
     setForm((f) => ({ ...f, portfolios: [...f.portfolios, { platform: 'YouTube', url: '', title: '' }] }))
   }
 
@@ -283,6 +315,7 @@ export default function ProfileSetupPage() {
       return
     }
 
+    localStorage.removeItem(DRAFT_KEY)
     router.push(nextPath)
     router.refresh()
   }
@@ -300,9 +333,63 @@ export default function ProfileSetupPage() {
       justifyContent: 'center',
       padding: '40px 24px',
     }}>
+      {/* 下書き復元モーダル */}
+      {pendingDraft && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000,
+          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
+        }}>
+          <div style={{
+            background: 'rgba(22,22,31,0.98)',
+            border: '1px solid rgba(199,125,255,0.3)',
+            borderRadius: '20px', padding: '32px', maxWidth: '400px', width: '100%',
+            boxShadow: '0 8px 40px rgba(199,125,255,0.2)',
+          }}>
+            <div style={{ fontSize: '28px', marginBottom: '12px', textAlign: 'center' }}>💾</div>
+            <h3 style={{ color: '#f0eff8', fontSize: '18px', fontWeight: '700', margin: '0 0 10px', textAlign: 'center' }}>
+              前回の入力内容があります
+            </h3>
+            <p style={{ color: '#a9a8c0', fontSize: '14px', lineHeight: '1.7', margin: '0 0 24px', textAlign: 'center' }}>
+              前回途中まで入力したプロフィール情報が保存されています。<br />
+              続きから入力しますか？
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={discardDraft}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  background: 'transparent', color: '#a9a8c0',
+                  fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+                }}
+              >
+                最初から始める
+              </button>
+              <button
+                onClick={restoreDraft}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+                  color: '#fff', fontSize: '14px', fontWeight: '700', cursor: 'pointer',
+                }}
+              >
+                続きから入力する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ width: '100%', maxWidth: '560px' }}>
         {/* ヘッダー */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{ textAlign: 'left', marginBottom: '12px' }}>
+            <Link href="/" style={{ color: '#5c5b78', fontSize: '13px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              ← TOPに戻る
+            </Link>
+          </div>
           <h1 style={{
             fontSize: '32px',
             fontWeight: '800',
@@ -311,7 +398,7 @@ export default function ProfileSetupPage() {
             WebkitTextFillColor: 'transparent',
             margin: '0 0 8px',
           }}>
-            CreMatch
+            Cralia
           </h1>
           <p style={{ color: '#a9a8c0', margin: 0 }}>プロフィールを設定しましょう</p>
         </div>
@@ -405,7 +492,7 @@ export default function ProfileSetupPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {([
                   { role: 'creator' as const, emoji: '🎨', label: 'クリエイター（受注者）', desc: '依頼を受けて制作・提供する' },
-                  { role: 'client' as const, emoji: '💼', label: '依頼者（発注者）', desc: 'クリエイターに制作を依頼する' },
+                  { role: 'client' as const, emoji: '💼', label: '依頼者（依頼者）', desc: 'クリエイターに制作を依頼する' },
                   { role: 'both' as const, emoji: '🔄', label: 'クリエイターかつ依頼者', desc: '制作依頼を受けながら、他のクリエイターにも依頼する' },
                 ]).map(({ role, emoji, label, desc }) => {
                   const isSelected = role === 'both'
@@ -476,7 +563,7 @@ export default function ProfileSetupPage() {
                   type="text"
                   value={form.displayName}
                   onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
-                  maxLength={30}
+                  maxLength={VALIDATION.DISPLAY_NAME_MAX}
                   placeholder="例: クリエイター太郎"
                   style={inputStyle}
                 />
@@ -547,7 +634,7 @@ export default function ProfileSetupPage() {
                     )
                   })}
                 </div>
-                {form.snsLinks.length < 7 && (
+                {form.snsLinks.length < VALIDATION.SNS_LINKS_MAX && (
                   <button
                     type="button"
                     onClick={() => setForm((f) => ({ ...f, snsLinks: [...f.snsLinks, { platform: 'X (Twitter)', id: '' }] }))}
@@ -592,7 +679,7 @@ export default function ProfileSetupPage() {
                         value={otherCreatorType}
                         onChange={(e) => setOtherCreatorType(e.target.value)}
                         placeholder="具体的な活動内容を入力してください（例: 作詞家、作曲家、声優）"
-                        maxLength={50}
+                        maxLength={VALIDATION.SKILL_TAG_MAX}
                         style={{ ...inputStyle, marginTop: '10px', borderColor: !otherCreatorType.trim() ? 'rgba(255,107,157,0.5)' : 'rgba(199,125,255,0.25)' }}
                       />
                       {!otherCreatorType.trim() && (
@@ -602,6 +689,36 @@ export default function ProfileSetupPage() {
                       )}
                     </>
                   )}
+                </div>
+              )}
+
+              {isClient && (
+                <div>
+                  <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '10px' }}>
+                    依頼者タイプ（複数選択可・任意）
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {CLIENT_TYPES.map(({ value, label }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => toggleClientType(value)}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '20px',
+                          border: form.clientTypes.includes(value) ? '2px solid #ff6b9d' : '1px solid rgba(255,255,255,0.15)',
+                          background: form.clientTypes.includes(value) ? 'rgba(255,107,157,0.2)' : 'transparent',
+                          color: form.clientTypes.includes(value) ? '#ff6b9d' : '#a9a8c0',
+                          fontSize: '14px',
+                          fontWeight: form.clientTypes.includes(value) ? '700' : '400',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -652,7 +769,7 @@ export default function ProfileSetupPage() {
                     </span>
                   ))}
                   {/* テキスト入力（タグの後ろに続く） */}
-                  {form.skills.length < 20 && (
+                  {form.skills.length < VALIDATION.SKILLS_MAX && (
                     <input
                       id="skill-input"
                       type="text"
@@ -679,7 +796,7 @@ export default function ProfileSetupPage() {
                   )}
                 </div>
                 <p style={{ color: '#7c7b99', fontSize: '12px', marginTop: '4px' }}>
-                  {form.skills.length} / 20 個　※ Backspace で最後のタグを削除できます
+                  {form.skills.length} / {VALIDATION.SKILLS_MAX} 個　※ Backspace で最後のタグを削除できます
                 </p>
                 {/* サジェスト */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
@@ -716,7 +833,7 @@ export default function ProfileSetupPage() {
                 <textarea
                   value={form.bio}
                   onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-                  maxLength={400}
+                  maxLength={VALIDATION.BIO_MAX}
                   rows={5}
                   placeholder={`あなたの活動やスタイルを紹介してください。\n例）はじめまして！イラストレーターの〇〇です。アニメ・ゲーム系のキャラクターデザインを得意としており、VTuberのキャラクターデザインやLive2Dモデル用イラストの制作実績が多数あります。丁寧なヒアリングをもとに、ご要望に合ったデザインをご提案します。お気軽にご相談ください！`}
                   style={{ ...inputStyle, resize: 'vertical' }}
@@ -819,7 +936,7 @@ export default function ProfileSetupPage() {
                 </div>
               ))}
 
-              {form.portfolios.length < 5 && (
+              {form.portfolios.length < VALIDATION.PORTFOLIOS_MAX && (
                 <button type="button" onClick={addPortfolio} style={addButtonStyle}>
                   + ポートフォリオを追加
                 </button>
@@ -911,7 +1028,7 @@ export default function ProfileSetupPage() {
                     value={form.deliveryDays}
                     onChange={(e) => setForm((f) => ({ ...f, deliveryDays: e.target.value }))}
                     placeholder="例: 2〜4週間"
-                    maxLength={30}
+                    maxLength={VALIDATION.DELIVERY_DAYS_MAX}
                     style={inputStyle}
                   />
                 </div>
@@ -1003,10 +1120,12 @@ export default function ProfileSetupPage() {
         <BioChatModal
           creatorTypes={form.creatorTypes}
           skills={form.skills}
-          onApply={(bio) => setForm((f) => ({ ...f, bio: bio.slice(0, 400) }))}
+          onApply={(bio) => setForm((f) => ({ ...f, bio: bio.slice(0, VALIDATION.BIO_MAX) }))}
           onClose={() => setShowBioChat(false)}
         />
       )}
+
+      <ScrollToTopButton alwaysShow />
     </div>
   )
 }
@@ -1055,4 +1174,12 @@ const addButtonStyle: React.CSSProperties = {
   fontSize: '15px',
   fontWeight: '600',
   cursor: 'pointer',
+}
+
+export default function ProfileSetupPage() {
+  return (
+    <Suspense>
+      <ProfileSetupContent />
+    </Suspense>
+  )
 }

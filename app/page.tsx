@@ -1,12 +1,6 @@
-import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+﻿import Link from 'next/link'
 
-export default async function HomePage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) redirect('/dashboard')
-
+export default function HomePage() {
   return (
     <div style={{
       minHeight: '100vh',
@@ -17,7 +11,7 @@ export default async function HomePage() {
       {/* ナビゲーション */}
       <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          CreMatch
+          Cralia
         </span>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <Link href="/login" style={{ color: '#a9a8c0', fontSize: '14px', fontWeight: '600', textDecoration: 'none' }}>ログイン</Link>
@@ -33,9 +27,9 @@ export default async function HomePage() {
           <span style={{ color: '#c77dff', fontSize: '13px', fontWeight: '600' }}>🎨 クリエイターのためのマッチングプラットフォーム</span>
         </div>
         <h1 style={{ fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: '900', lineHeight: '1.15', margin: '0 0 24px' }}>
-          クリエイターと発注者を<br />
+          すべてのクリエイターが<br />
           <span style={{ background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            つなぐ場所
+            つながる場所
           </span>
         </h1>
         <p style={{ fontSize: '18px', color: '#a9a8c0', lineHeight: '1.7', margin: '0 0 40px', maxWidth: '560px', marginLeft: 'auto', marginRight: 'auto' }}>
@@ -48,13 +42,16 @@ export default async function HomePage() {
           <Link href="/search" style={{ padding: '16px 36px', borderRadius: '16px', border: '1px solid rgba(199,125,255,0.35)', background: 'transparent', color: '#c77dff', fontSize: '16px', fontWeight: '700', textDecoration: 'none' }}>
             クリエイターを探す
           </Link>
+          <Link href="/login" style={{ padding: '16px 36px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#a9a8c0', fontSize: '16px', fontWeight: '700', textDecoration: 'none' }}>
+            ログイン
+          </Link>
         </div>
       </section>
 
       {/* 機能セクション */}
       <section style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 24px 100px' }}>
         <h2 style={{ textAlign: 'center', fontSize: '28px', fontWeight: '800', margin: '0 0 48px' }}>
-          CreMatchでできること
+          Craliaでできること
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
           {[
@@ -72,9 +69,15 @@ export default async function HomePage() {
             },
             {
               icon: '📣',
-              title: '発注者を探す',
-              desc: 'クリエイターとして仕事を探す。発注者にダイレクトに営業をかけましょう。',
+              title: 'お仕事募集中の依頼者',
+              desc: 'クリエイターとして仕事を探す。依頼者のプロフィールを確認してダイレクトに営業をかけましょう。',
               color: '#ff6b9d',
+            },
+            {
+              icon: '📋',
+              title: '案件を探す・募集する',
+              desc: 'クリエイターは公開中の案件を検索して応募。依頼者はクリエイター募集の案件を投稿して広く応募を受け付けられます。',
+              color: '#fbbf24',
             },
             {
               icon: '💬',
@@ -91,8 +94,14 @@ export default async function HomePage() {
             {
               icon: '🤖',
               title: 'AI支援機能',
-              desc: 'Claude AIがプロフィール文の作成をサポート。あなたの魅力を最大限に引き出します。',
+              desc: 'Claude AIがプロフィール文の作成や依頼文の作成をサポート。あなたの魅力・想いを最大限に引き出します。',
               color: '#f87171',
+            },
+            {
+              icon: '🎉',
+              title: '交流会への参加',
+              desc: 'Craliaが企画するクリエイター交流会に参加しよう。オンライン・オフラインを問わず、新しい仲間や仕事のきっかけが生まれる場を提供します。',
+              color: '#34d399',
             },
           ].map(({ icon, title, desc, color }) => (
             <div key={title} style={{ background: 'rgba(22,22,31,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '28px' }}>
@@ -120,7 +129,7 @@ export default async function HomePage() {
           <Link href="/login" style={{ color: '#5c5b78', fontSize: '13px', textDecoration: 'none' }}>ログイン</Link>
           <Link href="/signup" style={{ color: '#5c5b78', fontSize: '13px', textDecoration: 'none' }}>新規登録</Link>
         </div>
-        <p style={{ color: '#3c3c54', fontSize: '12px', margin: 0 }}>© 2026 CreMatch. All rights reserved.</p>
+        <p style={{ color: '#3c3c54', fontSize: '12px', margin: 0 }}>© 2026 Cralia. All rights reserved.</p>
       </footer>
     </div>
   )

@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import ProjectDetailClient from '@/components/ProjectDetailClient'
+import ProjectSchedule from '@/components/ProjectSchedule'
 
 export type ProjectRole = {
   id: string
@@ -84,6 +85,12 @@ export default async function ProjectPage({ params }: { params: { id: string } }
 
   const isOwner = user.id === project.owner_id
 
+  // スケジュールメンバー: 役職に割り当て済みのユーザーを重複排除して抽出
+  const scheduleMembers = roles
+    .filter((r) => r.assigned_user_id && r.assigned_user_name)
+    .map((r) => ({ userId: r.assigned_user_id!, name: r.assigned_user_name! }))
+    .filter((v, i, arr) => arr.findIndex((x) => x.userId === v.userId) === i)
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -91,8 +98,8 @@ export default async function ProjectPage({ params }: { params: { id: string } }
       color: '#f0eff8',
     }}>
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '22px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
-          CreMatch
+        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
+          Cralia
         </Link>
         <Link href="/projects" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>
           ← プロジェクト一覧へ
@@ -105,6 +112,16 @@ export default async function ProjectPage({ params }: { params: { id: string } }
         tasks={(tasks ?? []) as ProjectTask[]}
         isOwner={isOwner}
       />
+
+      {/* スケジュール機能（担当・依存関係管理） */}
+      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 24px 60px' }}>
+        <ProjectSchedule
+          projectId={params.id}
+          isOwner={isOwner}
+          members={scheduleMembers}
+          initialTaskCount={(tasks ?? []).length}
+        />
+      </div>
     </div>
   )
 }

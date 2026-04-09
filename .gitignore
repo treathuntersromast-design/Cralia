@@ -20,6 +20,10 @@ Thumbs.db
 .vscode
 .idea
 
+# Claude Code
+.claude/settings.json
+.claude/settings.local.json
+
 # デバッグ
 npm-debug.log*
 yarn-debug.log*

@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit, sanitizeAiResponse } from '@/lib/aiGuard'
+import { logError } from '@/lib/logError'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-const SYSTEM_PROMPT = `あなたはクリエイターマッチングプラットフォーム「CreMatch」の自己紹介文作成アシスタントです。
+const SYSTEM_PROMPT = `あなたはクリエイターマッチングプラットフォーム「Cralia」の自己紹介文作成アシスタントです。
 クリエイターが依頼者に好印象を与える、魅力的な自己紹介文（400文字以内）を作成する手助けをします。
 
 ## 絶対に守るルール
@@ -49,6 +51,14 @@ export async function POST(request: NextRequest) {
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json({ error: 'AI機能が設定されていません（APIキー未設定）' }, { status: 503 })
+    }
+
+    const { allowed, used, limit } = await checkRateLimit(user.id, 'ai/bio')
+    if (!allowed) {
+      return NextResponse.json(
+        { error: `1日の利用上限（${limit}回）に達しました。明日またお試しください。（本日 ${used}/${limit} 回）` },
+        { status: 429 }
+      )
     }
 
     let body: { messages?: unknown; creatorTypes?: string[]; skills?: string[] }
@@ -99,7 +109,8 @@ export async function POST(request: NextRequest) {
       messages: apiMessages,
     })
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : ''
+    const rawText = response.content[0].type === 'text' ? response.content[0].text : ''
+    const { sanitized: text } = sanitizeAiResponse(rawText)
 
     // ```bio ... ``` ブロックを抽出
     const bioMatch = text.match(/```bio\n([\s\S]*?)```/)
@@ -109,7 +120,8 @@ export async function POST(request: NextRequest) {
 
   } catch (e) {
     const message = e instanceof Error ? e.message : '予期しないエラーが発生しました'
-    console.error('[ai/bio]', message)
+    const stack   = e instanceof Error ? e.stack   : undefined
+    await logError({ endpoint: 'ai/bio', message, stack })
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

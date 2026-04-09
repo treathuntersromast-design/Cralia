@@ -7,20 +7,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
   const code = req.nextUrl.searchParams.get('code');
   const creatorId = req.nextUrl.searchParams.get('state');
+  const oauthError = req.nextUrl.searchParams.get('error')
+  const errorDescription = req.nextUrl.searchParams.get('error_description')
 
   console.log('callback受信 code:', code ? '取得OK' : 'なし');
   console.log('creator_id:', creatorId);
 
+  // Googleからエラーが返ってきた場合（access_denied, redirect_uri_mismatch等）
+  if (oauthError) {
+    console.error('Google OAuth error:', oauthError, errorDescription)
+    const msg = encodeURIComponent(oauthError === 'access_denied'
+      ? 'Googleカレンダーへのアクセスが拒否されました。'
+      : `Google認証エラー: ${oauthError}`)
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL}/settings/calendar?cal=error&msg=${msg}`
+    )
+  }
+
   if (!code || !creatorId) {
-    return NextResponse.json({ error: 'Missing code or state' }, { status: 400 });
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL}/settings/calendar?cal=error&msg=${encodeURIComponent('認証コードの取得に失敗しました。')}`
+    )
   }
 
   // トークン交換
@@ -40,7 +56,11 @@ export async function GET(req: NextRequest) {
   console.log('トークン取得結果:', tokenRes.ok ? '成功' : '失敗', tokenData.error ?? '');
 
   if (!tokenRes.ok) {
-    return NextResponse.json({ error: 'Token exchange failed', detail: tokenData }, { status: 500 });
+    console.error('Token exchange failed:', tokenData)
+    const msg = encodeURIComponent(`トークン取得に失敗しました: ${tokenData.error ?? 'unknown'}`)
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL}/settings/calendar?cal=error&msg=${msg}`
+    )
   }
 
   const { access_token, refresh_token, expires_in } = tokenData;
@@ -50,17 +70,20 @@ export async function GET(req: NextRequest) {
   const { error } = await supabase
     .from('creator_tokens')
     .upsert(
-      { creator_id: creatorId, access_token, refresh_token, expires_at: expiresAt },
+      { creator_id: creatorId, access_token, refresh_token: refresh_token ?? null, expires_at: expiresAt },
       { onConflict: 'creator_id' }
     );
 
   console.log('Supabase保存結果:', error ? '失敗: ' + error.message : '成功');
 
   if (error) {
-    return NextResponse.json({ error: 'DB save failed', detail: error }, { status: 500 });
+    const msg = encodeURIComponent(`DB保存に失敗しました: ${error.message}`)
+    return NextResponse.redirect(
+      `${process.env.NEXT_PUBLIC_APP_URL}/settings/calendar?cal=error&msg=${msg}`
+    )
   }
 
   return NextResponse.redirect(
-    `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?cal=connected`
+    `${process.env.NEXT_PUBLIC_APP_URL}/settings/calendar?cal=connected`
   );
 }

@@ -3,21 +3,9 @@
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import type { ProjectBoard, ProjectRole, ProjectTask } from '@/app/projects/[id]/page'
+import { PROJECT_STATUS_MAP, TASK_STATUS_MAP, PROJECT_STATUS } from '@/lib/constants/statuses'
 
-const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  recruiting:  { label: 'メンバー募集中', color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
-  in_progress: { label: '進行中',         color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
-  completed:   { label: '完了',           color: '#a9a8c0', bg: 'rgba(169,168,192,0.12)' },
-  cancelled:   { label: 'キャンセル',     color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
-}
-
-const TASK_STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  todo:        { label: '未着手', color: '#a9a8c0', bg: 'rgba(169,168,192,0.12)' },
-  in_progress: { label: '進行中', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
-  done:        { label: '完了',   color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
-}
-
-const PROJECT_STATUSES = ['recruiting', 'in_progress', 'completed', 'cancelled'] as const
+const PROJECT_STATUSES = Object.values(PROJECT_STATUS) as string[]
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px', borderRadius: '10px',
@@ -198,7 +186,7 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
     })
   }
 
-  const st = STATUS_MAP[project_.status] ?? STATUS_MAP.recruiting
+  const st = PROJECT_STATUS_MAP[project_.status] ?? PROJECT_STATUS_MAP.recruiting
 
   // Group tasks by status
   const todoTasks = tasks.filter((t) => t.status === 'todo')
@@ -252,7 +240,7 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
                 boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
               }}>
                 {PROJECT_STATUSES.map((s) => {
-                  const m = STATUS_MAP[s]
+                  const m = PROJECT_STATUS_MAP[s]
                   return (
                     <button key={s} onClick={() => changeStatus(s)}
                       style={{

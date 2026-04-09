@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+﻿import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 
@@ -37,6 +37,20 @@ export default async function SettingsPage() {
       color: '#4ade80',
     },
     {
+      href: '/settings/calendar',
+      icon: '📅',
+      title: 'Googleカレンダー連携',
+      desc: 'カレンダーと連携して依頼時の納期提案を有効にする',
+      color: '#4ade80',
+    },
+    {
+      href: '/settings/creator-profile',
+      icon: '🎨',
+      title: 'クリエイター設定',
+      desc: '同時受注上限・料金プランの設定',
+      color: '#c77dff',
+    },
+    {
       href: '/notifications',
       icon: '🔔',
       title: '通知',
@@ -52,14 +66,14 @@ export default async function SettingsPage() {
       color: '#f0eff8',
     }}>
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '22px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
-          CreMatch
+        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
+          Cralia
         </Link>
         <Link href="/dashboard" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>← ダッシュボードへ</Link>
       </div>
 
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '40px 24px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 8px' }}>設定</h1>
+        <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 8px' }}>設定</h1>
         <p style={{ color: '#7c7b99', fontSize: '14px', margin: '0 0 32px' }}>
           {profile?.display_name ?? user.email}
         </p>

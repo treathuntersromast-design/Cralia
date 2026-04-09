@@ -1,8 +1,8 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'プライバシーポリシー | CreMatch',
+  title: 'プライバシーポリシー | Cralia',
 }
 
 const SECTIONS = [
@@ -100,8 +100,8 @@ const SECTIONS = [
     title: '第12条（お問い合わせ窓口）',
     content: `個人情報の取り扱いに関するご相談・ご請求は、以下の窓口までご連絡ください。
 
-CreMatch 個人情報取り扱い担当
-メール: privacy@crematch.jp
+Cralia 個人情報取り扱い担当
+メール: privacy@Cralia.jp
 
 ※お問い合わせ内容を確認の上、遅滞なくご回答いたします。`,
   },
@@ -146,7 +146,7 @@ export default function PrivacyPage() {
             制定日：2026年1月1日　最終改定日：2026年1月1日
           </p>
           <p style={{ color: '#c0bdd8', fontSize: '14px', lineHeight: '1.8', marginTop: '16px' }}>
-            CreMatch（以下「当社」）は、クリエイターと依頼者のマッチングサービス「CreMatch」（以下「本サービス」）を提供するにあたり、お客様の個人情報の保護を重要な責務と捉え、個人情報の保護に関する法律（個人情報保護法）その他関連法令を遵守した上で、以下のプライバシーポリシー（以下「本ポリシー」）に従い適切に取り扱います。
+            Cralia（以下「当社」）は、クリエイターと依頼者のマッチングサービス「Cralia」（以下「本サービス」）を提供するにあたり、お客様の個人情報の保護を重要な責務と捉え、個人情報の保護に関する法律（個人情報保護法）その他関連法令を遵守した上で、以下のプライバシーポリシー（以下「本ポリシー」）に従い適切に取り扱います。
           </p>
         </div>
 

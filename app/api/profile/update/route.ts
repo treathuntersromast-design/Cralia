@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { CREATOR_TYPES } from '@/lib/constants/lists'
+import { VALIDATION } from '@/lib/constants/validation'
 
 function isSafeUrl(urlStr: string): boolean {
   try {
@@ -10,7 +12,7 @@ function isSafeUrl(urlStr: string): boolean {
   }
 }
 
-const ALLOWED_CREATOR_TYPES = ['VTuber', 'ボカロP', 'イラストレーター', '動画編集者', '楽曲制作関係', '3Dモデラー', 'デザイナー', 'その他']
+const ALLOWED_CREATOR_TYPES = [...CREATOR_TYPES]
 
 export async function PATCH(request: NextRequest) {
   const supabase = createClient()
@@ -29,7 +31,7 @@ export async function PATCH(request: NextRequest) {
   const userPatch: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (displayName !== undefined) {
     if (typeof displayName !== 'string' || !displayName.trim()) return NextResponse.json({ error: '表示名を入力してください' }, { status: 400 })
-    if (displayName.trim().length > 30) return NextResponse.json({ error: '表示名は30文字以内にしてください' }, { status: 400 })
+    if (displayName.trim().length > VALIDATION.DISPLAY_NAME_MAX) return NextResponse.json({ error: `表示名は${VALIDATION.DISPLAY_NAME_MAX}文字以内にしてください` }, { status: 400 })
     userPatch.display_name = displayName.trim()
   }
   if (snsLinks !== undefined) {
@@ -66,28 +68,28 @@ export async function PATCH(request: NextRequest) {
   }
   if (bio !== undefined) {
     if (typeof bio !== 'string') return NextResponse.json({ error: '不正なリクエストです' }, { status: 400 })
-    if (bio.trim().length > 400) return NextResponse.json({ error: '自己紹介は400文字以内にしてください' }, { status: 400 })
+    if (bio.trim().length > VALIDATION.BIO_MAX) return NextResponse.json({ error: `自己紹介は${VALIDATION.BIO_MAX}文字以内にしてください` }, { status: 400 })
     profilePatch.bio = bio.trim() || null
   }
   if (skills !== undefined) {
-    if (!Array.isArray(skills) || skills.length > 20) return NextResponse.json({ error: 'スキルは20個以内にしてください' }, { status: 400 })
-    if (skills.some((s: unknown) => typeof s !== 'string' || s.length > 50)) return NextResponse.json({ error: 'スキルは1つ50文字以内にしてください' }, { status: 400 })
+    if (!Array.isArray(skills) || skills.length > VALIDATION.SKILLS_MAX) return NextResponse.json({ error: `スキルは${VALIDATION.SKILLS_MAX}個以内にしてください` }, { status: 400 })
+    if (skills.some((s: unknown) => typeof s !== 'string' || s.length > VALIDATION.SKILL_TAG_MAX)) return NextResponse.json({ error: `スキルは1つ${VALIDATION.SKILL_TAG_MAX}文字以内にしてください` }, { status: 400 })
     profilePatch.skills = skills
   }
   if (priceMin !== undefined) {
-    const parsed = priceMin === '' ? null : parseInt(priceMin, 10)
+    const parsed = priceMin === '' || priceMin === null ? null : parseInt(String(priceMin), 10)
     if (parsed !== null && (isNaN(parsed) || parsed < 0)) return NextResponse.json({ error: '単価は0以上の数値を入力してください' }, { status: 400 })
     if (parsed !== null && parsed > 100_000_000) return NextResponse.json({ error: '単価は1億円以内で入力してください' }, { status: 400 })
     profilePatch.price_min = parsed
   }
   if (priceNote !== undefined) {
     if (typeof priceNote !== 'string') return NextResponse.json({ error: '不正なリクエストです' }, { status: 400 })
-    if (priceNote.length > 500) return NextResponse.json({ error: '単価補足は500文字以内にしてください' }, { status: 400 })
+    if (priceNote.length > VALIDATION.PRICE_NOTE_MAX) return NextResponse.json({ error: `単価補足は${VALIDATION.PRICE_NOTE_MAX}文字以内にしてください` }, { status: 400 })
     profilePatch.price_note = priceNote.trim() || null
   }
   if (deliveryDays !== undefined) {
     if (typeof deliveryDays !== 'string') return NextResponse.json({ error: '不正なリクエストです' }, { status: 400 })
-    if (deliveryDays.length > 30) return NextResponse.json({ error: '納品期間は30文字以内にしてください' }, { status: 400 })
+    if (deliveryDays.length > VALIDATION.DELIVERY_DAYS_MAX) return NextResponse.json({ error: `納品期間は${VALIDATION.DELIVERY_DAYS_MAX}文字以内にしてください` }, { status: 400 })
     profilePatch.delivery_days = deliveryDays.trim() || null
   }
 

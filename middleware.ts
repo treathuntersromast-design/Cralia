@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { ACTIVITY_STYLE_ID } from '@/lib/constants/activity'
 
 // 認証が必要なパス（前方一致）
-const PROTECTED_PATHS = ['/dashboard', '/profile', '/chat', '/orders', '/settings', '/clients', '/projects', '/notifications', '/messages']
+const PROTECTED_PATHS = ['/dashboard', '/profile', '/chat', '/orders', '/settings', '/clients', '/projects', '/notifications', '/messages', '/events']
 
 // 認証済みユーザーがアクセスすべきでないパス
 const AUTH_PATHS = ['/login', '/signup']
 
 // プロフィール未設定でもアクセス可能な認証済み専用パス
-const SETUP_ALLOWED_PATHS = ['/profile/setup']
+const SETUP_ALLOWED_PATHS = ['/profile/setup', '/profile/setup-prompt']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -61,16 +62,16 @@ export async function middleware(request: NextRequest) {
   if (isProtected) {
     const { data: profile } = await supabase
       .from('users')
-      .select('roles, display_name')
+      .select('activity_style_id, display_name')
       .eq('id', user.id)
       .single()
 
     const needsSetup = !profile || (
-      (!profile.roles || profile.roles.length === 0) &&
+      !Object.values(ACTIVITY_STYLE_ID).includes(profile.activity_style_id as number) &&
       !profile.display_name
     )
     if (needsSetup) {
-      return NextResponse.redirect(new URL('/profile/setup', request.url))
+      return NextResponse.redirect(new URL('/profile/setup-prompt', request.url))
     }
   }
 

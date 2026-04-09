@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
           !profile.display_name
         )
         if (needsSetup) {
-          return NextResponse.redirect(`${origin}/profile/setup`)
+          return NextResponse.redirect(`${origin}/profile/setup-prompt`)
         }
       }
 
