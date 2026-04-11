@@ -1,8 +1,10 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import ProjectDetailClient from '@/components/ProjectDetailClient'
 import ProjectSchedule from '@/components/ProjectSchedule'
+import ProjectBoardReviewSection from '@/components/ProjectBoardReviewSection'
 
 export type ProjectRole = {
   id: string
@@ -84,12 +86,28 @@ export default async function ProjectPage({ params }: { params: { id: string } }
   }))
 
   const isOwner = user.id === project.owner_id
+  const isCompleted = project.status === 'completed'
 
-  // スケジュールメンバー: 役職に割り当て済みのユーザーを重複排除して抽出
+  // スケジュール・評価メンバー: 役職に割り当て済みのユーザーを重複排除して抽出
   const scheduleMembers = roles
     .filter((r) => r.assigned_user_id && r.assigned_user_name)
     .map((r) => ({ userId: r.assigned_user_id!, name: r.assigned_user_name! }))
     .filter((v, i, arr) => arr.findIndex((x) => x.userId === v.userId) === i)
+
+  // プロジェクトボード評価の既存レビューを取得
+  let boardReviews: { id: string; rating: number; comment: string | null; created_at: string; reviewer_id: string; reviewee_id: string }[] = []
+  if (isCompleted) {
+    const db = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data } = await db
+      .from('reviews')
+      .select('id, rating, comment, created_at, reviewer_id, reviewee_id')
+      .eq('project_board_id', params.id)
+      .order('created_at', { ascending: false })
+    boardReviews = data ?? []
+  }
 
   return (
     <div style={{
@@ -114,12 +132,23 @@ export default async function ProjectPage({ params }: { params: { id: string } }
       />
 
       {/* スケジュール機能（担当・依存関係管理） */}
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 24px 60px' }}>
+      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 24px 0' }}>
         <ProjectSchedule
           projectId={params.id}
           isOwner={isOwner}
           members={scheduleMembers}
           initialTaskCount={(tasks ?? []).length}
+        />
+      </div>
+
+      {/* メンバー評価セクション（完了後のみ表示） */}
+      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 24px 60px' }}>
+        <ProjectBoardReviewSection
+          boardId={params.id}
+          isCompleted={isCompleted}
+          currentUserId={user.id}
+          members={scheduleMembers}
+          initialReviews={boardReviews}
         />
       </div>
     </div>

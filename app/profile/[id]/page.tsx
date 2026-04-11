@@ -88,6 +88,33 @@ export default async function ProfilePage({
     return `${Math.floor(diff / 365)}年以上前`
   }
 
+  // 評価統計取得（被評価者として受け取った評価）
+  type EvalStat = { count: number; avg: number | null }
+  let evalAsCreator: EvalStat = { count: 0, avg: null }
+  let evalAsClient:  EvalStat = { count: 0, avg: null }
+  let evalAsMember:  EvalStat = { count: 0, avg: null }
+  let recentReviews: { id: string; rating: number; comment: string | null; created_at: string; review_type: string }[] = []
+  try {
+    const admin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    const { data: allReviews } = await admin
+      .from('reviews')
+      .select('id, rating, review_type, comment, created_at')
+      .eq('reviewee_id', params.id)
+      .order('created_at', { ascending: false })
+
+    const calcStat = (rows: typeof allReviews, type: string): EvalStat => {
+      const filtered = (rows ?? []).filter((r) => r.review_type === type)
+      if (filtered.length === 0) return { count: 0, avg: null }
+      const avg = filtered.reduce((s, r) => s + r.rating, 0) / filtered.length
+      return { count: filtered.length, avg: Math.round(avg * 10) / 10 }
+    }
+
+    evalAsCreator = calcStat(allReviews, 'order_to_creator')
+    evalAsClient  = calcStat(allReviews, 'order_to_client')
+    evalAsMember  = calcStat(allReviews, 'project_member')
+    recentReviews = (allReviews ?? []).slice(0, 5)
+  } catch { /* 取得失敗時は非表示 */ }
+
   // creatorTypesの正規化（「その他（xxx）」→ 表示用にそのまま渡す）
   const creatorTypes: string[] = creator.creator_type ?? []
   const snsLinks: { platform: string; id: string }[] = Array.isArray(userRecord?.sns_links) ? (userRecord!.sns_links as { platform: string; id: string }[]) : []
@@ -161,6 +188,10 @@ export default async function ProfilePage({
         hasActiveReceivedOrders={hasActiveReceivedOrders}
         hasActiveSentOrders={hasActiveSentOrders}
         lastSeen={formatLastSeen(lastSignInAt)}
+        evalAsCreator={evalAsCreator}
+        evalAsClient={evalAsClient}
+        evalAsMember={evalAsMember}
+        recentReviews={recentReviews}
       />
     </div>
   )

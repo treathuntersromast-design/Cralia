@@ -32,7 +32,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     db.from('users').select('display_name, avatar_url').eq('id', order.client_id).single(),
     db.from('users').select('display_name, avatar_url').eq('id', order.creator_id).single(),
     db.from('reviews')
-      .select('id, rating, comment, created_at, reviewer_id')
+      .select('id, rating, comment, created_at, reviewer_id, reviewee_id, review_type')
       .eq('project_id', params.id)
       .order('created_at', { ascending: false }),
   ])
@@ -212,9 +212,12 @@ export default async function OrderDetailPage({ params }: { params: { id: string
         <ReviewSection
           orderId={order.id}
           isClient={isClient}
+          isCreator={isCreator}
           isCompleted={isCompleted}
           currentUserId={user.id}
-          initialReviews={reviews ?? []}
+          clientId={order.client_id}
+          creatorId={order.creator_id}
+          initialReviews={(reviews ?? []) as { id: string; rating: number; comment: string | null; created_at: string; reviewer_id: string; reviewee_id: string; review_type: string }[]}
         />
       </div>
     </main>

@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import AvatarUpload from './AvatarUpload'
 import AvailabilityEditor from './AvailabilityEditor'
+import EvaluationReportModal from './EvaluationReportModal'
 import {
   CREATOR_TYPES, SKILL_SUGGESTIONS,
   SNS_PLATFORMS, SNS_ICONS, SNS_BASE_URLS,
@@ -41,6 +42,10 @@ interface Props {
   hasActiveReceivedOrders: boolean
   hasActiveSentOrders: boolean
   lastSeen: string
+  evalAsCreator: { count: number; avg: number | null }
+  evalAsClient:  { count: number; avg: number | null }
+  evalAsMember:  { count: number; avg: number | null }
+  recentReviews: { id: string; rating: number; comment: string | null; created_at: string; review_type: string }[]
 }
 
 // ---- スタイル ----
@@ -716,6 +721,132 @@ export default function ProfilePageClient(props: Props) {
         )}
       </Section>
 
+      {/* 評価セクション */}
+      <EvaluationSection
+        isOwner={props.isOwner}
+        evalAsCreator={props.evalAsCreator}
+        evalAsClient={props.evalAsClient}
+        evalAsMember={props.evalAsMember}
+        recentReviews={props.recentReviews}
+      />
+
+    </div>
+  )
+}
+
+// ---- 評価セクション ----
+
+function EvaluationSection({
+  isOwner,
+  evalAsCreator,
+  evalAsClient,
+  evalAsMember,
+  recentReviews,
+}: {
+  isOwner: boolean
+  evalAsCreator: { count: number; avg: number | null }
+  evalAsClient:  { count: number; avg: number | null }
+  evalAsMember:  { count: number; avg: number | null }
+  recentReviews: { id: string; rating: number; comment: string | null; created_at: string; review_type: string }[]
+}) {
+  const [reportReviewId, setReportReviewId] = useState<string | null>(null)
+
+  const hasAnyEval = evalAsCreator.count > 0 || evalAsClient.count > 0 || evalAsMember.count > 0
+
+  const statItems = [
+    { label: 'クリエイターとして', stat: evalAsCreator, color: '#c77dff', bg: 'rgba(199,125,255,0.08)', border: 'rgba(199,125,255,0.2)' },
+    { label: '依頼者として',       stat: evalAsClient,  color: '#60a5fa', bg: 'rgba(96,165,250,0.08)',  border: 'rgba(96,165,250,0.2)'  },
+    { label: 'プロジェクトメンバーとして', stat: evalAsMember, color: '#4ade80', bg: 'rgba(74,222,128,0.08)',  border: 'rgba(74,222,128,0.2)'  },
+  ]
+
+  const typeLabel = (type: string) =>
+    type === 'order_to_creator' ? 'クリエイターとして受けた評価'
+    : type === 'order_to_client' ? '依頼者として受けた評価'
+    : 'プロジェクトメンバーとして受けた評価'
+
+  return (
+    <>
+      <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(199,125,255,0.15)', borderRadius: '20px', padding: '24px 28px', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '14px', fontWeight: '700', color: '#7c7b99', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 20px' }}>評価</h2>
+
+        {/* 統計カード */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: hasAnyEval ? '24px' : '0' }}>
+          {statItems.map(({ label, stat, color, bg, border }) => (
+            <div key={label} style={{ background: bg, border: `1px solid ${border}`, borderRadius: '14px', padding: '14px 16px' }}>
+              <p style={{ color: '#7c7b99', fontSize: '10px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 6px' }}>{label}</p>
+              {stat.count > 0 ? (
+                <>
+                  <p style={{ color, fontSize: '22px', fontWeight: '800', margin: '0 0 2px' }}>
+                    {stat.avg != null ? `★${stat.avg}` : '-'}
+                  </p>
+                  <p style={{ color: '#7c7b99', fontSize: '11px', margin: 0 }}>{stat.count}件</p>
+                </>
+              ) : (
+                <p style={{ color: '#5c5b78', fontSize: '13px', margin: 0 }}>評価なし</p>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* 最近の評価一覧 */}
+        {recentReviews.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {recentReviews.map((r) => (
+              <div key={r.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: r.comment ? '8px' : '0', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <StarDisplay rating={r.rating} />
+                    <span style={{ color: '#7c7b99', fontSize: '10px', fontWeight: '600', padding: '2px 7px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      {typeLabel(r.review_type)}
+                    </span>
+                    <span style={{ color: '#5c5b78', fontSize: '11px' }}>
+                      {new Date(r.created_at).toLocaleDateString('ja-JP')}
+                    </span>
+                  </div>
+                  {isOwner && (
+                    <button
+                      onClick={() => setReportReviewId(r.id)}
+                      style={{
+                        padding: '3px 10px', borderRadius: '20px', border: '1px solid rgba(248,113,113,0.3)',
+                        background: 'rgba(248,113,113,0.06)', color: '#f87171',
+                        fontSize: '11px', cursor: 'pointer',
+                      }}
+                    >
+                      報告する
+                    </button>
+                  )}
+                </div>
+                {r.comment && (
+                  <p style={{ color: '#d0cfea', fontSize: '13px', margin: 0, lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>{r.comment}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!hasAnyEval && (
+          <p style={{ color: '#5c5b78', fontSize: '14px', margin: 0 }}>まだ評価がありません</p>
+        )}
+      </div>
+
+      {reportReviewId && (
+        <EvaluationReportModal
+          reviewId={reportReviewId}
+          onClose={() => setReportReviewId(null)}
+        />
+      )}
+    </>
+  )
+}
+
+function StarDisplay({ rating }: { rating: number }) {
+  return (
+    <div style={{ display: 'flex', gap: '2px' }}>
+      {[1, 2, 3, 4, 5].map((s) => (
+        <span key={s} style={{ fontSize: '14px', filter: s <= rating ? 'none' : 'grayscale(1) opacity(0.25)' }}>
+          ⭐
+        </span>
+      ))}
     </div>
   )
 }

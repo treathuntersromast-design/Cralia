@@ -31,6 +31,8 @@ export default async function AdminPage() {
     { count: activeOrders },
     { data: recentErrors },
     { data: recentOrders },
+    { count: pendingReports },
+    { data: recentReports },
   ] = await Promise.all([
     db.from('users').select('*', { count: 'exact', head: true }),
     db.from('projects').select('*', { count: 'exact', head: true }),
@@ -39,6 +41,8 @@ export default async function AdminPage() {
     db.from('projects').select('*', { count: 'exact', head: true }).in('status', ['pending', 'accepted', 'in_progress', 'delivered']),
     db.from('error_logs').select('id, endpoint, message, created_at, user_id').order('created_at', { ascending: false }).limit(20),
     db.from('projects').select('id, title, status, created_at, client_id, creator_id').order('created_at', { ascending: false }).limit(10),
+    db.from('evaluation_reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    db.from('evaluation_reports').select('id, reason, status, created_at, reporter_id, review_id').order('created_at', { ascending: false }).limit(20),
   ])
 
   const stats = [
@@ -147,6 +151,59 @@ export default async function AdminPage() {
             </Link>
           </div>
         )}
+
+        {/* 評価報告（異議申し立て）セクション */}
+        {(pendingReports ?? 0) > 0 && (
+          <div style={{ marginTop: '20px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '14px', padding: '16px 20px' }}>
+            <p style={{ color: '#fbbf24', fontWeight: '700', fontSize: '14px', margin: '0 0 4px' }}>
+              ⚠️ 評価への異議申し立てが {pendingReports} 件あります（未対応）
+            </p>
+            <p style={{ color: '#a9a8c0', fontSize: '12px', margin: 0 }}>下記一覧を確認し、対応してください。</p>
+          </div>
+        )}
+
+        <div style={{ marginTop: '20px', background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '20px 24px' }}>
+          <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 16px' }}>
+            評価への異議申し立て（直近20件）
+          </h2>
+          {!recentReports || recentReports.length === 0 ? (
+            <p style={{ color: '#5c5b78', fontSize: '13px', margin: 0 }}>報告はありません ✅</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
+              {recentReports.map((rp) => {
+                const statusInfo: Record<string, { label: string; color: string; border: string }> = {
+                  pending:    { label: '未対応',   color: '#fbbf24', border: 'rgba(251,191,36,0.3)'  },
+                  reviewing:  { label: '確認中',   color: '#60a5fa', border: 'rgba(96,165,250,0.3)'  },
+                  resolved:   { label: '対応済み', color: '#4ade80', border: 'rgba(74,222,128,0.3)'  },
+                  dismissed:  { label: '却下',     color: '#a9a8c0', border: 'rgba(169,168,192,0.3)' },
+                }
+                const si = statusInfo[rp.status] ?? statusInfo.pending
+                return (
+                  <div key={rp.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', color: si.color, border: `1px solid ${si.border}`, background: 'transparent' }}>
+                        {si.label}
+                      </span>
+                      <span style={{ color: '#5c5b78', fontSize: '11px' }}>
+                        {new Date(rp.created_at).toLocaleString('ja-JP')}
+                      </span>
+                      <span style={{ color: '#7c7b99', fontSize: '11px' }}>
+                        報告者 ID: {rp.reporter_id.slice(0, 8)}...
+                      </span>
+                      <span style={{ color: '#7c7b99', fontSize: '11px' }}>
+                        レビュー ID: {rp.review_id.slice(0, 8)}...
+                      </span>
+                    </div>
+                    <p style={{ color: '#d0cfea', fontSize: '13px', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                      {rp.reason}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
       </div>
     </main>
   )

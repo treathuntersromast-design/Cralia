@@ -29,4 +29,8 @@ export const VALIDATION = {
   REAL_NAME_MAX:       50,
   PHONE_MAX:           15,
   ADDRESS_MAX:        200,
+
+  // 評価・報告
+  REVIEW_COMMENT_MAX: 500,
+  REPORT_REASON_MAX:  1000,
 } as const
