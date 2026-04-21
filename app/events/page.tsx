@@ -1,28 +1,52 @@
-﻿import { redirect } from 'next/navigation'
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
 
-export const dynamic = 'force-dynamic'
-
-// 交流会イベントの型（今後 DB テーブルを追加した際にここを差し替える）
 interface Event {
   id: string
   title: string
-  date: string          // ISO 文字列
-  location: string      // "オンライン" | 場所名
-  capacity: number      // 定員
-  applicants: number    // 申込済み人数
-  description: string
+  event_date: string
+  location: string
+  capacity: number
+  applicants: number
+  description: string | null
   tags: string[]
+  status: 'open' | 'closed' | 'cancelled'
+  isRegistered: boolean
 }
 
-// ダミーデータ（DB テーブル追加まで使用）
-const UPCOMING_EVENTS: Event[] = []
+export default function EventsPage() {
+  const [events, setEvents]       = useState<Event[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [registering, setRegistering] = useState<string | null>(null)
+  const [feedback, setFeedback]   = useState<{ id: string; msg: string } | null>(null)
 
-export default async function EventsPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login?next=/events')
+  useEffect(() => {
+    fetch('/api/events')
+      .then((r) => r.json())
+      .then((d) => { setEvents(d.data ?? []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  async function handleRegister(event: Event) {
+    setRegistering(event.id)
+    const method = event.isRegistered ? 'DELETE' : 'POST'
+    const res = await fetch(`/api/events/${event.id}`, { method })
+
+    if (res.ok) {
+      const msg = event.isRegistered ? '申込をキャンセルしました' : '申込が完了しました！'
+      setFeedback({ id: event.id, msg })
+      setEvents((prev) => prev.map((e) =>
+        e.id !== event.id ? e : {
+          ...e,
+          isRegistered: !e.isRegistered,
+          applicants: e.isRegistered ? e.applicants - 1 : e.applicants + 1,
+        }
+      ))
+    }
+    setRegistering(null)
+  }
 
   return (
     <main style={{
@@ -74,25 +98,46 @@ export default async function EventsPage() {
           </p>
         </div>
 
+        {/* ローディング */}
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '64px 0', color: '#7c7b99' }}>
+            読み込み中...
+          </div>
+        )}
+
         {/* イベント一覧 or 空状態 */}
-        {UPCOMING_EVENTS.length > 0 ? (
+        {!loading && events.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {UPCOMING_EVENTS.map((event) => {
+            {events.map((event) => {
               const remaining = event.capacity - event.applicants
               const isFull = remaining <= 0
-              const date = new Date(event.date)
+              const isCancelled = event.status === 'cancelled'
+              const date = new Date(event.event_date)
+              const fb = feedback?.id === event.id ? feedback.msg : null
 
               return (
                 <div key={event.id} style={{
                   background: 'rgba(22,22,31,0.9)',
-                  border: `1px solid ${isFull ? 'rgba(255,255,255,0.06)' : 'rgba(52,211,153,0.2)'}`,
+                  border: `1px solid ${isCancelled ? 'rgba(255,255,255,0.06)' : isFull ? 'rgba(255,255,255,0.06)' : 'rgba(52,211,153,0.2)'}`,
                   borderRadius: '20px', padding: '28px',
-                  opacity: isFull ? 0.6 : 1,
+                  opacity: isCancelled || isFull ? 0.6 : 1,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
                     <div style={{ flex: 1 }}>
-                      {/* タグ */}
+                      {/* タグ + 申込済みバッジ + 中止バッジ */}
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                        {isCancelled && (
+                          <span style={{
+                            fontSize: '11px', fontWeight: '600', padding: '2px 10px', borderRadius: '20px',
+                            background: 'rgba(248,113,113,0.15)', color: '#f87171',
+                          }}>中止</span>
+                        )}
+                        {event.isRegistered && !isCancelled && (
+                          <span style={{
+                            fontSize: '11px', fontWeight: '600', padding: '2px 10px', borderRadius: '20px',
+                            background: 'rgba(52,211,153,0.15)', color: '#34d399',
+                          }}>✓ 申込済み</span>
+                        )}
                         {event.tags.map((tag) => (
                           <span key={tag} style={{
                             fontSize: '11px', fontWeight: '600', padding: '2px 10px', borderRadius: '20px',
@@ -101,48 +146,72 @@ export default async function EventsPage() {
                         ))}
                       </div>
                       <h2 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 10px' }}>{event.title}</h2>
-                      <p style={{ color: '#a9a8c0', fontSize: '14px', lineHeight: '1.6', margin: '0 0 16px' }}>
-                        {event.description}
-                      </p>
+                      {event.description && (
+                        <p style={{ color: '#a9a8c0', fontSize: '14px', lineHeight: '1.6', margin: '0 0 16px' }}>
+                          {event.description}
+                        </p>
+                      )}
                       {/* 日時・場所 */}
                       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
                         <span style={{ color: '#7c7b99', fontSize: '13px' }}>
                           📅 {date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}
-                          {' '}
-                          {date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}〜
+                          {' '}{date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}〜
                         </span>
                         <span style={{ color: '#7c7b99', fontSize: '13px' }}>📍 {event.location}</span>
                       </div>
                     </div>
 
                     {/* 定員・申込ボタン */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px', flexShrink: 0 }}>
-                      <div style={{ textAlign: 'right' }}>
-                        <p style={{ margin: '0 0 2px', fontSize: '12px', color: '#7c7b99' }}>残り枠</p>
-                        <p style={{
-                          margin: 0, fontSize: '22px', fontWeight: '800',
-                          color: remaining <= 3 ? '#f87171' : '#34d399',
-                        }}>
-                          {isFull ? '満員' : `${remaining} 名`}
-                        </p>
-                        <p style={{ margin: 0, fontSize: '11px', color: '#5c5b78' }}>定員 {event.capacity} 名</p>
+                    {!isCancelled && (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px', flexShrink: 0 }}>
+                        <div style={{ textAlign: 'right' }}>
+                          <p style={{ margin: '0 0 2px', fontSize: '12px', color: '#7c7b99' }}>残り枠</p>
+                          <p style={{
+                            margin: 0, fontSize: '22px', fontWeight: '800',
+                            color: remaining <= 3 ? '#f87171' : '#34d399',
+                          }}>
+                            {isFull ? '満員' : `${remaining} 名`}
+                          </p>
+                          <p style={{ margin: 0, fontSize: '11px', color: '#5c5b78' }}>定員 {event.capacity} 名</p>
+                        </div>
+                        {isFull ? (
+                          <button disabled style={{
+                            padding: '12px 24px', borderRadius: '12px', border: 'none', cursor: 'not-allowed',
+                            background: 'rgba(255,255,255,0.06)', color: '#5c5b78',
+                            fontSize: '14px', fontWeight: '700',
+                          }}>申込締切</button>
+                        ) : (
+                          <button
+                            onClick={() => handleRegister(event)}
+                            disabled={registering === event.id}
+                            style={{
+                              padding: '12px 24px', borderRadius: '12px', border: 'none',
+                              cursor: registering === event.id ? 'not-allowed' : 'pointer',
+                              background: event.isRegistered
+                                ? 'rgba(248,113,113,0.15)'
+                                : 'linear-gradient(135deg, #34d399, #059669)',
+                              color: event.isRegistered ? '#f87171' : '#fff',
+                              fontSize: '14px', fontWeight: '700',
+                            }}
+                          >
+                            {registering === event.id ? '処理中...' : event.isRegistered ? 'キャンセルする' : '参加申込'}
+                          </button>
+                        )}
                       </div>
-                      <button
-                        disabled={isFull}
-                        style={{
-                          padding: '12px 24px', borderRadius: '12px', border: 'none', cursor: isFull ? 'not-allowed' : 'pointer',
-                          background: isFull ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg, #34d399, #059669)',
-                          color: isFull ? '#5c5b78' : '#fff',
-                          fontSize: '14px', fontWeight: '700',
-                        }}
-                      >
-                        {isFull ? '申込締切' : '参加申込'}
-                      </button>
-                    </div>
+                    )}
                   </div>
 
+                  {/* フィードバック */}
+                  {fb && (
+                    <div style={{
+                      marginTop: '12px', padding: '10px 14px', borderRadius: '10px',
+                      background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)',
+                      color: '#34d399', fontSize: '13px', fontWeight: '600',
+                    }}>{fb}</div>
+                  )}
+
                   {/* 残席少ない場合の警告 */}
-                  {!isFull && remaining <= 5 && (
+                  {!isFull && !isCancelled && remaining <= 5 && (
                     <div style={{
                       marginTop: '16px', padding: '10px 14px', borderRadius: '10px',
                       background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)',
@@ -155,8 +224,9 @@ export default async function EventsPage() {
               )
             })}
           </div>
-        ) : (
-          /* 空状態（イベント情報が出次第ここに表示される） */
+        )}
+
+        {!loading && events.length === 0 && (
           <div style={{
             background: 'rgba(22,22,31,0.8)',
             border: '1px solid rgba(52,211,153,0.15)',
@@ -183,7 +253,7 @@ export default async function EventsPage() {
           </div>
         )}
 
-        {/* 過去の交流会（将来的に実装） */}
+        {/* 参加について */}
         <div style={{ marginTop: '48px', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
           <h3 style={{ color: '#5c5b78', fontSize: '13px', fontWeight: '700', margin: '0 0 8px' }}>ℹ️ 参加について</h3>
           <ul style={{ color: '#7c7b99', fontSize: '13px', lineHeight: '1.8', margin: 0, paddingLeft: '20px' }}>

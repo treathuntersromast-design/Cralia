@@ -2,11 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import JobListingsClient from '@/components/JobListingsClient'
 
-vi.mock('next/link', () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  ),
-}))
+vi.mock('next/link')
 
 // ── テストデータ ─────────────────────────────────────────
 type Listing = Parameters<typeof JobListingsClient>[0]['listings'][0]

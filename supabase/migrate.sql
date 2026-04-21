@@ -45,6 +45,7 @@ ALTER TABLE public.reviews
 ALTER TABLE public.reviews
   ALTER COLUMN review_type SET NOT NULL;
 
+ALTER TABLE public.reviews DROP CONSTRAINT IF EXISTS reviews_review_type_check;
 ALTER TABLE public.reviews
   ADD CONSTRAINT reviews_review_type_check
     CHECK (review_type IN ('order_to_creator', 'order_to_client', 'project_member'));
@@ -54,6 +55,7 @@ ALTER TABLE public.reviews
   ALTER COLUMN project_id DROP NOT NULL;
 
 -- source XOR 制約（project_id / project_board_id どちらか一方のみ）
+ALTER TABLE public.reviews DROP CONSTRAINT IF EXISTS reviews_source_xor;
 ALTER TABLE public.reviews
   ADD CONSTRAINT reviews_source_xor CHECK (
     (project_id IS NOT NULL AND project_board_id IS NULL) OR
@@ -100,6 +102,10 @@ CREATE TABLE IF NOT EXISTS public.evaluation_reports (
 );
 
 ALTER TABLE public.evaluation_reports ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "eval_reports_select_own"   ON public.evaluation_reports;
+DROP POLICY IF EXISTS "eval_reports_insert_own"   ON public.evaluation_reports;
+DROP POLICY IF EXISTS "eval_reports_service_role" ON public.evaluation_reports;
 
 CREATE POLICY "eval_reports_select_own"   ON public.evaluation_reports FOR SELECT USING (auth.uid() = reporter_id);
 CREATE POLICY "eval_reports_insert_own"   ON public.evaluation_reports FOR INSERT WITH CHECK (auth.uid() = reporter_id);
