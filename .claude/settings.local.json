@@ -1,7 +1,9 @@
-﻿{
+{
   "permissions": {
     "allow": [
-      "Bash(ls -la /d/Project/Cralia/app/profile/[id]/)"
+      "Bash(ls -la /d/Project/Cralia/app/profile/[id]/)",
+      "Bash(git checkout *)",
+      "Bash(claude mcp *)"
     ]
   }
 }
