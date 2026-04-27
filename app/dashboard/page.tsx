@@ -7,6 +7,7 @@ import AvatarUpload from '@/components/AvatarUpload'
 import { activityStyleToLabel } from '@/lib/constants/activity'
 import { ORDER_STATUS_MAP, PROJECT_STATUS_MAP, INACTIVE_ORDER_STATUSES } from '@/lib/constants/statuses'
 import DashboardCalendar from '@/components/DashboardCalendar'
+import UpcomingMeetBanner from '@/components/UpcomingMeetBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -217,6 +218,9 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Meet アラート */}
+        <UpcomingMeetBanner calConnected={calConnected} />
 
         {/* ── 稼働中のプロジェクト（上部に移動） ── */}
         {activeProjects && activeProjects.length > 0 && (
