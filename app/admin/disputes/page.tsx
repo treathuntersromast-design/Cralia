@@ -1,8 +1,13 @@
-﻿import { redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { ORDER_STATUS_MAP } from '@/lib/constants/statuses'
+import { AlertTriangle, CheckCircle2, User } from 'lucide-react'
+import { AppHeader } from '@/components/layout/AppHeader'
+import { Container } from '@/components/ui/Container'
+import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,10 +35,9 @@ export default async function DisputesPage() {
 
   const projectIds = (disputedProjects ?? []).map((p) => p.id)
 
-  // クライアント・クリエイター情報を取得
-  const clientIds  = [...new Set((disputedProjects ?? []).map((p) => p.client_id))]
-  const creatorIds = [...new Set((disputedProjects ?? []).map((p) => p.creator_id))]
-  const allIds     = [...new Set([...clientIds, ...creatorIds])]
+  const clientIds  = Array.from(new Set((disputedProjects ?? []).map((p) => p.client_id)))
+  const creatorIds = Array.from(new Set((disputedProjects ?? []).map((p) => p.creator_id)))
+  const allIds     = Array.from(new Set([...clientIds, ...creatorIds]))
 
   const [{ data: usersData }, { data: messagesData }] = await Promise.all([
     allIds.length > 0
@@ -46,7 +50,6 @@ export default async function DisputesPage() {
 
   const userMap = Object.fromEntries((usersData ?? []).map((u) => [u.id, u]))
 
-  // プロジェクトごとの最新メッセージ
   const lastMessageMap: Record<string, { body: string; created_at: string }> = {}
   for (const m of messagesData ?? []) {
     if (!lastMessageMap[m.project_id]) {
@@ -57,36 +60,33 @@ export default async function DisputesPage() {
   const st = ORDER_STATUS_MAP['disputed']
 
   return (
-    <main style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8' }}>
-      {/* ヘッダー */}
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
-          Cralia
-        </Link>
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <Link href="/admin" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>← 管理者ダッシュボード</Link>
-          <span style={{ color: '#f87171', fontSize: '13px', fontWeight: '700', padding: '4px 12px', borderRadius: '20px', background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.3)' }}>
-            管理者
-          </span>
+    <div className="min-h-screen bg-[var(--c-bg)]">
+      <AppHeader />
+      <Container className="py-10">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <Link href="/admin" className="text-[14px] text-brand no-underline hover:underline">
+              ← 管理者ダッシュボード
+            </Link>
+          </div>
+          <Badge tone="danger" variant="soft">管理者</Badge>
         </div>
-      </div>
 
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 24px' }}>
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 6px' }}>異議申し立て中の依頼</h1>
-          <p style={{ color: '#7c7b99', fontSize: '14px', margin: 0 }}>
+        <div className="mb-8 mt-4">
+          <h1 className="text-[24px] font-bold mb-1">異議申し立て中の依頼</h1>
+          <p className="text-[14px] text-[var(--c-text-3)]">
             ステータスが「異議申し立て」になっている依頼の一覧です。依頼詳細ページで対応してください。
           </p>
         </div>
 
         {(!disputedProjects || disputedProjects.length === 0) ? (
-          <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '60px', textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
-            <p style={{ color: '#4ade80', fontWeight: '700', fontSize: '16px', margin: '0 0 6px' }}>異議申し立て中の依頼はありません</p>
-            <p style={{ color: '#5c5b78', fontSize: '13px', margin: 0 }}>現在すべての依頼が正常に進行中です</p>
+          <div className="bg-[var(--c-surface)] border border-[var(--c-border)] rounded-card py-16 text-center">
+            <CheckCircle2 size={40} className="text-[#16a34a] mx-auto mb-4" aria-hidden />
+            <p className="text-[#16a34a] font-bold text-[16px] mb-1">異議申し立て中の依頼はありません</p>
+            <p className="text-[13px] text-[var(--c-text-4)]">現在すべての依頼が正常に進行中です</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="flex flex-col gap-4">
             {disputedProjects.map((project) => {
               const client  = userMap[project.client_id]
               const creator = userMap[project.creator_id]
@@ -94,82 +94,60 @@ export default async function DisputesPage() {
               const daysSince = Math.floor((Date.now() - new Date(project.updated_at ?? project.created_at).getTime()) / 86400000)
 
               return (
-                <div key={project.id} style={{
-                  background: 'rgba(22,22,31,0.9)',
-                  border: '1px solid rgba(248,113,113,0.3)',
-                  borderRadius: '18px', padding: '24px',
-                }}>
+                <Card key={project.id} bordered className="p-6 border-[#dc2626]/20">
                   {/* ヘッダー行 */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
-                        <span style={{
-                          padding: '3px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700',
-                          color: st.color, background: st.bg, border: `1px solid ${st.border}`,
-                        }}>
-                          {st.label}
-                        </span>
+                  <div className="flex items-start justify-between gap-4 mb-5 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2.5 mb-2 flex-wrap">
+                        <Badge tone="danger" variant="soft">{st.label}</Badge>
                         {daysSince > 7 && (
-                          <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', color: '#f87171', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)' }}>
-                            ⚠️ {daysSince}日経過
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-[#dc2626] bg-[#dc2626]/8 border border-[#dc2626]/25 rounded-full px-2.5 py-0.5">
+                            <AlertTriangle size={10} aria-hidden />
+                            {daysSince}日経過
                           </span>
                         )}
-                        <span style={{ color: '#5c5b78', fontSize: '12px' }}>
+                        <span className="text-[12px] text-[var(--c-text-4)]">
                           {new Date(project.updated_at ?? project.created_at).toLocaleDateString('ja-JP')} 発生
                         </span>
                       </div>
-                      <h2 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {project.title}
-                      </h2>
+                      <h2 className="text-[18px] font-bold mb-1 truncate">{project.title}</h2>
                       {project.budget != null && project.order_type !== 'free' && (
-                        <p style={{ color: '#c77dff', fontSize: '14px', fontWeight: '700', margin: 0 }}>
-                          ¥{project.budget.toLocaleString()}
-                        </p>
+                        <p className="text-brand font-bold text-[14px]">¥{project.budget.toLocaleString()}</p>
                       )}
                     </div>
                     <Link
                       href={`/orders/${project.id}`}
-                      style={{
-                        flexShrink: 0, padding: '10px 20px', borderRadius: '12px',
-                        background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.35)',
-                        color: '#f87171', fontSize: '13px', fontWeight: '700', textDecoration: 'none',
-                      }}
+                      className="shrink-0 h-9 px-5 rounded-[8px] bg-[#dc2626]/10 border border-[#dc2626]/35 text-[#dc2626] text-[13px] font-bold no-underline hover:bg-[#dc2626]/15 transition-colors flex items-center"
                     >
                       詳細を確認 →
                     </Link>
                   </div>
 
                   {/* 当事者情報 */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                    {[
-                      { role: '依頼者（クライアント）', user: client, icon: '📣' },
-                      { role: 'クリエイター（受注者）', user: creator, icon: '🎨' },
-                    ].map(({ role, user: u, icon }) => (
-                      <div key={role} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '14px 16px' }}>
-                        <p style={{ color: '#5c5b78', fontSize: '11px', fontWeight: '700', margin: '0 0 8px', letterSpacing: '0.05em' }}>{role}</p>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {([
+                      { role: '依頼者（クライアント）', u: client },
+                      { role: 'クリエイター（受注者）', u: creator },
+                    ] as const).map(({ role, u }) => (
+                      <div key={role} className="bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-[10px] p-3.5">
+                        <p className="text-[11px] font-bold text-[var(--c-text-4)] tracking-wider uppercase mb-2">{role}</p>
                         {u ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{
-                              width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
-                              background: u.avatar_url ? 'transparent' : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-                            }}>
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full shrink-0 bg-brand-soft text-brand flex items-center justify-center overflow-hidden">
                               {u.avatar_url
-                                ? <img src={u.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                : <span style={{ fontSize: '14px' }}>{icon}</span>
+                                ? <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
+                                : <User size={14} aria-hidden />
                               }
                             </div>
-                            <div style={{ minWidth: 0 }}>
-                              <p style={{ fontWeight: '600', fontSize: '13px', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {u.display_name ?? '名前なし'}
-                              </p>
-                              <p style={{ color: '#5c5b78', fontSize: '11px', margin: 0 }}>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-[13px] truncate mb-0.5">{u.display_name ?? '名前なし'}</p>
+                              <p className="text-[11px] text-[var(--c-text-4)]">
                                 {u.entity_type === 'corporate' ? '法人・団体' : '個人'} · ID: {u.id.slice(0, 8)}...
                               </p>
                             </div>
                           </div>
                         ) : (
-                          <p style={{ color: '#5c5b78', fontSize: '13px', margin: 0 }}>情報なし</p>
+                          <p className="text-[13px] text-[var(--c-text-4)]">情報なし</p>
                         )}
                       </div>
                     ))}
@@ -177,22 +155,20 @@ export default async function DisputesPage() {
 
                   {/* 最新メッセージプレビュー */}
                   {lastMsg && (
-                    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '12px 14px' }}>
-                      <p style={{ color: '#5c5b78', fontSize: '11px', fontWeight: '700', margin: '0 0 6px', letterSpacing: '0.05em' }}>最新メッセージ</p>
-                      <p style={{ color: '#c0bdd8', fontSize: '13px', margin: '0 0 4px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                        {lastMsg.body}
-                      </p>
-                      <p style={{ color: '#5c5b78', fontSize: '11px', margin: 0 }}>
+                    <div className="bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-[8px] p-3.5">
+                      <p className="text-[11px] font-bold text-[var(--c-text-4)] tracking-wider uppercase mb-1.5">最新メッセージ</p>
+                      <p className="text-[13px] text-[var(--c-text-2)] mb-1 line-clamp-2">{lastMsg.body}</p>
+                      <p className="text-[11px] text-[var(--c-text-4)]">
                         {new Date(lastMsg.created_at).toLocaleString('ja-JP')}
                       </p>
                     </div>
                   )}
-                </div>
+                </Card>
               )
             })}
           </div>
         )}
-      </div>
-    </main>
+      </Container>
+    </div>
   )
 }

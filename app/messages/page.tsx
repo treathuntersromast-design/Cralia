@@ -1,6 +1,11 @@
-﻿import { redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { MessageCircle, ChevronRight } from 'lucide-react'
+import { AppHeader } from '@/components/layout/AppHeader'
+import { Container } from '@/components/ui/Container'
+import { Card } from '@/components/ui/Card'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,7 +14,6 @@ export default async function MessagesPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?next=/messages')
 
-  // 暫定：自分が参加している依頼（project）を取得してスレッド一覧として表示
   const { data: orders } = await supabase
     .from('projects')
     .select('id, title, status, created_at, client_id, creator_id')
@@ -18,62 +22,51 @@ export default async function MessagesPage() {
     .limit(30)
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--c-bg)',
-      color: 'var(--c-text)',
-    }}>
-      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
-          Cralia
-        </Link>
-        <Link href="/dashboard" style={{ color: 'var(--c-text-2)', fontSize: '14px', textDecoration: 'none' }}>← ダッシュボードへ</Link>
-      </div>
-
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '40px 24px' }}>
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 6px' }}>メッセージ</h1>
-          <p style={{ color: 'var(--c-text-3)', fontSize: '14px', margin: 0 }}>依頼に紐づいたチャットスレッド</p>
+    <div className="min-h-screen bg-[var(--c-bg)]">
+      <AppHeader />
+      <Container className="py-10">
+        <div className="mb-8">
+          <h1 className="text-[24px] font-bold mb-1">メッセージ</h1>
+          <p className="text-[14px] text-[var(--c-text-3)]">依頼に紐づいたチャットスレッド</p>
         </div>
 
-        {!orders || orders.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 24px', background: 'var(--c-surface)', borderRadius: '20px', border: '1px dashed var(--c-accent-a20)' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>💬</div>
-            <p style={{ fontSize: '16px', margin: '0 0 8px', fontWeight: '700' }}>まだメッセージはありません</p>
-            <p style={{ color: 'var(--c-text-3)', fontSize: '14px', margin: '0 0 24px' }}>依頼が成立するとチャットスレッドがここに表示されます</p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link href="/search" style={{ padding: '10px 24px', borderRadius: '12px', background: 'var(--c-grad-primary)', color: '#fff', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}>
-                クリエイターを探す
-              </Link>
-              <Link href="/clients" style={{ padding: '10px 24px', borderRadius: '12px', border: '1px solid var(--c-accent-a30)', background: 'transparent', color: 'var(--c-accent)', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}>
-                お仕事募集中の依頼者
-              </Link>
-            </div>
-          </div>
+        {(!orders || orders.length === 0) ? (
+          <EmptyState
+            icon={MessageCircle}
+            title="まだメッセージはありません"
+            description="依頼が成立するとチャットスレッドがここに表示されます"
+            action={
+              <div className="flex gap-3 justify-center flex-wrap mt-2">
+                <Link href="/search" className="inline-flex items-center h-9 px-4 rounded-[6px] bg-brand text-white text-[13px] font-medium no-underline hover:bg-brand-ink transition-colors">
+                  クリエイターを探す
+                </Link>
+                <Link href="/clients" className="inline-flex items-center h-9 px-4 rounded-[6px] border border-brand/25 text-brand text-[13px] font-medium no-underline hover:bg-brand/5 transition-colors">
+                  お仕事募集中の依頼者
+                </Link>
+              </div>
+            }
+          />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="flex flex-col gap-2">
             {orders.map((o) => (
-              <Link key={o.id} href={`/messages/${o.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div style={{
-                  background: 'var(--c-surface)', border: '1px solid var(--c-accent-a12)',
-                  borderRadius: '16px', padding: '18px 22px',
-                  display: 'flex', alignItems: 'center', gap: '14px',
-                }}>
-                  <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--c-grad-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>💬</div>
-                  <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <p style={{ fontWeight: '700', fontSize: '15px', margin: '0 0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.title}</p>
-                    <p style={{ color: 'var(--c-text-3)', fontSize: '12px', margin: 0 }}>
-                      {o.client_id === user.id ? '依頼者として' : 'クリエイターとして'} ·{' '}
-                      {new Date(o.created_at).toLocaleDateString('ja-JP')}
+              <Link key={o.id} href={`/messages/${o.id}`} className="no-underline text-[var(--c-text)]">
+                <Card bordered className="p-4 flex items-center gap-4 hover:border-brand transition-colors">
+                  <div className="w-11 h-11 rounded-full bg-brand-soft text-brand flex items-center justify-center shrink-0">
+                    <MessageCircle size={20} aria-hidden />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[15px] truncate mb-0.5">{o.title}</p>
+                    <p className="text-[12px] text-[var(--c-text-3)]">
+                      {o.client_id === user.id ? '依頼者として' : 'クリエイターとして'} · {new Date(o.created_at).toLocaleDateString('ja-JP')}
                     </p>
                   </div>
-                  <span style={{ color: 'var(--c-text-2)', fontSize: '13px' }}>→</span>
-                </div>
+                  <ChevronRight size={16} className="text-[var(--c-text-4)] shrink-0" aria-hidden />
+                </Card>
               </Link>
             ))}
           </div>
         )}
-      </div>
+      </Container>
     </div>
   )
 }

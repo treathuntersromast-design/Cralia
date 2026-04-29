@@ -48,6 +48,21 @@ export async function checkRateLimit(
   return { allowed: used <= limit, used, limit }
 }
 
+// ゲスト（未認証）用IP単位レート制限（インメモリ・1日5回上限）
+const GUEST_DAILY_LIMIT = 5
+const guestUsage = new Map<string, { date: string; count: number }>()
+
+export function checkGuestRateLimit(ip: string): { allowed: boolean; used: number; limit: number } {
+  const today = new Date().toISOString().slice(0, 10)
+  const entry = guestUsage.get(ip)
+  if (!entry || entry.date !== today) {
+    guestUsage.set(ip, { date: today, count: 1 })
+    return { allowed: true, used: 1, limit: GUEST_DAILY_LIMIT }
+  }
+  entry.count += 1
+  return { allowed: entry.count <= GUEST_DAILY_LIMIT, used: entry.count, limit: GUEST_DAILY_LIMIT }
+}
+
 // 外部URLパターン
 const URL_PATTERN = /https?:\/\/[^\s"')\]]+|www\.[a-z0-9-]+\.[a-z]{2,}[^\s"')\]]*/gi
 

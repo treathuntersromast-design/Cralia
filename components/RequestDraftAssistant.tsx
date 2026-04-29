@@ -126,7 +126,7 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
   }
 
   function extractDraftFromMessage(text: string): string | null {
-    const matches = [...text.matchAll(/```draft\n([\s\S]*?)```/g)]
+    const matches = Array.from(text.matchAll(/```draft\n([\s\S]*?)```/g))
     if (matches.length === 0) return null
     return matches[matches.length - 1][1].trim()
   }

@@ -75,12 +75,10 @@ export async function GET() {
 
   const gcalData = await gcalRes.json()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const meets = (gcalData.items ?? []).flatMap((item: any) => {
     const hangoutLink: string | null =
       item.hangoutLink ??
       (item.conferenceData?.entryPoints ?? []).find(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (ep: any) => ep.entryPointType === 'video'
       )?.uri ??
       null

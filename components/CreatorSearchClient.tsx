@@ -1,6 +1,12 @@
 'use client'
 
 import { useState, useMemo, useTransition, useCallback, useRef, useEffect } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
+import { Search, Hash, X } from 'lucide-react'
+import type { Creator } from '@/app/search/page'
+import { CREATOR_TYPES, SKILL_SUGGESTIONS } from '@/lib/constants/lists'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 const PAGE_SIZE = 100
 
@@ -10,26 +16,17 @@ function getPageNumbers(current: number, total: number): (number | '...')[] {
   if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total]
   return [1, '...', current - 1, current, current + 1, '...', total]
 }
-import { useRouter, usePathname } from 'next/navigation'
-import Link from 'next/link'
-import type { Creator } from '@/app/search/page'
-
-import { CREATOR_TYPES, SKILL_SUGGESTIONS } from '@/lib/constants/lists'
 
 const AVAIL_OPTIONS = [
-  { value: 'open',     label: '受付中',      color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
-  { value: 'one_slot', label: '要相談',      color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
-  { value: 'full',     label: '現在対応不可', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
+  { value: 'open',     label: '受付中',       color: 'text-[#16a34a]', bg: 'bg-[#4ade80]/12', border: 'border-[#4ade80]/50' },
+  { value: 'one_slot', label: '要相談',       color: 'text-[#d97706]', bg: 'bg-[#fbbf24]/12', border: 'border-[#fbbf24]/50' },
+  { value: 'full',     label: '現在対応不可', color: 'text-[#dc2626]', bg: 'bg-[#f87171]/12', border: 'border-[#f87171]/50' },
 ]
 
-const AVAIL_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  open:     { label: '受付中',      color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
-  one_slot: { label: '要相談',      color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
-  full:     { label: '現在対応不可', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
-}
-
-const filterLabelStyle: React.CSSProperties = {
-  color: 'var(--c-text-3)', fontSize: '12px', marginBottom: '8px', fontWeight: '600', letterSpacing: '0.06em',
+const AVAIL_MAP: Record<string, { label: string; colorCls: string; bgCls: string }> = {
+  open:     { label: '受付中',       colorCls: 'text-[#16a34a]', bgCls: 'bg-[#4ade80]/12' },
+  one_slot: { label: '要相談',       colorCls: 'text-[#d97706]', bgCls: 'bg-[#fbbf24]/12' },
+  full:     { label: '現在対応不可', colorCls: 'text-[#dc2626]', bgCls: 'bg-[#f87171]/12' },
 }
 
 interface Props {
@@ -49,15 +46,14 @@ export default function CreatorSearchClient({
   const pathname = usePathname()
   const [, startTransition] = useTransition()
 
-  const [query,         setQuery]         = useState(initialQ)
-  const [idQuery,       setIdQuery]       = useState(initialId)
-  const [searchMode,    setSearchMode]    = useState<'keyword' | 'id'>(initialId ? 'id' : 'keyword')
-  const [selectedType,  setSelectedType]  = useState(initialType)
-  const [selectedAvail, setSelectedAvail] = useState(initialAvailability)
+  const [query,          setQuery]         = useState(initialQ)
+  const [idQuery,        setIdQuery]       = useState(initialId)
+  const [searchMode,     setSearchMode]    = useState<'keyword' | 'id'>(initialId ? 'id' : 'keyword')
+  const [selectedType,   setSelectedType]  = useState(initialType)
+  const [selectedAvail,  setSelectedAvail] = useState(initialAvailability)
   const [selectedSkills, setSelectedSkills] = useState<string[]>(initialSkills)
   const [page, setPage] = useState(1)
 
-  // 現在の全フィルター状態を URL に書き込む
   const pushUrl = useCallback((type: string, avail: string, q: string, id: string, skills: string[]) => {
     const params = new URLSearchParams()
     if (type) params.set('type', type)
@@ -71,16 +67,14 @@ export default function CreatorSearchClient({
     })
   }, [pathname, router])
 
-  // アンマウント時に debounce タイマーをクリア
   useEffect(() => {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [])
 
-  // フィルター変更時はページをリセット
   useEffect(() => { setPage(1) }, [query, idQuery, searchMode, selectedSkills])
 
-  // テキスト入力はデバウンスして URL 更新
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const handleQueryChange = (value: string) => {
     setQuery(value)
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -123,8 +117,6 @@ export default function CreatorSearchClient({
     pushUrl(selectedType, selectedAvail, query, '', [])
   }
 
-  // プロフィールリンクに付与する back URL（現在の検索状態を保存）
-  // filtered.map 内で毎回生成せず1回だけ計算する
   const backUrl = useMemo(() => {
     const params = new URLSearchParams()
     if (selectedType) params.set('type', selectedType)
@@ -137,12 +129,10 @@ export default function CreatorSearchClient({
   }, [selectedType, selectedAvail, query, selectedSkills, pathname, from])
 
   const filtered = useMemo(() => {
-    // IDモード：display_id が完全一致するものだけ表示
     if (searchMode === 'id' && idQuery.trim()) {
       return creators.filter((c) => c.display_id === idQuery.trim())
     }
     return creators.filter((c) => {
-      // キーワード検索（名前・スキル・タイプ・自己紹介）
       if (query.trim()) {
         const q = query.trim().toLowerCase()
         const hit =
@@ -152,7 +142,6 @@ export default function CreatorSearchClient({
           (c.bio ?? '').toLowerCase().includes(q)
         if (!hit) return false
       }
-      // スキルフィルター
       if (selectedSkills.length > 0) {
         if (!selectedSkills.some((s) => (c.skills ?? []).includes(s))) return false
       }
@@ -164,81 +153,76 @@ export default function CreatorSearchClient({
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 24px' }}>
+    <div className="max-w-[1000px] mx-auto px-6 py-10">
 
       {/* タイトル */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: '800', margin: '0 0 6px' }}>
-          クリエイターを探す
-        </h1>
-        <p style={{ color: 'var(--c-text-3)', fontSize: '14px', margin: 0 }}>
+      <div className="mb-8">
+        <h1 className="text-[28px] font-bold mb-1.5">クリエイターを探す</h1>
+        <p className="text-[14px] text-[var(--c-text-3)]">
           {filtered.length} 人のクリエイターが見つかりました
-          {totalPages > 1 && <span style={{ marginLeft: '8px' }}>（{page} / {totalPages} ページ）</span>}
+          {totalPages > 1 && <span className="ml-2">（{page} / {totalPages} ページ）</span>}
         </p>
       </div>
 
       {/* 検索モード切替 + 検索バー */}
-      <div style={{ marginBottom: '28px' }}>
-        {/* タブ */}
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
+      <div className="mb-7">
+        <div className="flex gap-1 mb-2.5">
           {(['keyword', 'id'] as const).map((mode) => (
             <button
               key={mode}
               type="button"
               onClick={() => setSearchMode(mode)}
-              style={{
-                padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '600',
-                border: searchMode === mode ? 'none' : '1px solid var(--c-border-2)',
-                background: searchMode === mode ? 'var(--c-accent-a20)' : 'transparent',
-                color: searchMode === mode ? 'var(--c-accent)' : 'var(--c-text-3)', cursor: 'pointer',
-              }}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[13px] font-semibold transition-colors ${
+                searchMode === mode
+                  ? 'bg-brand-soft text-brand border-0'
+                  : 'border border-[var(--c-border-2)] text-[var(--c-text-3)] bg-transparent hover:bg-[var(--c-surface)]'
+              }`}
             >
-              {mode === 'keyword' ? '🔍 キーワード検索' : '🔢 ID検索'}
+              {mode === 'keyword' ? <><Search size={13} aria-hidden /> キーワード検索</> : <><Hash size={13} aria-hidden /> ID検索</>}
             </button>
           ))}
         </div>
 
         {searchMode === 'keyword' ? (
-          <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '18px', pointerEvents: 'none' }}>🔍</span>
+          <div className="relative">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--c-text-3)] pointer-events-none" aria-hidden />
             <input
               type="text"
               value={query}
               onChange={(e) => handleQueryChange(e.target.value)}
               placeholder="名前・スキル・クリエイタータイプ・自己紹介で検索..."
-              style={{
-                width: '100%', padding: '14px 16px 14px 48px', borderRadius: '14px',
-                border: '1px solid var(--c-accent-a25)', background: 'var(--c-input-bg)',
-                color: 'var(--c-text)', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
-              }}
+              className="w-full h-12 pl-12 pr-11 rounded-[14px] border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[15px] outline-none focus:border-brand transition"
             />
             {query && (
-              <button type="button" onClick={() => handleQueryChange('')}
-                style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--c-text-3)', cursor: 'pointer', fontSize: '18px' }}>
-                ×
+              <button
+                type="button"
+                onClick={() => handleQueryChange('')}
+                title="クリア"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-0 text-[var(--c-text-3)] cursor-pointer hover:text-[var(--c-text-2)] transition-colors"
+              >
+                <X size={18} aria-hidden />
               </button>
             )}
           </div>
         ) : (
-          <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '18px', pointerEvents: 'none' }}>🔢</span>
+          <div className="relative">
+            <Hash size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--c-text-3)] pointer-events-none" aria-hidden />
             <input
               type="text"
               value={idQuery}
               onChange={(e) => handleIdChange(e.target.value)}
               placeholder="8桁のユーザーIDを入力（例: 00123456）"
               maxLength={8}
-              style={{
-                width: '100%', padding: '14px 16px 14px 48px', borderRadius: '14px',
-                border: '1px solid var(--c-accent-a25)', background: 'var(--c-input-bg)',
-                color: 'var(--c-text)', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
-                fontFamily: 'monospace', letterSpacing: '0.1em',
-              }}
+              className="w-full h-12 pl-12 pr-11 rounded-[14px] border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[15px] outline-none focus:border-brand transition font-mono tracking-wider"
             />
             {idQuery && (
-              <button type="button" onClick={() => { setIdQuery(''); pushUrl('', '', '', '', []) }}
-                style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--c-text-3)', cursor: 'pointer', fontSize: '18px' }}>
-                ×
+              <button
+                type="button"
+                onClick={() => { setIdQuery(''); pushUrl('', '', '', '', []) }}
+                title="クリア"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-0 text-[var(--c-text-3)] cursor-pointer hover:text-[var(--c-text-2)] transition-colors"
+              >
+                <X size={18} aria-hidden />
               </button>
             )}
           </div>
@@ -246,31 +230,26 @@ export default function CreatorSearchClient({
       </div>
 
       {/* フィルターパネル */}
-      <div style={{
-        background: 'var(--c-surface-2)',
-        border: '1px solid var(--c-accent-a12)',
-        borderRadius: '16px',
-        padding: '20px 24px',
-        marginBottom: '32px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '18px',
-      }}>
+      <div className="bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-[16px] px-6 py-5 mb-8 flex flex-col gap-4.5">
         {/* 受付状況 */}
         <div>
-          <p style={filterLabelStyle}>受付状況</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <p className="text-[12px] text-[var(--c-text-3)] font-semibold tracking-wider uppercase mb-2">受付状況</p>
+          <div className="flex flex-wrap gap-2">
             {AVAIL_OPTIONS.map((opt) => {
               const active = selectedAvail === opt.value
               return (
-                <button key={opt.value} type="button" onClick={() => toggleAvail(opt.value)}
-                  style={{
-                    padding: '6px 14px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer',
-                    border: active ? `2px solid ${opt.color}` : '1px solid rgba(255,255,255,0.12)',
-                    background: active ? opt.bg : 'var(--c-input-bg-2)',
-                    color: active ? opt.color : 'var(--c-text-2)', fontWeight: active ? '700' : '400',
-                  }}>
-                  ● {opt.label}
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => toggleAvail(opt.value)}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] transition-colors ${
+                    active
+                      ? `border-2 ${opt.border} ${opt.bg} ${opt.color} font-bold`
+                      : 'border border-[var(--c-border-2)] bg-[var(--c-input-bg)] text-[var(--c-text-2)]'
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${active ? opt.color.replace('text-', 'bg-') : 'bg-[var(--c-text-4)]'}`} aria-hidden />
+                  {opt.label}
                 </button>
               )
             })}
@@ -279,18 +258,21 @@ export default function CreatorSearchClient({
 
         {/* クリエイタータイプ */}
         <div>
-          <p style={filterLabelStyle}>クリエイタータイプ</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <p className="text-[12px] text-[var(--c-text-3)] font-semibold tracking-wider uppercase mb-2">クリエイタータイプ</p>
+          <div className="flex flex-wrap gap-2">
             {CREATOR_TYPES.map((t) => {
               const active = selectedType === t
               return (
-                <button key={t} type="button" onClick={() => toggleType(t)}
-                  style={{
-                    padding: '6px 14px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer',
-                    border: active ? '2px solid var(--c-accent)' : '1px solid var(--c-border-2)',
-                    background: active ? 'var(--c-accent-a20)' : 'var(--c-input-bg-2)',
-                    color: active ? 'var(--c-accent)' : 'var(--c-text-2)', fontWeight: active ? '700' : '400',
-                  }}>
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => toggleType(t)}
+                  className={`px-3.5 py-1.5 rounded-full text-[13px] transition-colors ${
+                    active
+                      ? 'border-2 border-brand bg-brand-soft text-brand font-bold'
+                      : 'border border-[var(--c-border-2)] bg-[var(--c-input-bg)] text-[var(--c-text-2)]'
+                  }`}
+                >
                   {t}
                 </button>
               )
@@ -300,26 +282,32 @@ export default function CreatorSearchClient({
 
         {/* スキル */}
         <div>
-          <p style={filterLabelStyle}>
+          <p className="text-[12px] text-[var(--c-text-3)] font-semibold tracking-wider uppercase mb-2">
             スキル
             {selectedSkills.length > 0 && (
-              <button type="button" onClick={clearSkills}
-                style={{ marginLeft: '10px', background: 'none', border: 'none', color: 'var(--c-accent-alt)', fontSize: '11px', cursor: 'pointer', padding: 0 }}>
+              <button
+                type="button"
+                onClick={clearSkills}
+                className="ml-2.5 bg-transparent border-0 text-brand text-[11px] cursor-pointer hover:underline p-0"
+              >
                 クリア
               </button>
             )}
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <div className="flex flex-wrap gap-2">
             {SKILL_SUGGESTIONS.map((s) => {
               const active = selectedSkills.includes(s)
               return (
-                <button key={s} type="button" onClick={() => toggleSkill(s)}
-                  style={{
-                    padding: '6px 14px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer',
-                    border: active ? '2px solid var(--c-accent-alt)' : '1px solid var(--c-border-2)',
-                    background: active ? 'var(--c-alt-a15)' : 'var(--c-input-bg-2)',
-                    color: active ? 'var(--c-accent-alt)' : 'var(--c-text-2)', fontWeight: active ? '700' : '400',
-                  }}>
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => toggleSkill(s)}
+                  className={`px-3.5 py-1.5 rounded-full text-[13px] transition-colors ${
+                    active
+                      ? 'border-2 border-brand bg-brand-soft text-brand font-bold'
+                      : 'border border-[var(--c-border-2)] bg-[var(--c-input-bg)] text-[var(--c-text-2)]'
+                  }`}
+                >
                   {s}
                 </button>
               )
@@ -330,18 +318,14 @@ export default function CreatorSearchClient({
 
       {/* 結果グリッド */}
       {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--c-text-3)' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-          <p style={{ fontSize: '16px', margin: 0 }}>条件に一致するクリエイターが見つかりませんでした</p>
-          <p style={{ fontSize: '13px', margin: '8px 0 0', color: 'var(--c-text-4)' }}>検索ワードやフィルターを変えてみてください</p>
-        </div>
+        <EmptyState
+          icon={Search}
+          title="条件に一致するクリエイターが見つかりませんでした"
+          description="検索ワードやフィルターを変えてみてください"
+        />
       ) : (
         <>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: '16px',
-          }}>
+          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
             {paged.map((c) => (
               <CreatorCard key={c.creator_id} creator={c} backUrl={backUrl} />
             ))}
@@ -349,33 +333,32 @@ export default function CreatorSearchClient({
 
           {/* ページネーション */}
           {totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', marginTop: '40px', flexWrap: 'wrap' }}>
+            <div className="flex justify-center items-center gap-1.5 mt-10 flex-wrap">
               <button
                 type="button"
                 disabled={page === 1}
                 onClick={() => { setPage(p => p - 1); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                style={{
-                  padding: '8px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: '600',
-                  border: '1px solid var(--c-border-2)', background: 'transparent',
-                  color: page === 1 ? 'var(--c-text-4)' : 'var(--c-text-2)', cursor: page === 1 ? 'not-allowed' : 'pointer',
-                }}
-              >← 前へ</button>
+                className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[var(--c-border-2)] bg-transparent text-[var(--c-text-2)] disabled:text-[var(--c-text-4)] disabled:cursor-not-allowed hover:bg-[var(--c-surface)] transition-colors"
+              >
+                ← 前へ
+              </button>
 
               {getPageNumbers(page, totalPages).map((p, i) =>
                 p === '...' ? (
-                  <span key={`el-${i}`} style={{ color: 'var(--c-text-4)', padding: '0 4px', fontSize: '13px' }}>…</span>
+                  <span key={`el-${i}`} className="text-[var(--c-text-4)] px-1 text-[13px]">…</span>
                 ) : (
                   <button
                     key={p}
                     type="button"
                     onClick={() => { setPage(p as number); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                    style={{
-                      width: '38px', height: '38px', borderRadius: '10px', fontSize: '13px', fontWeight: '700',
-                      border: page === p ? '2px solid var(--c-accent-a50)' : '1px solid var(--c-border-2)',
-                      background: page === p ? 'var(--c-accent-a20)' : 'transparent',
-                      color: page === p ? 'var(--c-accent)' : 'var(--c-text-2)', cursor: 'pointer',
-                    }}
-                  >{p}</button>
+                    className={`w-[38px] h-[38px] rounded-[10px] text-[13px] font-bold transition-colors ${
+                      page === p
+                        ? 'border-2 border-brand/50 bg-brand-soft text-brand'
+                        : 'border border-[var(--c-border-2)] bg-transparent text-[var(--c-text-2)] hover:bg-[var(--c-surface)]'
+                    }`}
+                  >
+                    {p}
+                  </button>
                 )
               )}
 
@@ -383,12 +366,10 @@ export default function CreatorSearchClient({
                 type="button"
                 disabled={page === totalPages}
                 onClick={() => { setPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                style={{
-                  padding: '8px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: '600',
-                  border: '1px solid var(--c-border-2)', background: 'transparent',
-                  color: page === totalPages ? 'var(--c-text-4)' : 'var(--c-text-2)', cursor: page === totalPages ? 'not-allowed' : 'pointer',
-                }}
-              >次へ →</button>
+                className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[var(--c-border-2)] bg-transparent text-[var(--c-text-2)] disabled:text-[var(--c-text-4)] disabled:cursor-not-allowed hover:bg-[var(--c-surface)] transition-colors"
+              >
+                次へ →
+              </button>
             </div>
           )}
         </>
@@ -402,127 +383,92 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
   const initial = c.display_name?.[0]?.toUpperCase() ?? '?'
 
   return (
-    <Link href={`/profile/${c.creator_id}?back=${backUrl}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-      <div
-        style={{
-          background: 'var(--c-surface)',
-          border: '1px solid var(--c-accent-a15)',
-          borderRadius: '20px',
-          overflow: 'hidden',
-          cursor: 'pointer',
-          transition: 'border-color 0.15s, background 0.15s',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget as HTMLDivElement
-          el.style.borderColor = 'var(--c-accent-a40)'
-          el.style.background = 'var(--c-surface-r)'
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget as HTMLDivElement
-          el.style.borderColor = 'var(--c-accent-a15)'
-          el.style.background = 'var(--c-surface)'
-        }}
-      >
-        {/* ポートフォリオサムネ（最大2枚） */}
+    <Link href={`/profile/${c.creator_id}?back=${backUrl}`} className="no-underline text-[var(--c-text)] block">
+      <div className="bg-[var(--c-surface)] border border-[var(--c-border)] rounded-[20px] overflow-hidden flex flex-col hover:border-brand transition-colors">
+        {/* ポートフォリオサムネ */}
         {c.thumbnails.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: c.thumbnails.length >= 2 ? '1fr 1fr' : '1fr', gap: '2px' }}>
+          <div className={`grid gap-0.5 ${c.thumbnails.length >= 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
             {c.thumbnails.slice(0, 2).map((thumb, i) => (
               <img
                 key={i}
                 src={thumb}
                 alt=""
-                style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', display: 'block' }}
+                className="w-full aspect-video object-cover block"
               />
             ))}
           </div>
         )}
 
-        <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+        <div className="p-4.5 flex flex-col gap-3 flex-1">
           {/* アバター + 名前 + 受付状況 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '44px', height: '44px', borderRadius: '50%', flexShrink: 0,
-              overflow: 'hidden',
-              background: 'var(--c-grad-primary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '17px', fontWeight: '700', color: '#fff',
-            }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-11 h-11 rounded-full shrink-0 overflow-hidden bg-brand flex items-center justify-center text-[17px] font-bold text-white">
               {c.avatar_url
-                ? <img src={c.avatar_url} alt={c.display_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ? <img src={c.avatar_url} alt={c.display_name} className="w-full h-full object-cover" />
                 : initial}
             </div>
-            <div style={{ overflow: 'hidden', flex: 1 }}>
-              <div style={{ fontWeight: '700', fontSize: '15px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div className="overflow-hidden flex-1">
+              <div className="font-bold text-[15px] overflow-hidden text-ellipsis whitespace-nowrap">
                 {c.display_name}
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--c-text-3)', marginTop: '1px', display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <div className="text-[11px] text-[var(--c-text-3)] mt-px flex gap-1.5 items-center">
                 <span>{c.entity_type === 'corporate' ? '法人・団体' : '個人'}</span>
                 {c.display_id && (
-                  <span style={{ fontFamily: 'monospace', letterSpacing: '0.05em', color: 'var(--c-text-4)' }}>
+                  <span className="font-mono tracking-wider text-[var(--c-text-4)]">
                     ID: {c.display_id}
                   </span>
                 )}
               </div>
             </div>
-            <span style={{
-              padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '700',
-              color: avail.color, background: avail.bg, flexShrink: 0, whiteSpace: 'nowrap',
-            }}>
+            <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 whitespace-nowrap ${avail.colorCls} ${avail.bgCls}`}>
               ● {avail.label}
             </span>
           </div>
 
           {/* クリエイタータイプ */}
           {(c.creator_type ?? []).length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+            <div className="flex flex-wrap gap-1.5">
               {(c.creator_type ?? []).slice(0, 3).map((t) => (
-                <span key={t} style={{
-                  padding: '3px 10px', borderRadius: '20px', fontSize: '12px',
-                  background: 'var(--c-accent-a15)', color: 'var(--c-accent)', fontWeight: '600',
-                }}>
+                <span key={t} className="px-2.5 py-0.5 rounded-full text-[12px] bg-brand-soft text-brand font-semibold">
                   {t}
                 </span>
               ))}
               {(c.creator_type ?? []).length > 3 && (
-                <span style={{ color: 'var(--c-text-3)', fontSize: '12px', alignSelf: 'center' }}>+{(c.creator_type ?? []).length - 3}</span>
+                <span className="text-[var(--c-text-3)] text-[12px] self-center">
+                  +{(c.creator_type ?? []).length - 3}
+                </span>
               )}
             </div>
           )}
 
           {/* スキル */}
           {(c.skills ?? []).length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+            <div className="flex flex-wrap gap-1.5">
               {(c.skills ?? []).slice(0, 4).map((s) => (
-                <span key={s} style={{
-                  padding: '3px 10px', borderRadius: '20px', fontSize: '12px',
-                  border: '1px solid var(--c-border-2)', color: 'var(--c-text-2)',
-                }}>
+                <span key={s} className="px-2.5 py-0.5 rounded-full text-[12px] border border-[var(--c-border-2)] text-[var(--c-text-2)]">
                   {s}
                 </span>
               ))}
               {(c.skills ?? []).length > 4 && (
-                <span style={{ color: 'var(--c-text-3)', fontSize: '12px', alignSelf: 'center' }}>+{(c.skills ?? []).length - 4}</span>
+                <span className="text-[var(--c-text-3)] text-[12px] self-center">
+                  +{(c.skills ?? []).length - 4}
+                </span>
               )}
             </div>
           )}
 
           {/* bio */}
           {c.bio && (
-            <p style={{
-              color: 'var(--c-text-2)', fontSize: '13px', lineHeight: '1.6', margin: 0,
-              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-            }}>
+            <p className="text-[var(--c-text-2)] text-[13px] leading-[1.6] m-0 line-clamp-2">
               {c.bio}
             </p>
           )}
 
           {/* 価格 */}
           {c.price_min != null && c.price_min >= 0 && (
-            <div style={{ paddingTop: '8px', borderTop: '1px solid var(--c-border)', marginTop: 'auto' }}>
-              <span style={{ color: 'var(--c-text-3)', fontSize: '12px' }}>希望単価 </span>
-              <span style={{ color: 'var(--c-text)', fontSize: '14px', fontWeight: '600' }}>
+            <div className="pt-2 border-t border-[var(--c-border)] mt-auto">
+              <span className="text-[var(--c-text-3)] text-[12px]">希望単価 </span>
+              <span className="text-[var(--c-text)] text-[14px] font-semibold">
                 ¥{c.price_min.toLocaleString()} 〜
               </span>
             </div>

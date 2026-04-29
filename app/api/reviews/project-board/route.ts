@@ -89,11 +89,11 @@ export async function POST(request: NextRequest) {
     .eq('project_id', boardId)
     .not('assigned_user_id', 'is', null)
 
-  const otherMemberIds = [...new Set(
+  const otherMemberIds = Array.from(new Set(
     (allRoles ?? [])
       .map((r) => r.assigned_user_id as string)
       .filter((id) => id !== user.id)
-  )]
+  ))
 
   // 空配列の場合はスキップ（評価しない）
   if (evaluations.length === 0) {

@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { ArrowLeft } from 'lucide-react'
 import ChatThread from './ChatThread'
 
 export const dynamic = 'force-dynamic'
@@ -39,19 +40,17 @@ export default async function MessageThreadPage({ params }: { params: { id: stri
     : (clientUser?.display_name  ?? '依頼者')
 
   return (
-    <main style={{ height: '100dvh', background: 'var(--c-bg)', color: 'var(--c-text)', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      {/* ヘッダー */}
-      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
-        <Link href="/messages" style={{ color: 'var(--c-text-2)', fontSize: '18px', textDecoration: 'none', lineHeight: 1 }}>←</Link>
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          <p style={{ fontWeight: '700', fontSize: '15px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {partnerName}
-          </p>
-          <p style={{ color: 'var(--c-text-4)', fontSize: '12px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {order.title}
-          </p>
+    <main className="h-dvh bg-[var(--c-bg)] text-[var(--c-text)] flex flex-col">
+      {/* チャットヘッダー */}
+      <div className="border-b border-[var(--c-border)] px-5 py-3.5 flex items-center gap-3.5 shrink-0 bg-[var(--c-surface)]">
+        <Link href="/messages" className="text-[var(--c-text-2)] no-underline flex items-center">
+          <ArrowLeft size={20} aria-hidden />
+        </Link>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-[15px] truncate">{partnerName}</p>
+          <p className="text-[12px] text-[var(--c-text-4)] truncate">{order.title}</p>
         </div>
-        <Link href={`/orders/${order.id}`} style={{ color: 'var(--c-accent)', fontSize: '12px', textDecoration: 'none', flexShrink: 0 }}>
+        <Link href={`/orders/${order.id}`} className="text-brand text-[12px] no-underline hover:underline shrink-0">
           依頼詳細 →
         </Link>
       </div>

@@ -1,6 +1,10 @@
 'use client'
 
 import { useState, useMemo, useTransition, useCallback, useRef, useEffect } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import { Search, X, Mail } from 'lucide-react'
+import type { Client } from '@/app/clients/page'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 const PAGE_SIZE = 100
 
@@ -10,21 +14,19 @@ function getPageNumbers(current: number, total: number): (number | '...')[] {
   if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total]
   return [1, '...', current - 1, current, current + 1, '...', total]
 }
-import { useRouter, usePathname } from 'next/navigation'
-import type { Client } from '@/app/clients/page'
 
 const ENTITY_OPTIONS = [
   { value: 'individual', label: '個人' },
-  { value: 'corporate', label: '法人・団体' },
+  { value: 'corporate',  label: '法人・団体' },
 ]
 
-const SNS_ICONS: Record<string, string> = {
-  'X (Twitter)': '𝕏',
-  Instagram: '📷',
-  TikTok: '🎵',
-  Twitch: '🟣',
-  Bluesky: '🦋',
-  ホームページ: '🌐',
+const SNS_LABELS: Record<string, string> = {
+  'X (Twitter)': 'X',
+  Instagram: 'Instagram',
+  TikTok: 'TikTok',
+  Twitch: 'Twitch',
+  Bluesky: 'Bluesky',
+  ホームページ: 'Web',
 }
 
 const SNS_BASE_URLS: Record<string, string> = {
@@ -34,10 +36,6 @@ const SNS_BASE_URLS: Record<string, string> = {
   Twitch: 'https://twitch.tv/',
   Bluesky: 'https://bsky.app/profile/',
   ホームページ: '',
-}
-
-const filterLabelStyle: React.CSSProperties = {
-  color: 'var(--c-text-3)', fontSize: '12px', marginBottom: '8px', fontWeight: '600', letterSpacing: '0.06em',
 }
 
 function formatJoined(dateStr: string): string {
@@ -119,66 +117,56 @@ export default function ClientSearchClient({ clients, initialEntity, initialQ }:
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 24px' }}>
+    <div className="max-w-[1000px] mx-auto px-6 py-10">
 
       {/* タイトル */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: '800', margin: '0 0 6px' }}>
-          お仕事募集中の依頼者
-        </h1>
-        <p style={{ color: 'var(--c-text-3)', fontSize: '14px', margin: 0 }}>
+      <div className="mb-8">
+        <h1 className="text-[28px] font-bold mb-1.5">お仕事募集中の依頼者</h1>
+        <p className="text-[14px] text-[var(--c-text-3)]">
           {filtered.length} 人の依頼者が見つかりました
-          {totalPages > 1 && <span style={{ marginLeft: '8px' }}>（{page} / {totalPages} ページ）</span>}
+          {totalPages > 1 && <span className="ml-2">（{page} / {totalPages} ページ）</span>}
         </p>
       </div>
 
       {/* 検索バー */}
-      <div style={{ position: 'relative', marginBottom: '28px' }}>
-        <span style={{
-          position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)',
-          fontSize: '18px', pointerEvents: 'none',
-        }}>🔍</span>
+      <div className="relative mb-7">
+        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--c-text-3)] pointer-events-none" aria-hidden />
         <input
           type="text"
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
           placeholder="名前で検索..."
-          style={{
-            width: '100%', padding: '14px 16px 14px 48px', borderRadius: '14px',
-            border: '1px solid var(--c-alt-a25)',
-            background: 'var(--c-input-bg)',
-            color: 'var(--c-text)', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
-          }}
+          className="w-full h-12 pl-12 pr-11 rounded-[14px] border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[15px] outline-none focus:border-brand transition"
         />
         {query && (
-          <button type="button" onClick={() => handleQueryChange('')}
-            style={{
-              position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)',
-              background: 'none', border: 'none', color: 'var(--c-text-3)', cursor: 'pointer', fontSize: '18px',
-            }}>×</button>
+          <button
+            type="button"
+            onClick={() => handleQueryChange('')}
+            title="クリア"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-0 text-[var(--c-text-3)] cursor-pointer hover:text-[var(--c-text-2)] transition-colors"
+          >
+            <X size={18} aria-hidden />
+          </button>
         )}
       </div>
 
       {/* フィルターパネル */}
-      <div style={{
-        background: 'var(--c-surface-2)',
-        border: '1px solid var(--c-alt-a12)',
-        borderRadius: '16px',
-        padding: '20px 24px',
-        marginBottom: '32px',
-      }}>
-        <p style={filterLabelStyle}>活動形態</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+      <div className="bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-[16px] px-6 py-5 mb-8">
+        <p className="text-[12px] text-[var(--c-text-3)] font-semibold tracking-wider uppercase mb-2">活動形態</p>
+        <div className="flex flex-wrap gap-2">
           {ENTITY_OPTIONS.map((opt) => {
             const active = selectedEntity === opt.value
             return (
-              <button key={opt.value} type="button" onClick={() => toggleEntity(opt.value)}
-                style={{
-                  padding: '6px 16px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer',
-                  border: active ? '2px solid var(--c-accent-alt)' : '1px solid var(--c-border-2)',
-                  background: active ? 'var(--c-alt-a15)' : 'var(--c-accent-a04)',
-                  color: active ? 'var(--c-accent-alt)' : 'var(--c-text-2)', fontWeight: active ? '700' : '400',
-                }}>
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => toggleEntity(opt.value)}
+                className={`px-4 py-1.5 rounded-full text-[13px] transition-colors ${
+                  active
+                    ? 'border-2 border-brand bg-brand-soft text-brand font-bold'
+                    : 'border border-[var(--c-border-2)] bg-[var(--c-input-bg)] text-[var(--c-text-2)]'
+                }`}
+              >
                 {opt.label}
               </button>
             )
@@ -188,50 +176,45 @@ export default function ClientSearchClient({ clients, initialEntity, initialQ }:
 
       {/* 結果グリッド */}
       {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--c-text-3)' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-          <p style={{ fontSize: '16px', margin: 0 }}>条件に一致する依頼者がいませんでした</p>
-          <p style={{ fontSize: '13px', margin: '8px 0 0', color: 'var(--c-text-4)' }}>検索ワードやフィルターを変えてみてください</p>
-        </div>
+        <EmptyState
+          icon={Search}
+          title="条件に一致する依頼者がいませんでした"
+          description="検索ワードやフィルターを変えてみてください"
+        />
       ) : (
         <>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: '16px',
-          }}>
+          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
             {paged.map((c) => <ClientCard key={c.id} client={c} />)}
           </div>
 
           {/* ページネーション */}
           {totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', marginTop: '40px', flexWrap: 'wrap' }}>
+            <div className="flex justify-center items-center gap-1.5 mt-10 flex-wrap">
               <button
                 type="button"
                 disabled={page === 1}
                 onClick={() => { setPage(p => p - 1); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                style={{
-                  padding: '8px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: '600',
-                  border: '1px solid var(--c-border-2)', background: 'transparent',
-                  color: page === 1 ? 'var(--c-text-4)' : 'var(--c-text-2)', cursor: page === 1 ? 'not-allowed' : 'pointer',
-                }}
-              >← 前へ</button>
+                className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[var(--c-border-2)] bg-transparent text-[var(--c-text-2)] disabled:text-[var(--c-text-4)] disabled:cursor-not-allowed hover:bg-[var(--c-surface)] transition-colors"
+              >
+                ← 前へ
+              </button>
 
               {getPageNumbers(page, totalPages).map((p, i) =>
                 p === '...' ? (
-                  <span key={`el-${i}`} style={{ color: 'var(--c-text-4)', padding: '0 4px', fontSize: '13px' }}>…</span>
+                  <span key={`el-${i}`} className="text-[var(--c-text-4)] px-1 text-[13px]">…</span>
                 ) : (
                   <button
                     key={p}
                     type="button"
                     onClick={() => { setPage(p as number); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                    style={{
-                      width: '38px', height: '38px', borderRadius: '10px', fontSize: '13px', fontWeight: '700',
-                      border: page === p ? '2px solid var(--c-alt-a25)' : '1px solid var(--c-border-2)',
-                      background: page === p ? 'var(--c-alt-a15)' : 'transparent',
-                      color: page === p ? 'var(--c-accent-alt)' : 'var(--c-text-2)', cursor: 'pointer',
-                    }}
-                  >{p}</button>
+                    className={`w-[38px] h-[38px] rounded-[10px] text-[13px] font-bold transition-colors ${
+                      page === p
+                        ? 'border-2 border-brand/50 bg-brand-soft text-brand'
+                        : 'border border-[var(--c-border-2)] bg-transparent text-[var(--c-text-2)] hover:bg-[var(--c-surface)]'
+                    }`}
+                  >
+                    {p}
+                  </button>
                 )
               )}
 
@@ -239,12 +222,10 @@ export default function ClientSearchClient({ clients, initialEntity, initialQ }:
                 type="button"
                 disabled={page === totalPages}
                 onClick={() => { setPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                style={{
-                  padding: '8px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: '600',
-                  border: '1px solid var(--c-border-2)', background: 'transparent',
-                  color: page === totalPages ? 'var(--c-text-4)' : 'var(--c-text-2)', cursor: page === totalPages ? 'not-allowed' : 'pointer',
-                }}
-              >次へ →</button>
+                className="px-4 py-2 rounded-[10px] text-[13px] font-semibold border border-[var(--c-border-2)] bg-transparent text-[var(--c-text-2)] disabled:text-[var(--c-text-4)] disabled:cursor-not-allowed hover:bg-[var(--c-surface)] transition-colors"
+              >
+                次へ →
+              </button>
             </div>
           )}
         </>
@@ -259,60 +240,44 @@ function ClientCard({ client: c }: { client: Client }) {
   const snsList = (Array.isArray(c.sns_links) ? c.sns_links : []).filter((s) => s?.id?.trim())
 
   return (
-    <div style={{
-      background: 'var(--c-surface)',
-      border: '1px solid var(--c-alt-a15)',
-      borderRadius: '20px',
-      padding: '22px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '14px',
-    }}>
+    <div className="bg-[var(--c-surface)] border border-[var(--c-border)] rounded-[20px] p-5.5 flex flex-col gap-3.5">
       {/* アバター + 名前 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{
-          width: '52px', height: '52px', borderRadius: '50%', flexShrink: 0,
-          overflow: 'hidden',
-          background: 'var(--c-grad-primary)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '20px', fontWeight: '700', color: '#fff',
-        }}>
+      <div className="flex items-center gap-3">
+        <div className="w-[52px] h-[52px] rounded-full shrink-0 overflow-hidden bg-brand flex items-center justify-center text-[20px] font-bold text-white">
           {c.avatar_url
-            ? <img src={c.avatar_url} alt={c.display_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ? <img src={c.avatar_url} alt={c.display_name} className="w-full h-full object-cover" />
             : initial}
         </div>
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          <div style={{ fontWeight: '700', fontSize: '15px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div className="flex-1 overflow-hidden">
+          <div className="font-bold text-[15px] overflow-hidden text-ellipsis whitespace-nowrap">
             {c.display_name}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--c-text-3)', marginTop: '2px' }}>
+          <div className="text-[11px] text-[var(--c-text-3)] mt-0.5">
             {formatJoined(c.created_at)}
           </div>
         </div>
-        <span style={{
-          padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700',
-          background: c.entity_type === 'corporate' ? 'rgba(251,191,36,0.15)' : 'var(--c-border)',
-          color: c.entity_type === 'corporate' ? '#fbbf24' : 'var(--c-text-2)',
-          flexShrink: 0,
-        }}>
+        <span className={`px-3 py-1 rounded-full text-[12px] font-bold shrink-0 ${
+          c.entity_type === 'corporate'
+            ? 'bg-[#fbbf24]/15 text-[#d97706]'
+            : 'bg-[var(--c-surface-2)] text-[var(--c-text-2)]'
+        }`}>
           {entityLabel}
         </span>
       </div>
 
       {/* 依頼者タイプバッジ */}
       {(c.client_type ?? []).length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+        <div className="flex flex-wrap gap-1.5">
           {(c.client_type ?? []).slice(0, 4).map((t) => (
-            <span key={t} style={{
-              padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700',
-              background: 'var(--c-alt-a12)', color: 'var(--c-accent-alt)',
-              border: '1px solid var(--c-alt-a25)',
-            }}>
+            <span
+              key={t}
+              className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-brand-soft text-brand border border-brand/25"
+            >
               {t}
             </span>
           ))}
           {(c.client_type ?? []).length > 4 && (
-            <span style={{ color: 'var(--c-text-3)', fontSize: '11px', alignSelf: 'center' }}>
+            <span className="text-[var(--c-text-3)] text-[11px] self-center">
               +{(c.client_type ?? []).length - 4}
             </span>
           )}
@@ -321,43 +286,37 @@ function ClientCard({ client: c }: { client: Client }) {
 
       {/* SNS リンク */}
       {snsList.length > 0 ? (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+        <div className="flex flex-wrap gap-2">
           {snsList.map((s, i) => {
             const base = SNS_BASE_URLS[s.platform] ?? ''
             const rawHref = base ? `${base}${s.id}` : s.id
-            // base が空（ホームページ or 未知 platform）は生 URL なので常に検証する
             const href = base ? rawHref : (isSafeUrl(rawHref) ? rawHref : '#')
             return (
-              <a key={i} href={href} target="_blank" rel="noopener noreferrer"
+              <a
+                key={i}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px',
-                  padding: '5px 12px', borderRadius: '20px', fontSize: '12px',
-                  border: '1px solid var(--c-border-2)',
-                  background: 'var(--c-input-bg)',
-                  color: 'var(--c-text-2)', textDecoration: 'none',
-                }}>
-                <span>{SNS_ICONS[s.platform] ?? '🔗'}</span>
-                <span>{s.platform}</span>
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] border border-[var(--c-border-2)] bg-[var(--c-input-bg)] text-[var(--c-text-2)] no-underline hover:border-brand hover:text-brand transition-colors"
+              >
+                {SNS_LABELS[s.platform] ?? s.platform}
               </a>
             )
           })}
         </div>
       ) : (
-        <p style={{ color: 'var(--c-text-4)', fontSize: '13px', fontStyle: 'italic', margin: 0 }}>
-          SNS未登録
-        </p>
+        <p className="text-[var(--c-text-4)] text-[13px] italic m-0">SNS未登録</p>
       )}
 
       {/* アクションボタン */}
-      <button type="button" disabled style={{
-        width: '100%', padding: '10px', borderRadius: '12px',
-        border: '1px solid var(--c-alt-a20)',
-        background: 'var(--c-alt-a06)',
-        color: 'var(--c-accent-alt)', fontSize: '13px', fontWeight: '700',
-        cursor: 'not-allowed', opacity: 0.6, marginTop: 'auto',
-      }}>
-        📩 依頼を提案する（準備中）
+      <button
+        type="button"
+        disabled
+        className="w-full py-2.5 rounded-[12px] border border-brand/20 bg-brand-soft text-brand text-[13px] font-bold cursor-not-allowed opacity-60 mt-auto flex items-center justify-center gap-1.5"
+      >
+        <Mail size={14} aria-hidden />
+        依頼を提案する（準備中）
       </button>
     </div>
   )

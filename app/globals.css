@@ -3,122 +3,132 @@
 @tailwind utilities;
 
 /* ============================================================
-   THEME: DARK — ダークネイビー青ベース + 白文字
+   THEME: LIGHT (default) — 紙白背景・紺文字・青アクセント
    ============================================================ */
 :root,
-html[data-theme="dark"] {
-  /* Backgrounds */
-  --c-bg:          linear-gradient(160deg, #010820 0%, #020d35 45%, #010820 100%);
-  --c-surface:     rgba(2,10,50,0.92);
-  --c-surface-2:   rgba(1,7,40,0.88);
-  --c-surface-3:   rgba(1,5,30,0.80);
-  --c-surface-r:   #040f55;
-
-  /* Borders */
-  --c-border:      rgba(68,136,255,0.12);
-  --c-border-2:    rgba(68,136,255,0.22);
-  --c-border-3:    rgba(68,136,255,0.34);
-
-  /* Text */
-  --c-text:        #ffffff;
-  --c-text-2:      #b0cbff;
-  --c-text-3:      #6090d0;
-  --c-text-4:      #3060a0;
-  --c-text-5:      #1a3a70;
-  --c-text-on-raised: #ffffff;
-
-  /* Form */
-  --c-input-bg:    rgba(68,136,255,0.10);
-  --c-input-bg-2:  rgba(68,136,255,0.06);
-  --c-input-border: rgba(68,136,255,0.32);
-
-  /* Accent — ダークはブルー系 */
-  --c-accent:          #4488ff;
-  --c-accent-alt:      #00bfff;
-  --c-grad-primary:    linear-gradient(135deg, #00bfff, #0044ff);
-  --c-accent-a04:      rgba(68,136,255,0.04);
-  --c-accent-a06:      rgba(68,136,255,0.06);
-  --c-accent-a08:      rgba(68,136,255,0.08);
-  --c-accent-a12:      rgba(68,136,255,0.12);
-  --c-accent-a15:      rgba(68,136,255,0.15);
-  --c-accent-a20:      rgba(68,136,255,0.20);
-  --c-accent-a25:      rgba(68,136,255,0.25);
-  --c-accent-a30:      rgba(68,136,255,0.30);
-  --c-accent-a35:      rgba(68,136,255,0.35);
-  --c-accent-a40:      rgba(68,136,255,0.40);
-  --c-accent-a50:      rgba(68,136,255,0.50);
-  --c-alt-a06:         rgba(0,191,255,0.06);
-  --c-alt-a08:         rgba(0,191,255,0.08);
-  --c-alt-a10:         rgba(0,191,255,0.10);
-  --c-alt-a12:         rgba(0,191,255,0.12);
-  --c-alt-a15:         rgba(0,191,255,0.15);
-  --c-alt-a20:         rgba(0,191,255,0.20);
-  --c-alt-a25:         rgba(0,191,255,0.25);
-  --c-alt-a30:         rgba(0,191,255,0.30);
-
-  /* Misc */
-  --c-overlay:     rgba(0,5,30,0.78);
-  --c-shadow:      rgba(0,10,60,0.55);
-  --c-code-scheme: dark;
-}
-
-/* ============================================================
-   THEME: LIGHT — スカイブルー背景・ネイビー枠・白文字
-   ============================================================ */
 html[data-theme="light"] {
+  /* Brand — Tailwind config が参照する RGB チャンネル */
+  --brand-rgb:      29, 78, 216;    /* #1d4ed8 */
+  --brand-ink-rgb:  11, 42, 138;    /* #0b2a8a */
+  --brand-soft:     #eaf0ff;
+
   /* Backgrounds */
-  --c-bg:          #00bfff;
-  --c-surface:     #0001ff;
-  --c-surface-2:   rgba(0,1,220,0.88);
-  --c-surface-3:   rgba(0,1,200,0.76);
+  --c-bg:          #fafbfd;
+  --c-surface:     #ffffff;
+  --c-surface-2:   #ffffff;
+  --c-surface-3:   #f1f3f9;
   --c-surface-r:   #ffffff;
 
   /* Borders */
-  --c-border:      rgba(255,255,255,0.20);
-  --c-border-2:    rgba(255,255,255,0.35);
-  --c-border-3:    rgba(255,255,255,0.50);
+  --c-border:      #e6e9f1;
+  --c-border-2:    #dfe3ee;
+  --c-border-3:    #cdd3e3;
 
   /* Text */
-  --c-text:        #ffffff;
-  --c-text-2:      rgba(220,235,255,0.85);
-  --c-text-3:      rgba(185,210,255,0.68);
-  --c-text-4:      rgba(150,185,240,0.52);
-  --c-text-5:      rgba(120,160,220,0.38);
-  --c-text-on-raised: #0001ff;
+  --c-text:           #0b1530;
+  --c-text-2:         #374264;
+  --c-text-3:         #6b7896;
+  --c-text-4:         #9aa4be;
+  --c-text-5:         #b9c0d3;
+  --c-text-on-raised: #ffffff;
 
   /* Form */
-  --c-input-bg:    rgba(255,255,255,0.18);
-  --c-input-bg-2:  rgba(255,255,255,0.10);
-  --c-input-border: rgba(255,255,255,0.42);
+  --c-input-bg:     #ffffff;
+  --c-input-bg-2:   #f6f7fb;
+  --c-input-border: #cdd3e3;
 
-  /* Accent — ライトはネイビー青 */
-  --c-accent:          #0001ff;
-  --c-accent-alt:      #ffffff;
-  --c-grad-primary:    linear-gradient(135deg, #0080ff, #0001ff);
-  --c-accent-a04:      rgba(0,1,255,0.04);
-  --c-accent-a06:      rgba(0,1,255,0.06);
-  --c-accent-a08:      rgba(0,1,255,0.08);
-  --c-accent-a12:      rgba(0,1,255,0.12);
-  --c-accent-a15:      rgba(0,1,255,0.15);
-  --c-accent-a20:      rgba(0,1,255,0.20);
-  --c-accent-a25:      rgba(0,1,255,0.25);
-  --c-accent-a30:      rgba(0,1,255,0.30);
-  --c-accent-a35:      rgba(0,1,255,0.35);
-  --c-accent-a40:      rgba(0,1,255,0.40);
-  --c-accent-a50:      rgba(0,1,255,0.50);
-  --c-alt-a06:         rgba(255,255,255,0.06);
-  --c-alt-a08:         rgba(255,255,255,0.08);
-  --c-alt-a10:         rgba(255,255,255,0.10);
-  --c-alt-a12:         rgba(255,255,255,0.12);
-  --c-alt-a15:         rgba(255,255,255,0.15);
-  --c-alt-a20:         rgba(255,255,255,0.20);
-  --c-alt-a25:         rgba(255,255,255,0.25);
-  --c-alt-a30:         rgba(255,255,255,0.30);
+  /* Legacy accent vars (still referenced by older components) */
+  --c-accent:          #1d4ed8;
+  --c-accent-alt:      #0b2a8a;
+  --c-grad-primary:    linear-gradient(135deg, #1d4ed8, #0b2a8a);
+  --c-accent-a04:      rgba(29,78,216,0.04);
+  --c-accent-a06:      rgba(29,78,216,0.06);
+  --c-accent-a08:      rgba(29,78,216,0.08);
+  --c-accent-a12:      rgba(29,78,216,0.12);
+  --c-accent-a15:      rgba(29,78,216,0.15);
+  --c-accent-a20:      rgba(29,78,216,0.20);
+  --c-accent-a25:      rgba(29,78,216,0.25);
+  --c-accent-a30:      rgba(29,78,216,0.30);
+  --c-accent-a35:      rgba(29,78,216,0.35);
+  --c-accent-a40:      rgba(29,78,216,0.40);
+  --c-accent-a50:      rgba(29,78,216,0.50);
+  --c-alt-a06:         rgba(11,42,138,0.06);
+  --c-alt-a08:         rgba(11,42,138,0.08);
+  --c-alt-a10:         rgba(11,42,138,0.10);
+  --c-alt-a12:         rgba(11,42,138,0.12);
+  --c-alt-a15:         rgba(11,42,138,0.15);
+  --c-alt-a20:         rgba(11,42,138,0.20);
+  --c-alt-a25:         rgba(11,42,138,0.25);
+  --c-alt-a30:         rgba(11,42,138,0.30);
 
   /* Misc */
-  --c-overlay:     rgba(0,0,80,0.60);
-  --c-shadow:      rgba(0,0,100,0.28);
+  --c-overlay:     rgba(11,21,48,0.55);
+  --c-shadow:      rgba(11,21,48,0.10);
   --c-code-scheme: light;
+}
+
+/* ============================================================
+   THEME: DARK — 深紺ベース + 明るいテキスト・薄いブルーアクセント
+   ============================================================ */
+html[data-theme="dark"] {
+  /* Brand — ダークでは明るめブルーに */
+  --brand-rgb:      96, 165, 250;   /* #60a5fa  blue-400 */
+  --brand-ink-rgb:  59, 130, 246;   /* #3b82f6  blue-500 */
+  --brand-soft:     rgba(96,165,250,0.12);
+
+  /* Backgrounds — すべて solid color（gradient 不可）*/
+  --c-bg:          #0a0f1f;
+  --c-surface:     #111829;
+  --c-surface-2:   #0d1422;
+  --c-surface-3:   #080e1a;
+  --c-surface-r:   #1a2540;
+
+  /* Borders */
+  --c-border:      rgba(255,255,255,0.08);
+  --c-border-2:    rgba(255,255,255,0.13);
+  --c-border-3:    rgba(255,255,255,0.20);
+
+  /* Text */
+  --c-text:           #e6eaf5;
+  --c-text-2:         #a8b4d0;
+  --c-text-3:         #687898;
+  --c-text-4:         #404e6a;
+  --c-text-5:         #2a3550;
+  --c-text-on-raised: #ffffff;
+
+  /* Form */
+  --c-input-bg:     #111829;
+  --c-input-bg-2:   #0d1422;
+  --c-input-border: rgba(255,255,255,0.15);
+
+  /* Legacy accent vars */
+  --c-accent:          #60a5fa;
+  --c-accent-alt:      #93c5fd;
+  --c-grad-primary:    linear-gradient(135deg, #60a5fa, #3b82f6);
+  --c-accent-a04:      rgba(96,165,250,0.04);
+  --c-accent-a06:      rgba(96,165,250,0.06);
+  --c-accent-a08:      rgba(96,165,250,0.08);
+  --c-accent-a12:      rgba(96,165,250,0.12);
+  --c-accent-a15:      rgba(96,165,250,0.15);
+  --c-accent-a20:      rgba(96,165,250,0.20);
+  --c-accent-a25:      rgba(96,165,250,0.25);
+  --c-accent-a30:      rgba(96,165,250,0.30);
+  --c-accent-a35:      rgba(96,165,250,0.35);
+  --c-accent-a40:      rgba(96,165,250,0.40);
+  --c-accent-a50:      rgba(96,165,250,0.50);
+  --c-alt-a06:         rgba(147,197,253,0.06);
+  --c-alt-a08:         rgba(147,197,253,0.08);
+  --c-alt-a10:         rgba(147,197,253,0.10);
+  --c-alt-a12:         rgba(147,197,253,0.12);
+  --c-alt-a15:         rgba(147,197,253,0.15);
+  --c-alt-a20:         rgba(147,197,253,0.20);
+  --c-alt-a25:         rgba(147,197,253,0.25);
+  --c-alt-a30:         rgba(147,197,253,0.30);
+
+  /* Misc */
+  --c-overlay:     rgba(0,0,20,0.75);
+  --c-shadow:      rgba(0,0,20,0.50);
+  --c-code-scheme: dark;
 }
 
 /* ============================================================
@@ -127,14 +137,34 @@ html[data-theme="light"] {
 body {
   color: var(--c-text);
   background: var(--c-bg);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  transition: background 0.25s, color 0.25s;
+  font-family: var(--font-inter), var(--font-noto-jp), system-ui, -apple-system, sans-serif;
+  transition: background-color 0.25s, color 0.25s;
 }
 
+/* ---- Focus ring — すべてのインタラクティブ要素に一括適用 ---- */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(var(--brand-rgb) / 0.28);
+  border-radius: inherit;
+}
+
+/* Button コンポーネントは自前の focus shadow を持つため除外 */
+button.focus-ring-custom:focus-visible {
+  box-shadow: 0 0 0 3px rgb(var(--brand-rgb) / 0.28);
+}
+
+/* ---- Placeholder ---- */
+::placeholder {
+  color: var(--c-text-4);
+  opacity: 1;
+}
+
+/* ---- Date input ---- */
 input[type="date"] {
   color-scheme: var(--c-code-scheme);
 }
 
+/* ---- Select option (ブラウザネイティブ) ---- */
 option {
   color: #000000;
   background-color: #ffffff;

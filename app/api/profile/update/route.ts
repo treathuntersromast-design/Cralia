@@ -61,7 +61,7 @@ export async function PATCH(request: NextRequest) {
   if (creatorTypes !== undefined) {
     if (!Array.isArray(creatorTypes)) return NextResponse.json({ error: '不正なリクエストです' }, { status: 400 })
     const invalid = (creatorTypes as unknown[]).filter(
-      (t) => typeof t !== 'string' || (!ALLOWED_CREATOR_TYPES.includes(t) && !t.startsWith('その他（'))
+      (t) => typeof t !== 'string' || (!ALLOWED_CREATOR_TYPES.includes(t as any) && !(t as string).startsWith('その他（'))
     )
     if (invalid.length > 0) return NextResponse.json({ error: '不正なクリエイタータイプが含まれています' }, { status: 400 })
     profilePatch.creator_type = creatorTypes

@@ -1,10 +1,10 @@
-﻿import { notFound, redirect } from 'next/navigation'
-import Link from 'next/link'
+import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import ProjectDetailClient from '@/components/ProjectDetailClient'
 import ProjectSchedule from '@/components/ProjectSchedule'
 import ProjectBoardReviewSection from '@/components/ProjectBoardReviewSection'
+import { AppHeader } from '@/components/layout/AppHeader'
 
 export type ProjectRole = {
   id: string
@@ -54,7 +54,6 @@ export default async function ProjectPage({ params }: { params: { id: string } }
 
   if (!project) notFound()
 
-  // 割り当てユーザーの名前・アバターを取得
   const assignedIds = (rolesRaw ?? [])
     .map((r) => r.assigned_user_id)
     .filter(Boolean) as string[]
@@ -88,13 +87,11 @@ export default async function ProjectPage({ params }: { params: { id: string } }
   const isOwner = user.id === project.owner_id
   const isCompleted = project.status === 'completed'
 
-  // スケジュール・評価メンバー: 役職に割り当て済みのユーザーを重複排除して抽出
   const scheduleMembers = roles
     .filter((r) => r.assigned_user_id && r.assigned_user_name)
     .map((r) => ({ userId: r.assigned_user_id!, name: r.assigned_user_name! }))
     .filter((v, i, arr) => arr.findIndex((x) => x.userId === v.userId) === i)
 
-  // プロジェクトボード評価の既存レビューを取得
   let boardReviews: { id: string; rating: number; comment: string | null; created_at: string; reviewer_id: string; reviewee_id: string }[] = []
   if (isCompleted) {
     const db = createServiceClient(
@@ -110,19 +107,8 @@ export default async function ProjectPage({ params }: { params: { id: string } }
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)',
-      color: '#f0eff8',
-    }}>
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
-          Cralia
-        </Link>
-        <Link href="/projects" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>
-          ← プロジェクト一覧へ
-        </Link>
-      </div>
+    <div className="min-h-screen bg-[var(--c-bg)]">
+      <AppHeader />
 
       <ProjectDetailClient
         project={project as ProjectBoard}
@@ -131,8 +117,7 @@ export default async function ProjectPage({ params }: { params: { id: string } }
         isOwner={isOwner}
       />
 
-      {/* スケジュール機能（担当・依存関係管理） */}
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 24px 0' }}>
+      <div className="max-w-[860px] mx-auto px-6">
         <ProjectSchedule
           projectId={params.id}
           isOwner={isOwner}
@@ -141,8 +126,7 @@ export default async function ProjectPage({ params }: { params: { id: string } }
         />
       </div>
 
-      {/* メンバー評価セクション（完了後のみ表示） */}
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 24px 60px' }}>
+      <div className="max-w-[860px] mx-auto px-6 pb-16">
         <ProjectBoardReviewSection
           boardId={params.id}
           isCompleted={isCompleted}

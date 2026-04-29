@@ -1,6 +1,8 @@
-﻿import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import ClientSearchClient from '@/components/ClientSearchClient'
+import { AppHeader } from '@/components/layout/AppHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,15 +21,15 @@ const VALID_FROM_PATHS = ['/dashboard', '/orders', '/projects', '/messages', '/n
 function resolveFrom(raw: string | undefined): { href: string; label: string } {
   const decoded = raw ? decodeURIComponent(raw) : ''
   const matched = VALID_FROM_PATHS.find((p) => decoded.startsWith(p))
-  if (!matched) return { href: '/dashboard', label: '← ダッシュボードへ' }
+  if (!matched) return { href: '/dashboard', label: 'ダッシュボードへ' }
   const labels: Record<string, string> = {
-    '/orders': '← 依頼一覧へ',
-    '/projects': '← プロジェクトへ',
-    '/messages': '← メッセージへ',
-    '/notifications': '← 通知へ',
-    '/events': '← 交流会へ',
+    '/orders': '依頼一覧へ',
+    '/projects': 'プロジェクトへ',
+    '/messages': 'メッセージへ',
+    '/notifications': '通知へ',
+    '/events': '交流会へ',
   }
-  return { href: decoded, label: labels[matched] ?? '← ダッシュボードへ' }
+  return { href: decoded, label: labels[matched] ?? 'ダッシュボードへ' }
 }
 
 export default async function ClientsPage({
@@ -46,7 +48,6 @@ export default async function ClientsPage({
   const initialQ = (searchParams.q ?? '').slice(0, 200)
   const { href: backHref, label: backLabel } = resolveFrom(searchParams.from)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query: any = admin
     .from('users')
     .select('id, display_name, avatar_url, entity_type, sns_links, client_type, created_at')
@@ -61,32 +62,24 @@ export default async function ClientsPage({
   const { data } = await query
   const clients: Client[] = (data ?? []) as Client[]
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--c-bg)',
-      color: 'var(--c-text)',
-    }}>
-      {/* ヘッダー */}
-      <div style={{
-        borderBottom: '1px solid var(--c-border)',
-        padding: '16px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        <Link href="/dashboard" style={{
-          fontSize: '24px', fontWeight: '800',
-          color: 'var(--c-accent)',
-          textDecoration: 'none',
-        }}>
-          Cralia
-        </Link>
-        <Link href={backHref} style={{ color: 'var(--c-text-2)', fontSize: '14px', textDecoration: 'none' }}>
-          {backLabel}
-        </Link>
-      </div>
+  const showBack = backHref !== '/dashboard'
 
+  return (
+    <div className="min-h-screen bg-[var(--c-bg)]">
+      <AppHeader />
+      {showBack && (
+        <div className="border-b border-[var(--c-border)] bg-[var(--c-surface)]">
+          <div className="max-w-[1000px] mx-auto px-6 py-2">
+            <Link
+              href={backHref}
+              className="inline-flex items-center gap-1.5 text-[13px] text-[var(--c-text-3)] no-underline hover:text-brand transition-colors"
+            >
+              <ArrowLeft size={13} aria-hidden />
+              {backLabel}
+            </Link>
+          </div>
+        </div>
+      )}
       <ClientSearchClient
         clients={clients}
         initialEntity={entityFilter}

@@ -72,11 +72,9 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     : { data: [] }
 
   // 担当者名解決（role 経由 + 直接割り当て）
-  const userIds = [
-    ...new Set([
-      ...taskList.map((t) => t.assigned_user_id).filter(Boolean),
-    ]),
-  ] as string[]
+  const userIds = Array.from(new Set(
+    taskList.map((t) => t.assigned_user_id).filter(Boolean)
+  )) as string[]
   const userNameMap: Record<string, string> = {}
   if (userIds.length > 0) {
     const { data: users } = await db
@@ -229,9 +227,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   }
 
   if (depRows.length > 0) {
-    await db.from('project_task_deps').insert(depRows).catch(() => {
-      // 依存関係の挿入失敗はサイレントに無視（タスク自体は保存済み）
-    })
+    try { await db.from('project_task_deps').insert(depRows) } catch { /* サイレントに無視 */ }
   }
 
   return NextResponse.json({ success: true, taskIds: insertedIds })

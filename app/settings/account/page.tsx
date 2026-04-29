@@ -1,33 +1,31 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { AppHeader } from '@/components/layout/AppHeader'
+import { Container } from '@/components/ui/Container'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '12px 16px', borderRadius: '10px',
-  border: '1px solid var(--c-border-3)', background: 'var(--c-input-bg)',
-  color: 'var(--c-text)', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
-}
+const inputCls = 'w-full h-11 px-3.5 rounded-input border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[15px] outline-none focus:border-brand transition'
 
 export default function AccountSettingsPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  const [newEmail, setNewEmail] = useState('')
+  const [newEmail, setNewEmail]       = useState('')
   const [emailLoading, setEmailLoading] = useState(false)
-  const [emailMsg, setEmailMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [emailMsg, setEmailMsg]       = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  const [currentPw, setCurrentPw] = useState('')
-  const [newPw, setNewPw] = useState('')
-  const [confirmPw, setConfirmPw] = useState('')
-  const [pwLoading, setPwLoading] = useState(false)
-  const [pwMsg, setPwMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [newPw, setNewPw]             = useState('')
+  const [confirmPw, setConfirmPw]     = useState('')
+  const [pwLoading, setPwLoading]     = useState(false)
+  const [pwMsg, setPwMsg]             = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [deleteLoading, setDeleteLoading] = useState(false)
-  const [deleteMsg, setDeleteMsg] = useState<string | null>(null)
+  const [deleteMsg, setDeleteMsg]     = useState<string | null>(null)
 
   const handleEmailChange = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,7 +52,6 @@ export default function AccountSettingsPage() {
       setPwMsg({ type: 'error', text: '新しいパスワードが一致しません' })
       return
     }
-    // 連続した文字や単純すぎるパスワードの基本チェック
     if (/^(.)\1+$/.test(newPw)) {
       setPwMsg({ type: 'error', text: 'セキュリティのため、同じ文字の繰り返しは使えません' })
       return
@@ -66,7 +63,6 @@ export default function AccountSettingsPage() {
       setPwMsg({ type: 'error', text: error.message })
     } else {
       setPwMsg({ type: 'success', text: 'パスワードを変更しました' })
-      setCurrentPw('')
       setNewPw('')
       setConfirmPw('')
     }
@@ -93,97 +89,89 @@ export default function AccountSettingsPage() {
     }
   }
 
-  const sectionStyle: React.CSSProperties = {
-    background: 'var(--c-surface)', border: '1px solid var(--c-border)',
-    borderRadius: '20px', padding: '28px', marginBottom: '20px',
-  }
+  const msgCls = (type: 'success' | 'error') =>
+    type === 'success'
+      ? 'text-[13px] text-[#16a34a] bg-[#4ade80]/8 border border-[#4ade80]/25 rounded-[8px] px-3.5 py-2.5'
+      : 'text-[13px] text-[#dc2626] bg-[#dc2626]/8 border border-[#dc2626]/25 rounded-[8px] px-3.5 py-2.5'
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--c-bg)',
-      color: 'var(--c-text)',
-    }}>
-      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
-          Cralia
-        </Link>
-        <Link href="/settings" style={{ color: 'var(--c-text-2)', fontSize: '14px', textDecoration: 'none' }}>← 設定へ</Link>
-      </div>
-
-      <div style={{ maxWidth: '620px', margin: '0 auto', padding: '40px 24px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 32px' }}>アカウント設定</h1>
+    <div className="min-h-screen bg-[var(--c-bg)]">
+      <AppHeader />
+      <Container size="sm" className="py-10">
+        <h1 className="text-[26px] font-bold mb-8">アカウント設定</h1>
 
         {/* メールアドレス変更 */}
-        <div style={sectionStyle}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 20px' }}>メールアドレスの変更</h2>
-          <form onSubmit={handleEmailChange} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <Card bordered padded className="mb-5">
+          <h2 className="text-[16px] font-bold mb-5">メールアドレスの変更</h2>
+          <form onSubmit={handleEmailChange} className="flex flex-col gap-4">
             <div>
-              <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '6px' }}>新しいメールアドレス</label>
-              <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
-                placeholder="new@example.com" required style={inputStyle} />
+              <label className="block text-[13px] text-[var(--c-text-2)] mb-1.5">新しいメールアドレス</label>
+              <input
+                type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="new@example.com" required className={inputCls}
+              />
             </div>
-            {emailMsg && (
-              <p style={{ fontSize: '13px', margin: 0, color: emailMsg.type === 'success' ? '#4ade80' : '#f87171', background: emailMsg.type === 'success' ? 'rgba(74,222,128,0.08)' : 'rgba(248,113,113,0.08)', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${emailMsg.type === 'success' ? 'rgba(74,222,128,0.2)' : 'rgba(248,113,113,0.2)'}` }}>
-                {emailMsg.text}
-              </p>
-            )}
-            <button type="submit" disabled={emailLoading}
-              style={{ padding: '12px', borderRadius: '10px', border: 'none', background: 'var(--c-grad-primary)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: emailLoading ? 'not-allowed' : 'pointer', opacity: emailLoading ? 0.7 : 1 }}>
-              {emailLoading ? '送信中...' : '確認メールを送信'}
-            </button>
+            {emailMsg && <p className={msgCls(emailMsg.type)}>{emailMsg.text}</p>}
+            <Button type="submit" variant="primary" loading={emailLoading} className="w-full">
+              確認メールを送信
+            </Button>
           </form>
-        </div>
+        </Card>
 
         {/* パスワード変更 */}
-        <div style={sectionStyle}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 20px' }}>パスワードの変更</h2>
-          <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <Card bordered padded className="mb-5">
+          <h2 className="text-[16px] font-bold mb-5">パスワードの変更</h2>
+          <form onSubmit={handlePasswordChange} className="flex flex-col gap-4">
             <div>
-              <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '6px' }}>新しいパスワード（8文字以上）</label>
-              <input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)}
-                placeholder="••••••••" minLength={8} required style={inputStyle} />
+              <label className="block text-[13px] text-[var(--c-text-2)] mb-1.5">新しいパスワード（8文字以上）</label>
+              <input
+                type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)}
+                placeholder="••••••••" minLength={8} required className={inputCls}
+              />
             </div>
             <div>
-              <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '6px' }}>新しいパスワード（確認）</label>
-              <input type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)}
-                placeholder="••••••••" required style={inputStyle} />
+              <label className="block text-[13px] text-[var(--c-text-2)] mb-1.5">新しいパスワード（確認）</label>
+              <input
+                type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)}
+                placeholder="••••••••" required className={inputCls}
+              />
             </div>
-            {pwMsg && (
-              <p style={{ fontSize: '13px', margin: 0, color: pwMsg.type === 'success' ? '#4ade80' : '#f87171', background: pwMsg.type === 'success' ? 'rgba(74,222,128,0.08)' : 'rgba(248,113,113,0.08)', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${pwMsg.type === 'success' ? 'rgba(74,222,128,0.2)' : 'rgba(248,113,113,0.2)'}` }}>
-                {pwMsg.text}
-              </p>
-            )}
-            <button type="submit" disabled={pwLoading}
-              style={{ padding: '12px', borderRadius: '10px', border: 'none', background: 'var(--c-grad-primary)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: pwLoading ? 'not-allowed' : 'pointer', opacity: pwLoading ? 0.7 : 1 }}>
-              {pwLoading ? '変更中...' : 'パスワードを変更'}
-            </button>
+            {pwMsg && <p className={msgCls(pwMsg.type)}>{pwMsg.text}</p>}
+            <Button type="submit" variant="primary" loading={pwLoading} className="w-full">
+              パスワードを変更
+            </Button>
           </form>
-        </div>
+        </Card>
 
         {/* 危険ゾーン */}
-        <div id="danger" style={{ ...sectionStyle, border: '1px solid rgba(248,113,113,0.25)', background: 'rgba(248,113,113,0.04)', marginBottom: 0 }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px', color: '#f87171' }}>アカウントを削除する</h2>
-          <p style={{ color: 'var(--c-text-2)', fontSize: '13px', margin: '0 0 20px', lineHeight: '1.6' }}>
+        <div id="danger" className="border border-[#dc2626]/25 bg-[#dc2626]/4 rounded-card p-7">
+          <h2 className="text-[16px] font-bold text-[#dc2626] mb-2">アカウントを削除する</h2>
+          <p className="text-[13px] text-[var(--c-text-2)] leading-[1.6] mb-5">
             アカウントを削除すると、プロフィール・ポートフォリオ・プロジェクトなど全てのデータが完全に削除されます。この操作は取り消せません。
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="flex flex-col gap-3">
             <div>
-              <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '6px' }}>
-                確認のため「<strong style={{ color: '#f87171' }}>DELETE</strong>」と入力してください
+              <label className="block text-[13px] text-[var(--c-text-2)] mb-1.5">
+                確認のため「<strong className="text-[#dc2626]">DELETE</strong>」と入力してください
               </label>
-              <input type="text" value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)}
-                placeholder="DELETE" style={{ ...inputStyle, border: '1px solid rgba(248,113,113,0.3)' }} />
+              <input
+                type="text" value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)}
+                placeholder="DELETE"
+                className="w-full h-11 px-3.5 rounded-input border border-[#dc2626]/30 bg-[var(--c-input-bg)] text-[var(--c-text)] text-[15px] outline-none focus:border-[#dc2626] transition"
+              />
             </div>
-            {deleteMsg && <p style={{ color: '#f87171', fontSize: '13px', margin: 0 }}>{deleteMsg}</p>}
-            <button onClick={handleDeleteAccount}
+            {deleteMsg && <p className="text-[#dc2626] text-[13px]">{deleteMsg}</p>}
+            <button
+              type="button"
+              onClick={handleDeleteAccount}
               disabled={deleteConfirm !== 'DELETE' || deleteLoading}
-              style={{ padding: '12px', borderRadius: '10px', border: '1px solid rgba(248,113,113,0.4)', background: deleteConfirm === 'DELETE' ? 'rgba(248,113,113,0.15)' : 'transparent', color: '#f87171', fontSize: '14px', fontWeight: '700', cursor: deleteConfirm !== 'DELETE' || deleteLoading ? 'not-allowed' : 'pointer', opacity: deleteConfirm !== 'DELETE' ? 0.4 : 1 }}>
+              className="h-11 rounded-[8px] border border-[#dc2626]/40 bg-transparent text-[#dc2626] text-[14px] font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 hover:bg-[#dc2626]/8 transition-colors"
+            >
               {deleteLoading ? '削除中...' : 'アカウントを完全に削除する'}
             </button>
           </div>
         </div>
-      </div>
+      </Container>
     </div>
   )
 }

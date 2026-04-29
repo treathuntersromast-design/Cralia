@@ -111,12 +111,14 @@ export async function POST(request: NextRequest) {
   // 相手への通知
   const recipientId = order.client_id === user.id ? order.creator_id : order.client_id
   const { data: senderUser } = await db.from('users').select('display_name').eq('id', user.id).single()
-  await db.from('notifications').insert({
-    user_id: recipientId,
-    type:    'message_received',
-    title:   '新しいメッセージ',
-    body:    `${senderUser?.display_name ?? 'ユーザー'} さんからメッセージが届きました`,
-  }).catch(() => {})
+  try {
+    await db.from('notifications').insert({
+      user_id: recipientId,
+      type:    'message_received',
+      title:   '新しいメッセージ',
+      body:    `${senderUser?.display_name ?? 'ユーザー'} さんからメッセージが届きました`,
+    })
+  } catch { /* notification failure is non-fatal */ }
 
   return NextResponse.json({ message: msg })
 }

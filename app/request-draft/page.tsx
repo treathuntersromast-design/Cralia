@@ -1,9 +1,14 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { PenLine, SearchCheck, Calendar, Sparkles, AlertTriangle, Copy, Check, Send, ArrowLeft } from 'lucide-react'
 import { CREATOR_TYPES } from '@/lib/constants/lists'
+import { AppHeader } from '@/components/layout/AppHeader'
+import { Container } from '@/components/ui/Container'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 
 type Tab = 'create' | 'review'
 type Step = 'info' | 'chat'
@@ -22,16 +27,7 @@ interface FormInfo {
   creatorTypes: string[]
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '11px 14px', borderRadius: '10px',
-  border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)',
-  color: '#f0eff8', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
-}
-
-const labelStyle: React.CSSProperties = {
-  display: 'block', color: '#a9a8c0', fontSize: '12px',
-  marginBottom: '6px', fontWeight: '600', letterSpacing: '0.04em',
-}
+const inputCls = 'w-full h-10 px-3.5 rounded-input border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[14px] outline-none focus:border-brand transition'
 
 function RequestDraftInner() {
   const params = useSearchParams()
@@ -175,119 +171,110 @@ function RequestDraftInner() {
   }
 
   function buildJobsNewUrl(): string {
-    const params = new URLSearchParams()
-    if (form.title)      params.set('title',     form.title)
-    if (form.deadline)   params.set('deadline',  form.deadline)
-    if (form.budgetMin)  params.set('budgetMin', form.budgetMin)
-    if (form.budgetMax)  params.set('budgetMax', form.budgetMax)
-    params.set('orderType', form.orderType)
-    if (proposedDraft)   params.set('description', proposedDraft)
-    if (form.creatorTypes.length > 0) params.set('creatorTypes', form.creatorTypes.join(','))
-    return `/jobs/new?${params.toString()}`
+    const p = new URLSearchParams()
+    if (form.title)      p.set('title',     form.title)
+    if (form.deadline)   p.set('deadline',  form.deadline)
+    if (form.budgetMin)  p.set('budgetMin', form.budgetMin)
+    if (form.budgetMax)  p.set('budgetMax', form.budgetMax)
+    p.set('orderType', form.orderType)
+    if (proposedDraft)   p.set('description', proposedDraft)
+    if (form.creatorTypes.length > 0) p.set('creatorTypes', form.creatorTypes.join(','))
+    return `/jobs/new?${p.toString()}`
   }
 
-  // 認証確認中はブランク表示（リダイレクト or 表示の切り替えを待つ）
   if (isLoggedIn === null) {
     return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7c7b99' }}>
+      <div className="min-h-screen bg-[var(--c-bg)] flex items-center justify-center text-[var(--c-text-3)]">
         確認中...
       </div>
     )
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)',
-      color: '#f0eff8', fontFamily: 'system-ui, -apple-system, sans-serif',
-    }}>
-      {/* ヘッダー */}
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '22px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
-          Cralia
-        </Link>
-        <Link href="/dashboard" style={{ color: '#a9a8c0', fontSize: '13px', textDecoration: 'none' }}>
-          ← ダッシュボード
-        </Link>
-      </div>
-
-      <div style={{ maxWidth: '780px', margin: '0 auto', padding: '32px 20px' }}>
+    <div className="min-h-screen bg-[var(--c-bg)]">
+      <AppHeader />
+      <Container size="sm" className="py-10">
 
         {/* タイトル */}
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 6px' }}>
-            ✨ AI 依頼文アシスタント
+        <div className="mb-6">
+          <h1 className="text-[24px] font-bold mb-1.5 flex items-center gap-2">
+            <Sparkles size={22} className="text-brand" aria-hidden />
+            AI 依頼文アシスタント
           </h1>
-          <p style={{ color: '#7c7b99', fontSize: '14px', margin: 0 }}>
+          <p className="text-[14px] text-[var(--c-text-3)]">
             ゼロから作る・既存の文章を添削する — どちらも AI がサポートします
           </p>
         </div>
 
         {/* 外部依頼の注意喚起 */}
-        <div style={{
-          marginBottom: '24px', padding: '16px 20px', borderRadius: '14px',
-          background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.25)',
-        }}>
-          <p style={{ margin: '0 0 6px', fontWeight: '700', fontSize: '14px', color: '#fbbf24' }}>
-            ⚠️ Cralia 外でのやり取りについて
+        <div className="mb-6 px-5 py-4 rounded-[14px] bg-[#fbbf24]/7 border border-[#fbbf24]/25">
+          <p className="font-bold text-[14px] text-[#d97706] mb-1.5 flex items-center gap-1.5">
+            <AlertTriangle size={15} aria-hidden />
+            Cralia 外でのやり取りについて
           </p>
-          <p style={{ margin: 0, fontSize: '13px', color: '#a9a8c0', lineHeight: '1.7' }}>
-            この依頼文ツールで作成した文章を Cralia 外（SNS・知人経由など）でのやり取りに使う場合、<strong style={{ color: '#f0eff8' }}>報酬トラブル・成果物の権利問題・不正行為などについて Cralia は一切の補償・仲介を行いません</strong>。クリエイターへの依頼は Cralia のプラットフォーム上で行うことを推奨します。
+          <p className="text-[13px] text-[var(--c-text-2)] leading-[1.7] m-0">
+            この依頼文ツールで作成した文章を Cralia 外（SNS・知人経由など）でのやり取りに使う場合、
+            <strong className="text-[var(--c-text)]">報酬トラブル・成果物の権利問題・不正行為などについて Cralia は一切の補償・仲介を行いません</strong>。
+            クリエイターへの依頼は Cralia のプラットフォーム上で行うことを推奨します。
           </p>
         </div>
 
         {/* タブ */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+        <div className="flex gap-2 mb-6">
           {(['create', 'review'] as Tab[]).map((t) => (
             <button
               key={t}
+              type="button"
               onClick={() => { setTab(t); setStep('info'); setMessages([]); setProposedDraft(null) }}
-              style={{
-                padding: '10px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: '700',
-                cursor: 'pointer', border: 'none',
-                background: tab === t
-                  ? 'linear-gradient(135deg, #ff6b9d, #c77dff)'
-                  : 'rgba(255,255,255,0.06)',
-                color: tab === t ? '#fff' : '#a9a8c0',
-              }}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-[12px] text-[14px] font-bold transition-colors ${
+                tab === t
+                  ? 'bg-brand text-white border-0'
+                  : 'bg-[var(--c-surface)] border border-[var(--c-border)] text-[var(--c-text-2)] hover:bg-[var(--c-surface-2)]'
+              }`}
             >
-              {t === 'create' ? '✏️ 依頼文を作る' : '🔍 依頼文を添削する'}
+              {t === 'create'
+                ? <><PenLine size={15} aria-hidden /> 依頼文を作る</>
+                : <><SearchCheck size={15} aria-hidden /> 依頼文を添削する</>
+              }
             </button>
           ))}
         </div>
 
         {/* ─── STEP 1: 基本情報 ─── */}
         {step === 'info' && (
-          <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <Card bordered padded className="flex flex-col gap-5">
 
-            {/* 案件タイトル（任意） */}
+            {/* 案件タイトル */}
             <div>
-              <label style={labelStyle}>案件タイトル <span style={{ color: '#5c5b78' }}>（任意）</span></label>
+              <label className="block text-[12px] text-[var(--c-text-3)] font-semibold tracking-wider uppercase mb-1.5">
+                案件タイトル <span className="text-[var(--c-text-4)] normal-case font-normal">（任意）</span>
+              </label>
               <input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 placeholder="例: MVのイラスト制作"
                 maxLength={100}
-                style={inputStyle}
+                className={inputCls}
               />
             </div>
 
             {/* 有償 / 無償 */}
             <div>
-              <label style={labelStyle}>報酬の有無 <span style={{ color: '#ff6b9d', fontSize: '11px' }}>必須</span></label>
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <label className="block text-[12px] text-[var(--c-text-3)] font-semibold tracking-wider uppercase mb-2">
+                報酬の有無 <span className="text-[#dc2626] text-[11px] normal-case font-normal">必須</span>
+              </label>
+              <div className="flex gap-2.5">
                 {(['paid', 'free'] as const).map((v) => (
                   <button
-                    key={v} type="button"
+                    key={v}
+                    type="button"
                     onClick={() => setForm((f) => ({ ...f, orderType: v }))}
-                    style={{
-                      padding: '8px 24px', borderRadius: '12px', fontSize: '14px', cursor: 'pointer',
-                      border: form.orderType === v ? '2px solid #4ade80' : '1px solid rgba(255,255,255,0.12)',
-                      background: form.orderType === v ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.04)',
-                      color: form.orderType === v ? '#4ade80' : '#a9a8c0',
-                      fontWeight: form.orderType === v ? '700' : '400',
-                    }}
+                    className={`px-6 py-2 rounded-[12px] text-[14px] transition-colors ${
+                      form.orderType === v
+                        ? 'border-2 border-brand bg-brand-soft text-brand font-bold'
+                        : 'border border-[var(--c-border)] text-[var(--c-text-3)] hover:bg-[var(--c-surface-2)]'
+                    }`}
                   >
                     {v === 'paid' ? '有償' : '無償'}
                   </button>
@@ -298,20 +285,26 @@ function RequestDraftInner() {
             {/* 予算（有償時） */}
             {form.orderType === 'paid' && (
               <div>
-                <label style={labelStyle}>予算（円） <span style={{ color: '#5c5b78' }}>（任意）</span></label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <label className="block text-[12px] text-[var(--c-text-3)] font-semibold tracking-wider uppercase mb-1.5">
+                  予算（円） <span className="text-[var(--c-text-4)] normal-case font-normal">（任意）</span>
+                </label>
+                <div className="flex items-center gap-2.5">
                   <input
-                    type="number" value={form.budgetMin} min={0}
+                    type="number"
+                    value={form.budgetMin}
+                    min={0}
                     onChange={(e) => setForm((f) => ({ ...f, budgetMin: e.target.value }))}
                     placeholder="下限（例: 5000）"
-                    style={{ ...inputStyle, maxWidth: '180px' }}
+                    className={`${inputCls} max-w-[180px]`}
                   />
-                  <span style={{ color: '#7c7b99', flexShrink: 0 }}>〜</span>
+                  <span className="text-[var(--c-text-3)] shrink-0">〜</span>
                   <input
-                    type="number" value={form.budgetMax} min={0}
+                    type="number"
+                    value={form.budgetMax}
+                    min={0}
                     onChange={(e) => setForm((f) => ({ ...f, budgetMax: e.target.value }))}
                     placeholder="上限（例: 30000）"
-                    style={{ ...inputStyle, maxWidth: '180px' }}
+                    className={`${inputCls} max-w-[180px]`}
                   />
                 </div>
               </div>
@@ -319,32 +312,37 @@ function RequestDraftInner() {
 
             {/* 希望納期 */}
             <div>
-              <label style={labelStyle}>希望納期 <span style={{ color: '#5c5b78' }}>（任意）</span></label>
+              <label htmlFor="draft-deadline" className="block text-[12px] text-[var(--c-text-3)] font-semibold tracking-wider uppercase mb-1.5">
+                希望納期 <span className="text-[var(--c-text-4)] normal-case font-normal">（任意）</span>
+              </label>
               <input
-                type="date" value={form.deadline}
+                id="draft-deadline"
+                type="date"
+                value={form.deadline}
                 onChange={(e) => setForm((f) => ({ ...f, deadline: e.target.value }))}
-                style={{ ...inputStyle, maxWidth: '200px', colorScheme: 'dark' }}
+                title="希望納期"
+                className={`${inputCls} max-w-[200px]`}
               />
             </div>
 
             {/* クリエイタータイプ */}
             <div>
-              <label style={{ ...labelStyle, marginBottom: '10px' }}>
-                募集するクリエイタータイプ <span style={{ color: '#5c5b78' }}>（任意・複数可）</span>
+              <label className="block text-[12px] text-[var(--c-text-3)] font-semibold tracking-wider uppercase mb-2.5">
+                募集クリエイタータイプ <span className="text-[var(--c-text-4)] normal-case font-normal">（任意・複数可）</span>
               </label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div className="flex flex-wrap gap-2">
                 {CREATOR_TYPES.map((t) => {
                   const active = form.creatorTypes.includes(t)
                   return (
                     <button
-                      key={t} type="button" onClick={() => toggleCreatorType(t)}
-                      style={{
-                        padding: '6px 14px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer',
-                        border: active ? '2px solid #c77dff' : '1px solid rgba(255,255,255,0.15)',
-                        background: active ? 'rgba(199,125,255,0.15)' : 'rgba(255,255,255,0.04)',
-                        color: active ? '#c77dff' : '#a9a8c0',
-                        fontWeight: active ? '700' : '400',
-                      }}
+                      key={t}
+                      type="button"
+                      onClick={() => toggleCreatorType(t)}
+                      className={`px-3.5 py-1 rounded-full text-[13px] transition-colors ${
+                        active
+                          ? 'border-2 border-brand bg-brand-soft text-brand font-bold'
+                          : 'border border-[var(--c-border)] text-[var(--c-text-3)] hover:bg-[var(--c-surface-2)]'
+                      }`}
                     >
                       {t}
                     </button>
@@ -356,157 +354,139 @@ function RequestDraftInner() {
             {/* 添削モード: 既存の依頼文 */}
             {tab === 'review' && (
               <div>
-                <label style={labelStyle}>
-                  現在の依頼文 <span style={{ color: '#ff6b9d', fontSize: '11px' }}>必須</span>
+                <label className="block text-[12px] text-[var(--c-text-3)] font-semibold tracking-wider uppercase mb-1.5">
+                  現在の依頼文 <span className="text-[#dc2626] text-[11px] normal-case font-normal">必須</span>
                 </label>
                 <textarea
                   value={existingDraft}
                   onChange={(e) => setExistingDraft(e.target.value)}
                   placeholder="添削してほしい依頼文をここに貼り付けてください..."
                   rows={8}
-                  style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.7' }}
+                  className="w-full px-3.5 py-2.5 rounded-input border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[14px] outline-none focus:border-brand transition resize-y leading-[1.7]"
                 />
-                <p style={{ color: '#7c7b99', fontSize: '12px', marginTop: '4px' }}>
-                  {existingDraft.length} 文字
-                </p>
+                <p className="text-[12px] text-[var(--c-text-4)] mt-1">{existingDraft.length} 文字</p>
               </div>
             )}
 
-            {/* 開始ボタン */}
-            <button
-              onClick={startChat}
+            <Button
+              type="button"
+              variant="primary"
+              size="lg"
               disabled={tab === 'review' && existingDraft.trim().length === 0}
-              style={{
-                padding: '14px', borderRadius: '14px', border: 'none', fontSize: '15px', fontWeight: '700',
-                cursor: tab === 'review' && existingDraft.trim().length === 0 ? 'not-allowed' : 'pointer',
-                background: tab === 'review' && existingDraft.trim().length === 0
-                  ? 'rgba(255,255,255,0.08)'
-                  : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
-                color: '#fff',
-              }}
+              onClick={startChat}
+              className="w-full"
             >
-              {tab === 'create' ? '✨ AI と一緒に依頼文を作る' : '🔍 AI に添削してもらう'}
-            </button>
-          </div>
+              {tab === 'create'
+                ? <><Sparkles size={16} aria-hidden /> AI と一緒に依頼文を作る</>
+                : <><SearchCheck size={16} aria-hidden /> AI に添削してもらう</>
+              }
+            </Button>
+          </Card>
         )}
 
         {/* ─── STEP 2: AI チャット ─── */}
         {step === 'chat' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="flex flex-col gap-4">
 
             {/* 基本情報サマリー */}
-            <div style={{
-              padding: '14px 18px', borderRadius: '14px',
-              background: 'rgba(199,125,255,0.08)', border: '1px solid rgba(199,125,255,0.2)',
-              display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center',
-            }}>
-              {form.title && <span style={{ fontSize: '13px', color: '#c77dff', fontWeight: '700' }}>「{form.title}」</span>}
-              <span style={{ fontSize: '13px', color: '#a9a8c0' }}>
+            <div className="px-4.5 py-3.5 rounded-[14px] bg-brand-soft border border-brand/20 flex flex-wrap gap-3 items-center">
+              {form.title && <span className="text-[13px] text-brand font-bold">「{form.title}」</span>}
+              <span className="text-[13px] text-[var(--c-text-3)]">
                 {form.orderType === 'free' ? '無償' : budgetLabel()}
               </span>
               {form.deadline && (
-                <span style={{ fontSize: '13px', color: '#a9a8c0' }}>📅 {form.deadline}</span>
+                <span className="text-[13px] text-[var(--c-text-3)] flex items-center gap-1">
+                  <Calendar size={13} aria-hidden />
+                  {form.deadline}
+                </span>
               )}
               {form.creatorTypes.length > 0 && (
-                <span style={{ fontSize: '13px', color: '#a9a8c0' }}>{form.creatorTypes.join(' / ')}</span>
+                <span className="text-[13px] text-[var(--c-text-3)]">{form.creatorTypes.join(' / ')}</span>
               )}
               <button
+                type="button"
                 onClick={() => { setStep('info'); setMessages([]); setProposedDraft(null) }}
-                style={{ marginLeft: 'auto', fontSize: '12px', color: '#7c7b99', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
+                className="ml-auto text-[12px] text-[var(--c-text-3)] bg-transparent border-0 cursor-pointer hover:text-brand transition-colors flex items-center gap-1"
               >
-                ← 情報を変更
+                <ArrowLeft size={12} aria-hidden />
+                情報を変更
               </button>
             </div>
 
             {/* チャット履歴 */}
-            <div style={{
-              background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '20px', padding: '20px',
-              minHeight: '320px', maxHeight: '480px', overflowY: 'auto',
-              display: 'flex', flexDirection: 'column', gap: '14px',
-            }}>
+            <Card bordered className="p-5 min-h-[320px] max-h-[480px] overflow-y-auto flex flex-col gap-3.5">
               {messages.length === 0 && sending && (
-                <div style={{ color: '#7c7b99', fontSize: '14px', textAlign: 'center', margin: 'auto' }}>
+                <div className="text-[var(--c-text-4)] text-[14px] text-center m-auto">
                   AI が準備中...
                 </div>
               )}
               {messages.map((m, i) => (
-                <div key={i} style={{
-                  display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start',
-                }}>
-                  <div style={{
-                    maxWidth: '80%', padding: '12px 16px', borderRadius: m.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                    background: m.role === 'user' ? 'linear-gradient(135deg, #ff6b9d44, #c77dff44)' : 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    fontSize: '14px', lineHeight: '1.7', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                  }}>
+                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] px-4 py-3 text-[14px] leading-[1.7] whitespace-pre-wrap break-words border ${
+                    m.role === 'user'
+                      ? 'rounded-[18px_18px_4px_18px] bg-brand/10 border-brand/15 text-[var(--c-text)]'
+                      : 'rounded-[18px_18px_18px_4px] bg-[var(--c-surface-2)] border-[var(--c-border)] text-[var(--c-text)]'
+                  }`}>
                     {m.content}
                   </div>
                 </div>
               ))}
               {sending && messages.length > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                  <div style={{ padding: '12px 16px', borderRadius: '18px 18px 18px 4px', background: 'rgba(255,255,255,0.06)', color: '#7c7b99', fontSize: '14px' }}>
+                <div className="flex justify-start">
+                  <div className="px-4 py-3 rounded-[18px_18px_18px_4px] bg-[var(--c-surface-2)] border border-[var(--c-border)] text-[var(--c-text-4)] text-[14px]">
                     入力中...
                   </div>
                 </div>
               )}
               <div ref={chatEndRef} />
-            </div>
+            </Card>
 
             {/* エラー */}
             {aiError && (
-              <div style={{
-                padding: '12px 16px', borderRadius: '10px', fontSize: '13px',
-                background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)',
-                color: '#f87171',
-              }}>
+              <div className="px-4 py-3 rounded-[10px] text-[13px] bg-[#dc2626]/8 border border-[#dc2626]/25 text-[#dc2626]">
                 {aiError}
               </div>
             )}
 
-            {/* 提案された依頼文 */}
+            {/* 生成された依頼文 */}
             {proposedDraft && (
-              <div style={{
-                padding: '20px', borderRadius: '16px',
-                background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#34d399' }}>✓ 生成された依頼文</span>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+              <div className="p-5 rounded-[16px] bg-[#4ade80]/8 border border-[#4ade80]/25">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[13px] font-bold text-[#16a34a] flex items-center gap-1.5">
+                    <Check size={14} aria-hidden />
+                    生成された依頼文
+                  </span>
+                  <div className="flex gap-2">
                     <button
+                      type="button"
                       onClick={handleCopy}
-                      style={{
-                        padding: '6px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: '600',
-                        background: copied ? 'rgba(52,211,153,0.3)' : 'rgba(52,211,153,0.15)',
-                        color: '#34d399',
-                      }}
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-[8px] border-0 cursor-pointer text-[12px] font-semibold transition-colors ${
+                        copied
+                          ? 'bg-[#4ade80]/30 text-[#16a34a]'
+                          : 'bg-[#4ade80]/15 text-[#16a34a] hover:bg-[#4ade80]/25'
+                      }`}
                     >
-                      {copied ? '✓ コピーしました' : 'コピー'}
+                      {copied ? <Check size={13} aria-hidden /> : <Copy size={13} aria-hidden />}
+                      {copied ? 'コピーしました' : 'コピー'}
                     </button>
                     {isLoggedIn && (
                       <Link
                         href={buildJobsNewUrl()}
-                        style={{
-                          padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600',
-                          background: 'linear-gradient(135deg, #ff6b9d44, #c77dff44)',
-                          border: '1px solid rgba(199,125,255,0.3)',
-                          color: '#c77dff', textDecoration: 'none',
-                        }}
+                        className="px-3.5 py-1.5 rounded-[8px] text-[12px] font-semibold bg-brand-soft border border-brand/30 text-brand no-underline hover:bg-brand/10 transition-colors"
                       >
                         案件として投稿 →
                       </Link>
                     )}
                   </div>
                 </div>
-                <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.8', whiteSpace: 'pre-wrap', color: '#e0dff4' }}>
+                <p className="m-0 text-[14px] leading-[1.8] whitespace-pre-wrap text-[var(--c-text)]">
                   {proposedDraft}
                 </p>
               </div>
             )}
 
             {/* 入力エリア */}
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div className="flex gap-2.5">
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -516,37 +496,35 @@ function RequestDraftInner() {
                 placeholder="AIへのメッセージ（Shift+Enter で改行）"
                 rows={2}
                 disabled={sending}
-                style={{
-                  ...inputStyle, flex: 1, resize: 'none', lineHeight: '1.6',
-                  opacity: sending ? 0.6 : 1,
-                }}
+                className={`flex-1 px-3.5 py-2.5 rounded-input border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[14px] outline-none focus:border-brand transition resize-none leading-[1.6] ${sending ? 'opacity-60' : ''}`}
               />
               <button
+                type="button"
                 onClick={handleSend}
                 disabled={!input.trim() || sending}
-                style={{
-                  padding: '0 20px', borderRadius: '12px', border: 'none', cursor: !input.trim() || sending ? 'not-allowed' : 'pointer',
-                  background: !input.trim() || sending ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
-                  color: !input.trim() || sending ? '#5c5b78' : '#fff',
-                  fontSize: '14px', fontWeight: '700', flexShrink: 0,
-                }}
+                title="送信"
+                className={`px-5 rounded-[12px] border-0 text-[14px] font-bold shrink-0 flex items-center justify-center transition-colors ${
+                  !input.trim() || sending
+                    ? 'bg-[var(--c-surface-2)] text-[var(--c-text-4)] cursor-not-allowed'
+                    : 'bg-brand text-white cursor-pointer hover:bg-brand-ink'
+                }`}
               >
-                送信
+                <Send size={16} aria-hidden />
               </button>
             </div>
 
             {remaining !== null && (
-              <p style={{ margin: 0, fontSize: '12px', color: '#5c5b78', textAlign: 'right' }}>
+              <p className="m-0 text-[12px] text-[var(--c-text-4)] text-right">
                 本日の残り利用回数: {remaining} 回
               </p>
             )}
 
-            <p style={{ margin: 0, fontSize: '12px', color: '#5c5b78', textAlign: 'center' }}>
+            <p className="m-0 text-[12px] text-[var(--c-text-4)] text-center">
               AIの回答は参考情報です。内容を確認のうえご利用ください。
             </p>
           </div>
         )}
-      </div>
+      </Container>
     </div>
   )
 }

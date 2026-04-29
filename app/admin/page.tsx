@@ -1,19 +1,29 @@
-﻿import { redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { AppHeader } from '@/components/layout/AppHeader'
+import { Container } from '@/components/ui/Container'
+import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
 
 export const dynamic = 'force-dynamic'
 
-// 管理者のメールアドレスを環境変数で制御
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim()).filter(Boolean)
+
+const REPORT_STATUS: Record<string, { label: string; cls: string }> = {
+  pending:   { label: '未対応',   cls: 'text-[#d97706] border-[#fbbf24]/30 bg-[#fbbf24]/5' },
+  reviewing: { label: '確認中',   cls: 'text-[#60a5fa] border-[#60a5fa]/30 bg-[#60a5fa]/5' },
+  resolved:  { label: '対応済み', cls: 'text-[#16a34a] border-[#4ade80]/30 bg-[#4ade80]/5' },
+  dismissed: { label: '却下',     cls: 'text-[var(--c-text-3)] border-[var(--c-border)] bg-[var(--c-surface)]' },
+}
 
 export default async function AdminPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?next=/admin')
 
-  // 管理者チェック
   if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(user.email ?? '')) {
     redirect('/dashboard')
   }
@@ -46,59 +56,49 @@ export default async function AdminPage() {
   ])
 
   const stats = [
-    { label: '総ユーザー数',       value: totalUsers ?? 0,     color: '#c77dff', bg: 'rgba(199,125,255,0.08)', border: 'rgba(199,125,255,0.2)' },
-    { label: '総依頼数',           value: totalOrders ?? 0,    color: '#60a5fa', bg: 'rgba(96,165,250,0.08)',  border: 'rgba(96,165,250,0.2)'  },
-    { label: 'アクティブな依頼',   value: activeOrders ?? 0,   color: '#fbbf24', bg: 'rgba(251,191,36,0.08)',  border: 'rgba(251,191,36,0.2)'  },
-    { label: '完了済み依頼',       value: completedOrders ?? 0,color: '#4ade80', bg: 'rgba(74,222,128,0.08)',  border: 'rgba(74,222,128,0.2)'  },
-    { label: '異議申し立て中',     value: disputedOrders ?? 0, color: '#f87171', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.2)' },
+    { label: '総ユーザー数',     value: totalUsers ?? 0,      bgCls: 'bg-brand-soft border-brand/20',      valCls: 'text-brand'      },
+    { label: '総依頼数',         value: totalOrders ?? 0,     bgCls: 'bg-[#60a5fa]/8 border-[#60a5fa]/20', valCls: 'text-[#60a5fa]'  },
+    { label: 'アクティブ',       value: activeOrders ?? 0,    bgCls: 'bg-[#fbbf24]/8 border-[#fbbf24]/20', valCls: 'text-[#d97706]'  },
+    { label: '完了済み',         value: completedOrders ?? 0, bgCls: 'bg-[#4ade80]/8 border-[#4ade80]/20', valCls: 'text-[#16a34a]'  },
+    { label: '異議申し立て中',   value: disputedOrders ?? 0,  bgCls: 'bg-[#f87171]/8 border-[#f87171]/20', valCls: 'text-[#dc2626]'  },
   ]
 
   return (
-    <main style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8' }}>
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
-          Cralia
-        </Link>
-        <span style={{ color: '#f87171', fontSize: '13px', fontWeight: '700', padding: '4px 12px', borderRadius: '20px', background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.3)' }}>
-          管理者
-        </span>
-      </div>
-
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 24px' }}>
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 6px' }}>管理者ダッシュボード</h1>
-          <p style={{ color: '#7c7b99', fontSize: '14px', margin: 0 }}>プラットフォーム全体の状況</p>
+    <div className="min-h-screen bg-[var(--c-bg)]">
+      <AppHeader />
+      <Container className="py-10">
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-[24px] font-bold">管理者ダッシュボード</h1>
+          <Badge tone="danger" variant="soft">管理者</Badge>
         </div>
+        <p className="text-[14px] text-[var(--c-text-3)] mb-8">プラットフォーム全体の状況</p>
 
         {/* 統計カード */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '12px', marginBottom: '36px' }}>
-          {stats.map(({ label, value, color, bg, border }) => (
-            <div key={label} style={{ background: bg, border: `1px solid ${border}`, borderRadius: '16px', padding: '18px 20px' }}>
-              <p style={{ color: '#7c7b99', fontSize: '11px', fontWeight: '700', margin: '0 0 6px', letterSpacing: '0.05em' }}>{label}</p>
-              <p style={{ color, fontSize: '28px', fontWeight: '800', margin: 0 }}>{value.toLocaleString()}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-9">
+          {stats.map(({ label, value, bgCls, valCls }) => (
+            <div key={label} className={`${bgCls} border rounded-card p-5`}>
+              <p className="text-[11px] font-bold text-[var(--c-text-3)] tracking-wider mb-1.5">{label}</p>
+              <p className={`text-[28px] font-bold ${valCls}`}>{value.toLocaleString()}</p>
             </div>
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'start' }}>
+        {/* 2-column grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
           {/* 最近の依頼 */}
-          <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '20px 24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: 0 }}>最近の依頼</h2>
-            </div>
+          <Card bordered padded>
+            <h2 className="text-[12px] font-bold text-[var(--c-text-3)] tracking-wider uppercase mb-4">最近の依頼</h2>
             {!recentOrders || recentOrders.length === 0 ? (
-              <p style={{ color: '#5c5b78', fontSize: '13px', margin: 0 }}>依頼はありません</p>
+              <p className="text-[13px] text-[var(--c-text-4)]">依頼はありません</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className="flex flex-col gap-2">
                 {recentOrders.map((o) => (
-                  <Link key={o.id} href={`/orders/${o.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '10px 14px' }}>
-                      <p style={{ fontWeight: '600', fontSize: '13px', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {o.title}
-                      </p>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <span style={{ fontSize: '11px', color: '#7c7b99' }}>{o.status}</span>
-                        <span style={{ fontSize: '11px', color: '#5c5b78' }}>
+                  <Link key={o.id} href={`/orders/${o.id}`} className="no-underline text-[var(--c-text)]">
+                    <div className="bg-[var(--c-surface-2)] rounded-[8px] px-3.5 py-2.5 hover:border hover:border-brand/20 transition-colors">
+                      <p className="font-semibold text-[13px] truncate mb-0.5">{o.title}</p>
+                      <div className="flex gap-2 items-center">
+                        <span className="text-[11px] text-[var(--c-text-3)]">{o.status}</span>
+                        <span className="text-[11px] text-[var(--c-text-4)]">
                           {new Date(o.created_at).toLocaleDateString('ja-JP')}
                         </span>
                       </div>
@@ -107,94 +107,97 @@ export default async function AdminPage() {
                 ))}
               </div>
             )}
-          </div>
+          </Card>
 
           {/* エラーログ */}
-          <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '20px 24px' }}>
-            <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 16px' }}>エラーログ（直近20件）</h2>
+          <Card bordered padded>
+            <h2 className="text-[12px] font-bold text-[var(--c-text-3)] tracking-wider uppercase mb-4">エラーログ（直近20件）</h2>
             {!recentErrors || recentErrors.length === 0 ? (
-              <p style={{ color: '#5c5b78', fontSize: '13px', margin: 0 }}>エラーはありません ✅</p>
+              <div className="flex items-center gap-2 text-[#16a34a] text-[13px]">
+                <CheckCircle2 size={15} aria-hidden />
+                エラーはありません
+              </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto' }}>
+              <div className="flex flex-col gap-2 max-h-[380px] overflow-y-auto">
                 {recentErrors.map((e) => (
-                  <div key={e.id} style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.15)', borderRadius: '10px', padding: '10px 14px' }}>
-                    <p style={{ color: '#f87171', fontSize: '12px', fontWeight: '700', margin: '0 0 2px' }}>
-                      [{e.endpoint}]
-                    </p>
-                    <p style={{ color: '#d0cfea', fontSize: '12px', margin: '0 0 4px', lineHeight: '1.5', wordBreak: 'break-all' }}>
-                      {e.message}
-                    </p>
-                    <p style={{ color: '#5c5b78', fontSize: '11px', margin: 0 }}>
-                      {new Date(e.created_at).toLocaleString('ja-JP')}
-                    </p>
+                  <div key={e.id} className="bg-[#f87171]/5 border border-[#f87171]/15 rounded-[8px] px-3.5 py-2.5">
+                    <p className="text-[#dc2626] text-[12px] font-bold mb-0.5">[{e.endpoint}]</p>
+                    <p className="text-[12px] text-[var(--c-text-2)] mb-1 leading-[1.5] break-all">{e.message}</p>
+                    <p className="text-[11px] text-[var(--c-text-4)]">{new Date(e.created_at).toLocaleString('ja-JP')}</p>
                   </div>
                 ))}
               </div>
             )}
-          </div>
+          </Card>
         </div>
 
-        {/* 異議申し立て中の依頼リンク */}
+        {/* 異議申し立て警告 */}
         {(disputedOrders ?? 0) > 0 && (
-          <div style={{ marginTop: '20px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: '14px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <p style={{ color: '#f87171', fontWeight: '700', fontSize: '14px', margin: '0 0 2px' }}>
-                ⚠️ 異議申し立て中の依頼が {disputedOrders} 件あります
-              </p>
-              <p style={{ color: '#a9a8c0', fontSize: '12px', margin: 0 }}>対応が必要な依頼を確認してください</p>
+          <div className="mt-5 bg-[#f87171]/5 border border-[#f87171]/25 rounded-card p-4 flex items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle size={16} className="text-[#dc2626] shrink-0 mt-0.5" aria-hidden />
+              <div>
+                <p className="text-[#dc2626] font-bold text-[14px] mb-0.5">
+                  異議申し立て中の依頼が {disputedOrders} 件あります
+                </p>
+                <p className="text-[12px] text-[var(--c-text-3)]">対応が必要な依頼を確認してください</p>
+              </div>
             </div>
             <Link
               href="/admin/disputes"
-              style={{ padding: '9px 18px', borderRadius: '10px', background: 'rgba(248,113,113,0.2)', border: '1px solid rgba(248,113,113,0.4)', color: '#f87171', fontSize: '13px', fontWeight: '700', textDecoration: 'none', flexShrink: 0 }}
+              className="shrink-0 h-9 px-4 rounded-[8px] bg-[#dc2626]/10 border border-[#dc2626]/35 text-[#dc2626] text-[13px] font-bold no-underline hover:bg-[#dc2626]/15 transition-colors flex items-center"
             >
               確認する
             </Link>
           </div>
         )}
 
-        {/* 評価報告（異議申し立て）セクション */}
+        {/* 評価報告 pending 警告 */}
         {(pendingReports ?? 0) > 0 && (
-          <div style={{ marginTop: '20px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '14px', padding: '16px 20px' }}>
-            <p style={{ color: '#fbbf24', fontWeight: '700', fontSize: '14px', margin: '0 0 4px' }}>
-              ⚠️ 評価への異議申し立てが {pendingReports} 件あります（未対応）
-            </p>
-            <p style={{ color: '#a9a8c0', fontSize: '12px', margin: 0 }}>下記一覧を確認し、対応してください。</p>
+          <div className="mt-5 bg-[#fbbf24]/5 border border-[#fbbf24]/25 rounded-card p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle size={16} className="text-[#d97706] shrink-0 mt-0.5" aria-hidden />
+              <div>
+                <p className="text-[#d97706] font-bold text-[14px] mb-0.5">
+                  評価への異議申し立てが {pendingReports} 件あります（未対応）
+                </p>
+                <p className="text-[13px] text-[var(--c-text-3)]">下記一覧を確認し、対応してください。</p>
+              </div>
+            </div>
           </div>
         )}
 
-        <div style={{ marginTop: '20px', background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '20px 24px' }}>
-          <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 16px' }}>
+        {/* 評価報告一覧 */}
+        <Card bordered padded className="mt-5">
+          <h2 className="text-[12px] font-bold text-[var(--c-text-3)] tracking-wider uppercase mb-4">
             評価への異議申し立て（直近20件）
           </h2>
           {!recentReports || recentReports.length === 0 ? (
-            <p style={{ color: '#5c5b78', fontSize: '13px', margin: 0 }}>報告はありません ✅</p>
+            <div className="flex items-center gap-2 text-[#16a34a] text-[13px]">
+              <CheckCircle2 size={15} aria-hidden />
+              報告はありません
+            </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
+            <div className="flex flex-col gap-3 max-h-[420px] overflow-y-auto">
               {recentReports.map((rp) => {
-                const statusInfo: Record<string, { label: string; color: string; border: string }> = {
-                  pending:    { label: '未対応',   color: '#fbbf24', border: 'rgba(251,191,36,0.3)'  },
-                  reviewing:  { label: '確認中',   color: '#60a5fa', border: 'rgba(96,165,250,0.3)'  },
-                  resolved:   { label: '対応済み', color: '#4ade80', border: 'rgba(74,222,128,0.3)'  },
-                  dismissed:  { label: '却下',     color: '#a9a8c0', border: 'rgba(169,168,192,0.3)' },
-                }
-                const si = statusInfo[rp.status] ?? statusInfo.pending
+                const si = REPORT_STATUS[rp.status] ?? REPORT_STATUS.pending
                 return (
-                  <div key={rp.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                      <span style={{ padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', color: si.color, border: `1px solid ${si.border}`, background: 'transparent' }}>
+                  <div key={rp.id} className="bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-[8px] p-4">
+                    <div className="flex items-center gap-2.5 mb-2 flex-wrap">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${si.cls}`}>
                         {si.label}
                       </span>
-                      <span style={{ color: '#5c5b78', fontSize: '11px' }}>
+                      <span className="text-[11px] text-[var(--c-text-4)]">
                         {new Date(rp.created_at).toLocaleString('ja-JP')}
                       </span>
-                      <span style={{ color: '#7c7b99', fontSize: '11px' }}>
+                      <span className="text-[11px] text-[var(--c-text-3)]">
                         報告者 ID: {rp.reporter_id.slice(0, 8)}...
                       </span>
-                      <span style={{ color: '#7c7b99', fontSize: '11px' }}>
+                      <span className="text-[11px] text-[var(--c-text-3)]">
                         レビュー ID: {rp.review_id.slice(0, 8)}...
                       </span>
                     </div>
-                    <p style={{ color: '#d0cfea', fontSize: '13px', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    <p className="text-[13px] text-[var(--c-text-2)] leading-[1.6] whitespace-pre-wrap break-words">
                       {rp.reason}
                     </p>
                   </div>
@@ -202,9 +205,8 @@ export default async function AdminPage() {
               })}
             </div>
           )}
-        </div>
-
-      </div>
-    </main>
+        </Card>
+      </Container>
+    </div>
   )
 }

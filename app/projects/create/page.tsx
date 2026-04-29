@@ -1,8 +1,11 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { AppHeader } from '@/components/layout/AppHeader'
+import { Container } from '@/components/ui/Container'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 
 const CATEGORIES = ['楽曲', '動画', 'イラスト', 'ゲーム', 'ポッドキャスト', 'その他']
 
@@ -12,22 +15,18 @@ interface Role {
   is_owner_role: boolean
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 14px', borderRadius: '10px',
-  border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(255,255,255,0.05)',
-  color: '#f0eff8', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
-}
+const inputCls = 'w-full h-10 px-3.5 rounded-input border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[14px] outline-none focus:border-brand transition'
 
 export default function CreateProjectPage() {
   const router = useRouter()
-  const [title, setTitle] = useState('')
+  const [title,       setTitle]       = useState('')
   const [description, setDescription] = useState('')
-  const [category, setCategory] = useState('')
-  const [roles, setRoles] = useState<Role[]>([
+  const [category,    setCategory]    = useState('')
+  const [roles,       setRoles]       = useState<Role[]>([
     { role_name: '', description: '', is_owner_role: true },
   ])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error,   setError]   = useState<string | null>(null)
 
   const addRole = () => {
     if (roles.length >= 20) return
@@ -65,44 +64,39 @@ export default function CreateProjectPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)',
-      color: '#f0eff8',
-    }}>
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
-          Cralia
-        </Link>
-        <Link href="/projects" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>← プロジェクト一覧へ</Link>
-      </div>
+    <div className="min-h-screen bg-[var(--c-bg)]">
+      <AppHeader />
+      <Container size="sm" className="py-10">
+        <h1 className="text-[26px] font-bold mb-8">プロジェクトを作成</h1>
 
-      <div style={{ maxWidth: '640px', margin: '0 auto', padding: '40px 24px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 32px' }}>プロジェクトを作成</h1>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="flex flex-col gap-6">
           {/* タイトル */}
           <div>
-            <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '6px' }}>
-              プロジェクト名<span style={{ color: '#ff6b9d' }}>*</span>
+            <label className="block text-[13px] text-[var(--c-text-2)] mb-1.5">
+              プロジェクト名<span className="text-[#dc2626]">*</span>
             </label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={60}
-              placeholder="例: ボカロオリジナル曲「〇〇」制作" style={inputStyle} />
-            <p style={{ color: '#7c7b99', fontSize: '12px', marginTop: '4px' }}>{title.length}/60</p>
+            <input
+              value={title} onChange={(e) => setTitle(e.target.value)} maxLength={60}
+              placeholder="例: ボカロオリジナル曲「〇〇」制作" className={inputCls}
+            />
+            <p className="text-[12px] text-[var(--c-text-4)] mt-1 text-right">{title.length}/60</p>
           </div>
 
           {/* カテゴリ */}
           <div>
-            <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '8px' }}>カテゴリ</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <label className="block text-[13px] text-[var(--c-text-2)] mb-2">カテゴリ</label>
+            <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((c) => (
-                <button key={c} type="button" onClick={() => setCategory(category === c ? '' : c)}
-                  style={{
-                    padding: '6px 16px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer',
-                    border: category === c ? '2px solid #c77dff' : '1px solid rgba(255,255,255,0.15)',
-                    background: category === c ? 'rgba(199,125,255,0.2)' : 'transparent',
-                    color: category === c ? '#c77dff' : '#a9a8c0', fontWeight: category === c ? '700' : '400',
-                  }}>
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCategory(category === c ? '' : c)}
+                  className={`px-4 py-1.5 rounded-full text-[13px] transition-colors ${
+                    category === c
+                      ? 'border-2 border-brand bg-brand-soft text-brand font-bold'
+                      : 'border border-[var(--c-border)] text-[var(--c-text-3)] hover:bg-[var(--c-surface)]'
+                  }`}
+                >
                   {c}
                 </button>
               ))}
@@ -111,72 +105,88 @@ export default function CreateProjectPage() {
 
           {/* 概要 */}
           <div>
-            <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '6px' }}>概要</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} maxLength={1000}
+            <label className="block text-[13px] text-[var(--c-text-2)] mb-1.5">概要</label>
+            <textarea
+              value={description} onChange={(e) => setDescription(e.target.value)} rows={4} maxLength={1000}
               placeholder="プロジェクトの目的・背景・制作物の概要などを書いてください。"
-              style={{ ...inputStyle, resize: 'vertical' }} />
-            <p style={{ color: '#7c7b99', fontSize: '12px', marginTop: '4px' }}>{description.length}/1000</p>
+              className="w-full px-3.5 py-2.5 rounded-input border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[14px] outline-none focus:border-brand transition resize-y leading-[1.6]"
+            />
+            <p className="text-[12px] text-[var(--c-text-4)] mt-1 text-right">{description.length}/1000</p>
           </div>
 
           {/* 役職 */}
           <div>
-            <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '4px' }}>
-              役職<span style={{ color: '#ff6b9d' }}>*</span>
+            <label className="block text-[13px] text-[var(--c-text-2)] mb-1">
+              役職<span className="text-[#dc2626]">*</span>
             </label>
-            <p style={{ color: '#7c7b99', fontSize: '12px', marginBottom: '12px' }}>
+            <p className="text-[12px] text-[var(--c-text-3)] mb-3">
               「主催」チェックを付けた役職が自分のポジションです。募集したい役職も追加してください。
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="flex flex-col gap-2.5">
               {roles.map((r, i) => (
-                <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${r.is_owner_role ? 'rgba(199,125,255,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius: '14px', padding: '16px' }}>
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
-                    <input value={r.role_name} onChange={(e) => updateRole(i, 'role_name', e.target.value)}
+                <div
+                  key={i}
+                  className={`border rounded-[12px] p-4 ${r.is_owner_role ? 'border-brand/40 bg-brand-soft' : 'border-[var(--c-border)] bg-[var(--c-surface)]'}`}
+                >
+                  <div className="flex gap-2 mb-2 items-center">
+                    <input
+                      value={r.role_name} onChange={(e) => updateRole(i, 'role_name', e.target.value)}
                       placeholder="例: ボーカル、イラストレーター" maxLength={40}
-                      style={{ ...inputStyle, flex: 1 }} />
-                    <button type="button" onClick={() => removeRole(i)}
+                      className={`${inputCls} flex-1`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeRole(i)}
                       disabled={roles.length <= 1}
-                      style={{ background: 'none', border: 'none', color: '#ff6b9d', cursor: roles.length <= 1 ? 'not-allowed' : 'pointer', fontSize: '20px', padding: '0 4px', opacity: roles.length <= 1 ? 0.3 : 1 }}>
+                      className="text-[#dc2626] bg-transparent border-none cursor-pointer text-[20px] px-1 disabled:opacity-30 disabled:cursor-not-allowed leading-none"
+                    >
                       ×
                     </button>
                   </div>
-                  <input value={r.description} onChange={(e) => updateRole(i, 'description', e.target.value)}
+                  <input
+                    value={r.description} onChange={(e) => updateRole(i, 'description', e.target.value)}
                     placeholder="役割の詳細（任意）" maxLength={100}
-                    style={{ ...inputStyle, fontSize: '13px', marginBottom: '8px' }} />
-                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', color: r.is_owner_role ? '#c77dff' : '#a9a8c0' }}>
-                    <input type="checkbox" checked={r.is_owner_role}
+                    className={`${inputCls} text-[13px] mb-2`}
+                  />
+                  <label className={`inline-flex items-center gap-1.5 cursor-pointer text-[13px] ${r.is_owner_role ? 'text-brand font-semibold' : 'text-[var(--c-text-3)]'}`}>
+                    <input
+                      type="checkbox"
+                      checked={r.is_owner_role}
                       onChange={(e) => {
-                        // 主催は1つだけ
                         setRoles((prev) => prev.map((role, j) => ({
                           ...role,
                           is_owner_role: j === i ? e.target.checked : e.target.checked ? false : role.is_owner_role,
                         })))
                       }}
-                      style={{ accentColor: '#c77dff' }} />
+                      className="accent-brand w-4 h-4"
+                    />
                     主催（自分の役職）
                   </label>
                 </div>
               ))}
             </div>
             {roles.length < 20 && (
-              <button type="button" onClick={addRole}
-                style={{ marginTop: '10px', width: '100%', padding: '10px', borderRadius: '10px', border: '1px dashed rgba(199,125,255,0.3)', background: 'transparent', color: '#c77dff', fontSize: '13px', cursor: 'pointer' }}>
+              <button
+                type="button"
+                onClick={addRole}
+                className="mt-2.5 w-full h-10 rounded-[8px] border border-dashed border-brand/30 bg-transparent text-brand text-[13px] font-semibold cursor-pointer hover:bg-brand-soft transition-colors"
+              >
                 ＋ 役職を追加
               </button>
             )}
           </div>
 
-          {error && <p style={{ color: '#ff6b9d', fontSize: '13px', margin: 0 }}>{error}</p>}
+          {error && (
+            <p className="text-[13px] text-[#dc2626] bg-[#dc2626]/8 border border-[#dc2626]/25 rounded-[8px] px-3.5 py-2.5">
+              {error}
+            </p>
+          )}
 
-          <button type="button" onClick={handleSubmit} disabled={loading}
-            style={{
-              padding: '14px', borderRadius: '14px', border: 'none',
-              background: loading ? 'rgba(199,125,255,0.3)' : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
-              color: '#fff', fontSize: '15px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer',
-            }}>
-            {loading ? '作成中...' : 'プロジェクトを作成する'}
-          </button>
+          <Button type="button" variant="primary" size="lg" loading={loading} onClick={handleSubmit} className="w-full">
+            プロジェクトを作成する
+          </Button>
         </div>
-      </div>
+      </Container>
     </div>
   )
 }

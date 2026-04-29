@@ -67,7 +67,7 @@ export async function middleware(request: NextRequest) {
       .single()
 
     const needsSetup = !profile || (
-      !Object.values(ACTIVITY_STYLE_ID).includes(profile.activity_style_id as number) &&
+      !Object.values(ACTIVITY_STYLE_ID).includes(profile.activity_style_id as 1 | 2 | 3) &&
       !profile.display_name
     )
     if (needsSetup) {

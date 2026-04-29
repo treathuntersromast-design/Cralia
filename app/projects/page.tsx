@@ -1,14 +1,24 @@
-﻿import { redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { FolderOpen, Plus, ChevronRight } from 'lucide-react'
+import { AppHeader } from '@/components/layout/AppHeader'
+import { Container } from '@/components/ui/Container'
+import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 export const dynamic = 'force-dynamic'
 
-const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  recruiting:  { label: 'メンバー募集中', color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
-  in_progress: { label: '進行中',         color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
-  completed:   { label: '完了',           color: 'var(--c-text-2)', bg: 'rgba(169,168,192,0.12)' },
-  cancelled:   { label: 'キャンセル',     color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
+function projectTone(status: string): 'ok' | 'brand' | 'neutral' | 'danger' {
+  const map: Record<string, 'ok' | 'brand' | 'neutral' | 'danger'> = {
+    recruiting: 'ok', in_progress: 'brand', completed: 'neutral', cancelled: 'danger',
+  }
+  return map[status] ?? 'neutral'
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  recruiting: 'メンバー募集中', in_progress: '進行中', completed: '完了', cancelled: 'キャンセル',
 }
 
 export default async function ProjectsPage() {
@@ -23,87 +33,66 @@ export default async function ProjectsPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--c-bg)',
-      color: 'var(--c-text)',
-    }}>
-      {/* ヘッダー */}
-      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
-          Cralia
-        </Link>
-        <Link href="/dashboard" style={{ color: 'var(--c-text-2)', fontSize: '14px', textDecoration: 'none' }}>← ダッシュボードへ</Link>
-      </div>
-
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px' }}>
-        {/* タイトル + 作成ボタン */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', flexWrap: 'wrap', gap: '12px' }}>
+    <div className="min-h-screen bg-[var(--c-bg)]">
+      <AppHeader />
+      <Container className="py-10">
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
           <div>
-            <h1 style={{ fontSize: '28px', fontWeight: '800', margin: '0 0 4px' }}>マイプロジェクト</h1>
-            <p style={{ color: 'var(--c-text-3)', fontSize: '14px', margin: 0 }}>あなたが主催するプロジェクト</p>
+            <h1 className="text-[28px] font-bold mb-1">マイプロジェクト</h1>
+            <p className="text-[14px] text-[var(--c-text-3)]">あなたが主催するプロジェクト</p>
           </div>
-          <Link href="/projects/create" style={{
-            display: 'inline-flex', alignItems: 'center', gap: '8px',
-            padding: '12px 22px', borderRadius: '14px',
-            background: 'var(--c-grad-primary)',
-            color: '#fff', fontSize: '14px', fontWeight: '700', textDecoration: 'none',
-          }}>
-            ＋ プロジェクトを作成
+          <Link
+            href="/projects/create"
+            className="inline-flex items-center gap-2 h-10 px-5 rounded-[8px] bg-brand text-white text-[14px] font-semibold no-underline hover:bg-brand-ink transition-colors"
+          >
+            <Plus size={16} aria-hidden />
+            プロジェクトを作成
           </Link>
         </div>
 
-        {/* プロジェクト一覧 */}
         {!myProjects || myProjects.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 24px', background: 'var(--c-surface-2)', borderRadius: '20px', border: '1px dashed var(--c-accent-a20)' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎯</div>
-            <p style={{ fontSize: '16px', margin: '0 0 8px', fontWeight: '700' }}>まだプロジェクトがありません</p>
-            <p style={{ color: 'var(--c-text-3)', fontSize: '14px', margin: '0 0 24px' }}>メンバーを集めてプロジェクトを立ち上げましょう</p>
-            <Link href="/projects/create" style={{
-              display: 'inline-flex', padding: '12px 24px', borderRadius: '14px',
-              background: 'var(--c-grad-primary)',
-              color: '#fff', fontSize: '14px', fontWeight: '700', textDecoration: 'none',
-            }}>
-              ＋ 最初のプロジェクトを作成
-            </Link>
-          </div>
+          <EmptyState
+            icon={FolderOpen}
+            title="まだプロジェクトがありません"
+            description="メンバーを集めてプロジェクトを立ち上げましょう"
+            action={
+              <Link
+                href="/projects/create"
+                className="inline-flex items-center gap-2 h-9 px-4 rounded-[6px] bg-brand text-white text-[13px] font-medium no-underline hover:bg-brand-ink transition-colors"
+              >
+                <Plus size={14} aria-hidden />
+                最初のプロジェクトを作成
+              </Link>
+            }
+          />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {myProjects.map((p) => {
-              const st = STATUS_MAP[p.status] ?? STATUS_MAP.recruiting
-              return (
-                <Link key={p.id} href={`/projects/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <div style={{
-                    background: 'var(--c-surface)', border: '1px solid var(--c-accent-a15)',
-                    borderRadius: '16px', padding: '20px 24px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
-                  }}>
-                    <div style={{ overflow: 'hidden' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: '700', fontSize: '16px' }}>{p.title}</span>
-                        {p.category && (
-                          <span style={{ padding: '2px 10px', borderRadius: '20px', fontSize: '12px', background: 'var(--c-accent-a15)', color: 'var(--c-accent)' }}>
-                            {p.category}
-                          </span>
-                        )}
-                      </div>
-                      <span style={{ color: 'var(--c-text-3)', fontSize: '12px' }}>
-                        {new Date(p.created_at).toLocaleDateString('ja-JP')} 作成
-                      </span>
+          <div className="flex flex-col gap-3">
+            {myProjects.map((p) => (
+              <Link key={p.id} href={`/projects/${p.id}`} className="no-underline text-[var(--c-text)]">
+                <Card bordered className="px-6 py-5 flex items-center justify-between gap-4 hover:border-brand transition-colors">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2.5 mb-1 flex-wrap">
+                      <span className="font-bold text-[16px]">{p.title}</span>
+                      {p.category && (
+                        <Badge tone="brand" variant="soft">{p.category}</Badge>
+                      )}
                     </div>
-                    <span style={{
-                      padding: '5px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700',
-                      color: st.color, background: st.bg, whiteSpace: 'nowrap', flexShrink: 0,
-                    }}>
-                      {st.label}
+                    <span className="text-[12px] text-[var(--c-text-3)]">
+                      {new Date(p.created_at).toLocaleDateString('ja-JP')} 作成
                     </span>
                   </div>
-                </Link>
-              )
-            })}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge tone={projectTone(p.status)} variant="soft">
+                      {STATUS_LABEL[p.status] ?? p.status}
+                    </Badge>
+                    <ChevronRight size={16} className="text-[var(--c-text-4)]" aria-hidden />
+                  </div>
+                </Card>
+              </Link>
+            ))}
           </div>
         )}
-      </div>
+      </Container>
     </div>
   )
 }

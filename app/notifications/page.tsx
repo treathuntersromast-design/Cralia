@@ -1,17 +1,23 @@
-﻿import { redirect } from 'next/navigation'
-import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import {
+  MessageCircle, Target, Inbox, CheckCircle2,
+  XCircle, Star, Bell, type LucideIcon,
+} from 'lucide-react'
+import { AppHeader } from '@/components/layout/AppHeader'
+import { Container } from '@/components/ui/Container'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 export const dynamic = 'force-dynamic'
 
-const TYPE_META: Record<string, { icon: string; color: string }> = {
-  message:        { icon: '💬', color: '#60a5fa' },
-  project_invite: { icon: '🎯', color: 'var(--c-accent)' },
-  order_received: { icon: '📩', color: '#4ade80' },
-  order_accepted: { icon: '✅', color: '#4ade80' },
-  order_declined: { icon: '❌', color: '#f87171' },
-  review:         { icon: '⭐', color: '#fbbf24' },
-  system:         { icon: '🔔', color: 'var(--c-text-2)' },
+const TYPE_META: Record<string, { icon: LucideIcon; cls: string }> = {
+  message:        { icon: MessageCircle, cls: 'bg-[#60a5fa]/10 text-[#60a5fa]'   },
+  project_invite: { icon: Target,        cls: 'bg-brand/10 text-brand'             },
+  order_received: { icon: Inbox,         cls: 'bg-[#4ade80]/10 text-[#16a34a]'   },
+  order_accepted: { icon: CheckCircle2,  cls: 'bg-[#4ade80]/10 text-[#16a34a]'   },
+  order_declined: { icon: XCircle,       cls: 'bg-[#f87171]/10 text-[#dc2626]'   },
+  review:         { icon: Star,          cls: 'bg-[#fbbf24]/10 text-[#d97706]'   },
+  system:         { icon: Bell,          cls: 'bg-[var(--c-surface-3)] text-[var(--c-text-3)]' },
 }
 
 export default async function NotificationsPage() {
@@ -26,7 +32,6 @@ export default async function NotificationsPage() {
     .order('created_at', { ascending: false })
     .limit(50)
 
-  // 未読IDを記録してから既読にマーク（表示時は記録した未読IDで判定する）
   const unreadIds = new Set((notifications ?? []).filter((n) => !n.read_at).map((n) => n.id))
   if (unreadIds.size > 0) {
     await supabase
@@ -36,63 +41,37 @@ export default async function NotificationsPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--c-bg)',
-      color: 'var(--c-text)',
-    }}>
-      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
-          Cralia
-        </Link>
-        <Link href="/dashboard" style={{ color: 'var(--c-text-2)', fontSize: '14px', textDecoration: 'none' }}>← ダッシュボードへ</Link>
-      </div>
-
-      <div style={{ maxWidth: '720px', margin: '0 auto', padding: '40px 24px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 32px' }}>通知</h1>
-
-        {!notifications || notifications.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 24px', background: 'var(--c-surface-2)', borderRadius: '20px', border: '1px dashed var(--c-accent-a20)' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔔</div>
-            <p style={{ fontSize: '16px', margin: '0 0 8px', fontWeight: '700' }}>通知はありません</p>
-            <p style={{ color: 'var(--c-text-3)', fontSize: '14px', margin: 0 }}>依頼やメッセージが届くとここに表示されます</p>
-          </div>
+    <div className="min-h-screen bg-[var(--c-bg)]">
+      <AppHeader />
+      <Container size="sm" className="py-10">
+        <h1 className="text-[24px] font-bold mb-8">通知</h1>
+        {(!notifications || notifications.length === 0) ? (
+          <EmptyState icon={Bell} title="通知はありません" description="依頼やメッセージが届くとここに表示されます" />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div className="flex flex-col gap-1.5">
             {notifications.map((n) => {
               const meta = TYPE_META[n.type] ?? TYPE_META.system
+              const IconComp = meta.icon
               const isUnread = unreadIds.has(n.id)
               return (
-                <div key={n.id} style={{
-                  background: isUnread ? 'var(--c-accent-a06)' : 'var(--c-surface-2)',
-                  border: `1px solid ${isUnread ? 'var(--c-accent-a20)' : 'var(--c-border)'}`,
-                  borderRadius: '14px',
-                  padding: '16px 20px',
-                  display: 'flex',
-                  gap: '14px',
-                  alignItems: 'flex-start',
-                }}>
-                  <div style={{
-                    width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0,
-                    background: `${meta.color}18`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px',
-                  }}>{meta.icon}</div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontWeight: isUnread ? '700' : '500', fontSize: '14px', margin: '0 0 4px' }}>{n.title}</p>
-                    {n.body && <p style={{ color: 'var(--c-text-2)', fontSize: '13px', margin: '0 0 6px', lineHeight: '1.5' }}>{n.body}</p>}
-                    <p style={{ color: 'var(--c-text-4)', fontSize: '12px', margin: 0 }}>
+                <div key={n.id} className={`flex gap-4 items-start p-4 rounded-card border transition-colors ${isUnread ? 'bg-brand/5 border-brand/15' : 'bg-[var(--c-surface)] border-[var(--c-border)]'}`}>
+                  <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center ${meta.cls}`}>
+                    <IconComp size={18} aria-hidden />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-[14px] mb-1 ${isUnread ? 'font-bold' : 'font-medium'}`}>{n.title}</p>
+                    {n.body && <p className="text-[13px] text-[var(--c-text-2)] mb-1.5 leading-snug">{n.body}</p>}
+                    <p className="text-[12px] text-[var(--c-text-4)]">
                       {new Date(n.created_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
-                  {isUnread && (
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--c-accent)', flexShrink: 0, marginTop: '6px' }} />
-                  )}
+                  {isUnread && <div className="w-2 h-2 rounded-full bg-brand shrink-0 mt-2" />}
                 </div>
               )
             })}
           </div>
         )}
-      </div>
+      </Container>
     </div>
   )
 }

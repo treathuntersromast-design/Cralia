@@ -1,8 +1,11 @@
-﻿import { redirect, notFound } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import ReceiptClient from './ReceiptClient'
+import { AppHeader } from '@/components/layout/AppHeader'
+import { Container } from '@/components/ui/Container'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +33,6 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
     db.from('users').select('display_name').eq('id', order.creator_id).single(),
   ])
 
-  // 既存の領収書・発注書を取得
   const { data: receiptsRows } = await db
     .from('receipts')
     .select('*')
@@ -41,18 +43,20 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
   const isCreator = order.creator_id === user.id
 
   return (
-    <main style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
-          Cralia
+    <div className="min-h-screen bg-[var(--c-bg)]">
+      <AppHeader />
+      <Container size="sm" className="py-10">
+        <Link
+          href={`/orders/${params.id}`}
+          className="inline-flex items-center gap-1.5 text-[13px] text-[var(--c-text-3)] no-underline hover:text-brand transition-colors mb-6"
+        >
+          <ArrowLeft size={14} aria-hidden />
+          依頼詳細へ
         </Link>
-        <Link href={`/orders/${params.id}`} style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>← 依頼詳細へ</Link>
-      </div>
 
-      <div style={{ maxWidth: '640px', margin: '0 auto', padding: '40px 24px' }}>
-        <div style={{ marginBottom: '28px' }}>
-          <h1 style={{ fontSize: '22px', fontWeight: '800', margin: '0 0 6px' }}>領収書 / 発注書</h1>
-          <p style={{ color: '#7c7b99', fontSize: '14px', margin: 0 }}>{order.title}</p>
+        <div className="mb-7">
+          <h1 className="text-[22px] font-bold mb-1.5">領収書 / 発注書</h1>
+          <p className="text-[14px] text-[var(--c-text-3)]">{order.title}</p>
         </div>
 
         <ReceiptClient
@@ -68,7 +72,7 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
           createdAt={order.created_at}
           initialReceipts={receiptsRows ?? []}
         />
-      </div>
-    </main>
+      </Container>
+    </div>
   )
 }

@@ -1,9 +1,14 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { AlertTriangle, Calendar, Check, Lock, Info } from 'lucide-react'
 import RequestDraftAssistant from '@/components/RequestDraftAssistant'
+import { AppHeader } from '@/components/layout/AppHeader'
+import { Button } from '@/components/ui/Button'
+
+const inputCls = 'w-full h-10 px-3.5 rounded-input border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[14px] outline-none focus:border-brand transition'
 
 function NewOrderContent() {
   const router = useRouter()
@@ -25,7 +30,6 @@ function NewOrderContent() {
 
   const DRAFT_KEY = `order_draft_${creatorId}`
 
-  // localStorage から下書き復元
   useEffect(() => {
     if (!creatorId) return
     try {
@@ -41,7 +45,6 @@ function NewOrderContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [creatorId])
 
-  // フィールド変更時に自動保存（debounce: 800ms）
   useEffect(() => {
     if (!creatorId) return
     const timer = setTimeout(() => {
@@ -55,14 +58,12 @@ function NewOrderContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title, description, budget, deadline, orderType])
 
-  // Googleカレンダー連携チェック
   const [calConnected,    setCalConnected]    = useState(false)
   const [suggesting,      setSuggesting]      = useState(false)
   const [suggestion,      setSuggestion]      = useState<{ deadline: string; summary: string } | null>(null)
   const [suggestError,    setSuggestError]    = useState<string | null>(null)
   const [workingDays,     setWorkingDays]     = useState(10)
 
-  // 納期チェック
   const [deadlineWarning, setDeadlineWarning] = useState<{
     level: 'danger' | 'caution'
     message: string
@@ -76,7 +77,6 @@ function NewOrderContent() {
       .catch(() => setCalConnected(false))
   }, [creatorId])
 
-  // ログインユーザーの表示名を取得（AI添削に使用）
   useEffect(() => {
     fetch('/api/profile/me')
       .then((r) => r.ok ? r.json() : null)
@@ -84,7 +84,6 @@ function NewOrderContent() {
       .catch(() => {})
   }, [])
 
-  // 納期が変わるたびに実現可能性をチェック
   useEffect(() => {
     if (!deadline || !creatorId) { setDeadlineWarning(null); return }
     const params = new URLSearchParams({ creatorId, deadline })
@@ -102,10 +101,12 @@ function NewOrderContent() {
 
   if (!creatorId) {
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--c-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--c-text)' }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ color: '#f87171', marginBottom: '16px' }}>依頼先が指定されていません</p>
-          <Link href="/search" style={{ color: 'var(--c-accent)', textDecoration: 'none' }}>クリエイターを探す →</Link>
+      <div className="min-h-screen bg-[var(--c-bg)] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-[#dc2626] mb-4">依頼先が指定されていません</p>
+          <Link href="/search" className="text-brand no-underline hover:underline">
+            クリエイターを探す →
+          </Link>
         </div>
       </div>
     )
@@ -162,342 +163,317 @@ function NewOrderContent() {
     router.push(`/orders/${data.id}`)
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '10px 14px', borderRadius: '10px',
-    border: '1px solid var(--c-accent-a25)', background: 'var(--c-input-bg)',
-    color: 'var(--c-text)', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
-  }
-
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
-      {/* ヘッダー */}
-      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
-          Cralia
-        </Link>
-        <Link href={`/profile/${creatorId}?back=/orders`} style={{ color: 'var(--c-text-2)', fontSize: '14px', textDecoration: 'none' }}>
-          ← プロフィールへ戻る
-        </Link>
-      </div>
+    <div className="min-h-screen bg-[var(--c-bg)]">
+      <AppHeader />
 
-      <div style={{ maxWidth: '1160px', margin: '0 auto', padding: '48px 24px', display: 'flex', alignItems: 'flex-start', gap: '32px' }}>
+      <div className="max-w-[1160px] mx-auto px-6 py-12 flex items-start gap-8">
         {/* 左カラム：フォーム */}
-        <div style={{ flex: '1', minWidth: 0 }}>
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 8px' }}>依頼を送る</h1>
-          <p style={{ color: 'var(--c-text-2)', margin: 0, fontSize: '14px' }}>
-            依頼先：<span style={{ color: 'var(--c-accent)', fontWeight: '700' }}>{creatorName}</span> さん
-          </p>
-          {draftSaved && (
-            <p style={{ color: '#4ade80', fontSize: '12px', margin: '6px 0 0' }}>✓ 下書きを自動保存しました</p>
-          )}
-        </div>
+        <div className="flex-1 min-w-0">
+          <div className="mb-8">
+            <h1 className="text-[24px] font-bold mb-2">依頼を送る</h1>
+            <p className="text-[14px] text-[var(--c-text-2)]">
+              依頼先：<span className="text-brand font-bold">{creatorName}</span> さん
+            </p>
+            {draftSaved && (
+              <p className="text-[#16a34a] text-[12px] mt-1.5 flex items-center gap-1">
+                <Check size={12} aria-hidden />
+                下書きを自動保存しました
+              </p>
+            )}
+          </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* 有償/無償区分 */}
-          <div>
-            <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', fontWeight: '600', marginBottom: '10px' }}>
-              依頼の種別 <span style={{ color: '#f87171' }}>*</span>
-            </label>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              {([
-                { value: 'paid', label: '有償依頼', desc: '報酬あり', color: 'var(--c-accent)', bg: 'var(--c-accent-a12)', border: 'var(--c-accent-a50)' },
-                { value: 'free', label: '無償依頼', desc: '報酬なし（コラボ等）', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)', border: 'rgba(96,165,250,0.5)' },
-              ] as const).map(({ value, label, desc, color, bg, border }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setOrderType(value)}
-                  style={{
-                    flex: 1, padding: '14px 12px', borderRadius: '12px', textAlign: 'left',
-                    border: `2px solid ${orderType === value ? border : 'var(--c-border-2)'}`,
-                    background: orderType === value ? bg : 'var(--c-accent-a04)',
-                    cursor: 'pointer', transition: 'all 0.15s',
-                  }}
-                >
-                  <p style={{ margin: '0 0 2px', fontWeight: '700', fontSize: '14px', color: orderType === value ? color : 'var(--c-text)' }}>
-                    {label}
-                  </p>
-                  <p style={{ margin: 0, fontSize: '12px', color: 'var(--c-text-3)' }}>{desc}</p>
-                </button>
-              ))}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            {/* 有償/無償区分 */}
+            <div>
+              <label className="block text-[13px] text-[var(--c-text-2)] font-semibold mb-2.5">
+                依頼の種別 <span className="text-[#dc2626]">*</span>
+              </label>
+              <div className="flex gap-2.5">
+                {([
+                  { value: 'paid', label: '有償依頼', desc: '報酬あり' },
+                  { value: 'free', label: '無償依頼', desc: '報酬なし（コラボ等）' },
+                ] as const).map(({ value, label, desc }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setOrderType(value)}
+                    className={`flex-1 p-3.5 rounded-[12px] text-left border-2 transition-all ${
+                      orderType === value
+                        ? value === 'paid'
+                          ? 'border-brand bg-brand-soft'
+                          : 'border-[#60a5fa]/50 bg-[#60a5fa]/10'
+                        : 'border-[var(--c-border-2)] bg-[var(--c-surface)]'
+                    }`}
+                  >
+                    <p className={`font-bold text-[14px] mb-0.5 ${
+                      orderType === value
+                        ? value === 'paid' ? 'text-brand' : 'text-[#60a5fa]'
+                        : 'text-[var(--c-text)]'
+                    }`}>
+                      {label}
+                    </p>
+                    <p className="text-[12px] text-[var(--c-text-3)] m-0">{desc}</p>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* タイトル */}
-          <div>
-            <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>
-              依頼タイトル <span style={{ color: '#f87171' }}>*</span>
-            </label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="例: MVのイラスト制作をお願いしたい"
-              maxLength={100}
-              required
-              style={inputStyle}
-            />
-            <p style={{ color: 'var(--c-text-4)', fontSize: '12px', margin: '4px 0 0', textAlign: 'right' }}>{title.length}/100</p>
-          </div>
+            {/* タイトル */}
+            <div>
+              <label className="block text-[13px] text-[var(--c-text-2)] font-semibold mb-2">
+                依頼タイトル <span className="text-[#dc2626]">*</span>
+              </label>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="例: MVのイラスト制作をお願いしたい"
+                maxLength={100}
+                required
+                className={inputCls}
+              />
+              <p className="text-[var(--c-text-4)] text-[12px] mt-1 text-right">{title.length}/100</p>
+            </div>
 
-          {/* 依頼内容 */}
-          <div>
-            <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>
-              依頼内容 <span style={{ color: '#f87171' }}>*</span>
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={'依頼の詳細を記入してください。\n\n例:\n- 曲のジャンル・雰囲気\n- 参考にしたい作品\n- ご希望のスタイルや色合い\n- 使用用途（YouTube、ライブ配信など）'}
-              maxLength={2000}
-              required
-              rows={10}
-              style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6' }}
-            />
-            <p style={{ color: 'var(--c-text-4)', fontSize: '12px', margin: '4px 0 0', textAlign: 'right' }}>{description.length}/2000</p>
-          </div>
+            {/* 依頼内容 */}
+            <div>
+              <label className="block text-[13px] text-[var(--c-text-2)] font-semibold mb-2">
+                依頼内容 <span className="text-[#dc2626]">*</span>
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={'依頼の詳細を記入してください。\n\n例:\n- 曲のジャンル・雰囲気\n- 参考にしたい作品\n- ご希望のスタイルや色合い\n- 使用用途（YouTube、ライブ配信など）'}
+                maxLength={2000}
+                required
+                rows={10}
+                className="w-full px-3.5 py-2.5 rounded-input border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[14px] outline-none focus:border-brand transition resize-y leading-[1.6]"
+              />
+              <p className="text-[var(--c-text-4)] text-[12px] mt-1 text-right">{description.length}/2000</p>
+            </div>
 
-          {/* 予算・納期 */}
-          <div style={{ display: 'grid', gridTemplateColumns: orderType === 'paid' ? '1fr 1fr' : '1fr', gap: '16px' }}>
-            {orderType === 'paid' && (
+            {/* 予算・納期 */}
+            <div className={`grid gap-4 ${orderType === 'paid' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {orderType === 'paid' && (
+                <div>
+                  <label className="block text-[13px] text-[var(--c-text-2)] font-semibold mb-2">
+                    予算（任意）
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--c-text-3)] text-[14px]">¥</span>
+                    <input
+                      type="number"
+                      value={budget}
+                      onChange={(e) => setBudget(e.target.value)}
+                      placeholder="10000"
+                      min={0}
+                      className={`${inputCls} pl-7`}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div>
-                <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>
-                  予算（任意）
+                <label htmlFor="deadline-input" className="block text-[13px] text-[var(--c-text-2)] font-semibold mb-2">
+                  希望納期（任意）
                 </label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--c-text-3)', fontSize: '14px' }}>¥</span>
-                  <input
-                    type="number"
-                    value={budget}
-                    onChange={(e) => setBudget(e.target.value)}
-                    placeholder="10000"
-                    min={0}
-                    style={{ ...inputStyle, paddingLeft: '28px' }}
-                  />
+                <input
+                  id="deadline-input"
+                  type="date"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  title="希望納期"
+                  className={inputCls}
+                />
+              </div>
+            </div>
+
+            {/* 納期タイトネスアラート */}
+            {deadlineWarning && (
+              <div className={`flex gap-3 items-start p-3.5 rounded-[12px] border ${
+                deadlineWarning.level === 'danger'
+                  ? 'bg-[#dc2626]/8 border-[#dc2626]/35'
+                  : 'bg-[#fbbf24]/8 border-[#fbbf24]/35'
+              }`}>
+                <AlertTriangle
+                  size={18}
+                  className={`shrink-0 mt-0.5 ${deadlineWarning.level === 'danger' ? 'text-[#dc2626]' : 'text-[#fbbf24]'}`}
+                  aria-hidden
+                />
+                <div>
+                  <p className={`font-bold text-[13px] mb-0.5 ${deadlineWarning.level === 'danger' ? 'text-[#dc2626]' : 'text-[#fbbf24]'}`}>
+                    {deadlineWarning.level === 'danger' ? '納期がタイトです' : '納期の余裕がやや少ないです'}
+                  </p>
+                  <p className="text-[13px] text-[var(--c-text-2)] leading-[1.6] m-0">
+                    {deadlineWarning.message}
+                  </p>
                 </div>
               </div>
             )}
 
-            {/* 納期フィールド */}
-            <div>
-              <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', fontWeight: '600', marginBottom: '8px' }}>
-                希望納期（任意）
-              </label>
-              <input
-                type="date"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                style={{ ...inputStyle, colorScheme: 'dark' }}
-              />
-            </div>
-          </div>
-
-          {/* 納期タイトネスアラート（依頼者向け） */}
-          {deadlineWarning && (
-            <div style={{
-              display: 'flex', gap: '12px', alignItems: 'flex-start',
-              padding: '14px 16px', borderRadius: '12px',
-              background: deadlineWarning.level === 'danger'
-                ? 'rgba(248,113,113,0.08)' : 'rgba(251,191,36,0.08)',
-              border: `1px solid ${deadlineWarning.level === 'danger'
-                ? 'rgba(248,113,113,0.35)' : 'rgba(251,191,36,0.35)'}`,
-            }}>
-              <span style={{ fontSize: '18px', flexShrink: 0, marginTop: '1px' }}>
-                {deadlineWarning.level === 'danger' ? '⚠️' : '💡'}
-              </span>
-              <div>
-                <p style={{
-                  margin: '0 0 2px', fontWeight: '700', fontSize: '13px',
-                  color: deadlineWarning.level === 'danger' ? '#f87171' : '#fbbf24',
-                }}>
-                  {deadlineWarning.level === 'danger' ? '納期がタイトです' : '納期の余裕がやや少ないです'}
-                </p>
-                <p style={{ margin: 0, fontSize: '13px', color: 'var(--c-text-2)', lineHeight: '1.6' }}>
-                  {deadlineWarning.message}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Googleカレンダー連携クリエイター向け：納期提案ブロック */}
-          {calConnected && (
-            <div style={{ background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: '14px', padding: '18px 20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '16px' }}>📅</span>
-                <p style={{ margin: 0, fontWeight: '700', fontSize: '14px', color: '#4ade80' }}>
-                  カレンダーを考慮した納期提案
-                </p>
-              </div>
-              <p style={{ color: 'var(--c-text-3)', fontSize: '13px', margin: '0 0 14px', lineHeight: '1.6' }}>
-                {creatorName}さんのGoogleカレンダーに登録された不在予定・日本の祝日を自動的にスキップして、現実的な納期を提案します。
-              </p>
-
-              {/* 作業日数セレクタ */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
-                <span style={{ color: 'var(--c-text-2)', fontSize: '13px', flexShrink: 0 }}>必要な作業日数：</span>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                  {[3, 5, 7, 10, 14, 21].map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setWorkingDays(d)}
-                      style={{
-                        padding: '5px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: '600',
-                        border: workingDays === d ? 'none' : '1px solid var(--c-border-3)',
-                        background: workingDays === d ? 'rgba(74,222,128,0.25)' : 'transparent',
-                        color: workingDays === d ? '#4ade80' : 'var(--c-text-3)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {d}日
-                    </button>
-                  ))}
+            {/* Googleカレンダー連携：納期提案 */}
+            {calConnected && (
+              <div className="bg-[#4ade80]/5 border border-[#4ade80]/20 rounded-[14px] p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Calendar size={16} className="text-[#16a34a]" aria-hidden />
+                  <p className="font-bold text-[14px] text-[#16a34a] m-0">カレンダーを考慮した納期提案</p>
                 </div>
-              </div>
-
-              {/* 提案エラー */}
-              {suggestError && (
-                <p style={{ color: '#f87171', fontSize: '13px', margin: '0 0 10px', background: 'rgba(248,113,113,0.08)', borderRadius: '8px', padding: '8px 12px' }}>
-                  {suggestError}
+                <p className="text-[var(--c-text-3)] text-[13px] mb-3.5 leading-[1.6]">
+                  {creatorName}さんのGoogleカレンダーに登録された不在予定・日本の祝日を自動的にスキップして、現実的な納期を提案します。
                 </p>
-              )}
 
-              {/* 提案結果 */}
-              {suggestion && (
-                <div style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '10px', padding: '12px 16px', marginBottom: '12px' }}>
-                  <p style={{ color: '#4ade80', fontWeight: '700', fontSize: '15px', margin: '0 0 4px' }}>
-                    提案納期: {new Date(suggestion.deadline).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                <div className="flex items-center gap-2.5 mb-3.5 flex-wrap">
+                  <span className="text-[var(--c-text-2)] text-[13px] shrink-0">必要な作業日数：</span>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {[3, 5, 7, 10, 14, 21].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setWorkingDays(d)}
+                        className={`px-3 py-1 rounded-full text-[13px] font-semibold transition-colors ${
+                          workingDays === d
+                            ? 'bg-[#4ade80]/25 text-[#16a34a] border-0'
+                            : 'border border-[var(--c-border-2)] bg-transparent text-[var(--c-text-3)]'
+                        }`}
+                      >
+                        {d}日
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {suggestError && (
+                  <p className="text-[#dc2626] text-[13px] mb-2.5 bg-[#dc2626]/8 rounded-[8px] px-3 py-2">
+                    {suggestError}
                   </p>
-                  <p style={{ color: 'var(--c-text-3)', fontSize: '12px', margin: '0 0 12px' }}>{suggestion.summary}</p>
+                )}
+
+                {suggestion && (
+                  <div className="bg-[#4ade80]/10 border border-[#4ade80]/25 rounded-[10px] p-3.5 mb-3">
+                    <p className="text-[#16a34a] font-bold text-[15px] mb-1">
+                      提案納期: {new Date(suggestion.deadline).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                    <p className="text-[var(--c-text-3)] text-[12px] mb-3">{suggestion.summary}</p>
+                    <button
+                      type="button"
+                      onClick={applyDeadline}
+                      className="px-4 py-2 rounded-[8px] border-0 bg-[#4ade80] text-[#0a3d2b] text-[13px] font-bold cursor-pointer"
+                    >
+                      この日程を使う
+                    </button>
+                  </div>
+                )}
+
+                {!suggestion && (
                   <button
                     type="button"
-                    onClick={applyDeadline}
-                    style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', background: '#4ade80', color: '#0d0d14', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
+                    onClick={handleSuggestDeadline}
+                    disabled={suggesting}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-[14px] font-bold border border-[#4ade80]/40 bg-[#4ade80]/10 text-[#16a34a] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed transition-colors hover:bg-[#4ade80]/15"
                   >
-                    この日程を使う
+                    <Calendar size={15} aria-hidden />
+                    {suggesting ? '計算中...' : '納期を提案してもらう'}
                   </button>
-                </div>
-              )}
+                )}
+              </div>
+            )}
 
-              {/* 提案ボタン */}
-              {!suggestion && (
+            {/* ポートフォリオ掲載許可 */}
+            <div className="bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-[14px] p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-bold text-[14px] mb-1">ポートフォリオへの掲載許可</p>
+                  <p className="text-[12px] text-[var(--c-text-3)] leading-[1.6] m-0">
+                    クリエイターが納品物を自身のポートフォリオとして公開することを許可します
+                  </p>
+                </div>
                 <button
                   type="button"
-                  onClick={handleSuggestDeadline}
-                  disabled={suggesting}
-                  style={{
-                    padding: '10px 20px', borderRadius: '10px', fontSize: '14px', fontWeight: '700',
-                    border: '1px solid rgba(74,222,128,0.4)', background: 'rgba(74,222,128,0.1)',
-                    color: '#4ade80', cursor: suggesting ? 'not-allowed' : 'pointer', opacity: suggesting ? 0.6 : 1,
-                  }}
+                  onClick={() => setPortfolioAllowed(v => !v)}
+                  role="switch"
+                  aria-checked={(portfolioAllowed ? 'true' : 'false') as 'true' | 'false'}
+                  aria-label="ポートフォリオへの掲載許可"
+                  className={`relative shrink-0 w-[52px] h-7 rounded-full border-0 transition-colors ${portfolioAllowed ? 'bg-brand' : 'bg-[var(--c-border-2)]'}`}
                 >
-                  {suggesting ? '計算中...' : '📅 納期を提案してもらう'}
+                  <span className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${portfolioAllowed ? 'left-7' : 'left-1'}`} />
                 </button>
-              )}
-            </div>
-          )}
-
-          {/* ポートフォリオ掲載許可 */}
-          <div style={{ background: 'var(--c-surface-2)', border: '1px solid var(--c-border)', borderRadius: '14px', padding: '18px 20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-              <div>
-                <p style={{ margin: '0 0 4px', fontWeight: '700', fontSize: '14px', color: 'var(--c-text)' }}>
-                  ポートフォリオへの掲載許可
-                </p>
-                <p style={{ margin: 0, fontSize: '12px', color: 'var(--c-text-3)', lineHeight: '1.6' }}>
-                  クリエイターが納品物を自身のポートフォリオとして公開することを許可します
-                </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setPortfolioAllowed(v => !v)}
-                style={{
-                  flexShrink: 0,
-                  width: '52px', height: '28px', borderRadius: '14px', border: 'none',
-                  background: portfolioAllowed ? 'var(--c-grad-primary)' : 'var(--c-border-2)',
-                  cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
-                }}
-                aria-checked={portfolioAllowed ? 'true' : 'false'}
-                aria-label="ポートフォリオへの掲載許可"
-                role="switch"
-              >
-                <span style={{
-                  position: 'absolute', top: '4px',
-                  left: portfolioAllowed ? '28px' : '4px',
-                  width: '20px', height: '20px', borderRadius: '50%',
-                  background: '#fff', transition: 'left 0.2s',
-                }} />
-              </button>
+              <p className={`mt-2.5 text-[12px] leading-[1.6] px-3 py-2 rounded-[8px] border flex items-center gap-1.5 ${
+                portfolioAllowed
+                  ? 'bg-brand-soft text-brand border-brand/20'
+                  : 'bg-[var(--c-surface)] text-[var(--c-text-3)] border-[var(--c-border)]'
+              }`}>
+                {portfolioAllowed ? <Check size={13} aria-hidden /> : <Lock size={13} aria-hidden />}
+                {portfolioAllowed
+                  ? '掲載を許可します — クリエイターは納品物をポートフォリオに使用できます'
+                  : '掲載を許可しない（初期設定）— 納品物の外部公開はできません'}
+              </p>
             </div>
-            <p style={{
-              margin: '10px 0 0', fontSize: '12px', lineHeight: '1.6', padding: '8px 12px', borderRadius: '8px',
-              background: portfolioAllowed ? 'var(--c-accent-a08)' : 'var(--c-accent-a04)',
-              color: portfolioAllowed ? 'var(--c-accent)' : 'var(--c-text-3)',
-              border: `1px solid ${portfolioAllowed ? 'var(--c-accent-a20)' : 'var(--c-border)'}`,
-            }}>
-              {portfolioAllowed
-                ? '✅ 掲載を許可します — クリエイターは納品物をポートフォリオに使用できます'
-                : '🔒 掲載を許可しない（初期設定）— 納品物の外部公開はできません'}
-            </p>
-          </div>
 
-          {/* 著作権・権利同意 */}
-          <div style={{ background: 'var(--c-surface-2)', border: `1px solid ${copyrightAgreed ? 'rgba(74,222,128,0.3)' : 'var(--c-border)'}`, borderRadius: '14px', padding: '18px 20px' }}>
-            <p style={{ margin: '0 0 10px', fontWeight: '700', fontSize: '14px', color: 'var(--c-text)' }}>著作権・権利に関する同意事項</p>
-            <ul style={{ color: 'var(--c-text-2)', fontSize: '13px', lineHeight: '1.8', margin: '0 0 14px', paddingLeft: '20px' }}>
-              <li>クリエイターの著作者人格権（氏名表示権・同一性保持権）は譲渡できないことを理解しています</li>
-              <li>成果物の著作権の帰属（譲渡か利用許諾か）は別途クリエイターと合意します</li>
-              <li>第三者の著作物を含む依頼の場合、著作権侵害のリスクは依頼者が負います</li>
-              <li>依頼内容が法令・公序良俗に違反しないことを確認しています</li>
-            </ul>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={copyrightAgreed}
-                onChange={(e) => setCopyrightAgreed(e.target.checked)}
-                style={{ marginTop: '2px', accentColor: 'var(--c-accent)', width: '16px', height: '16px', flexShrink: 0, cursor: 'pointer' }}
-              />
-              <span style={{ color: copyrightAgreed ? '#4ade80' : 'var(--c-text-2)', fontSize: '13px', fontWeight: '600', lineHeight: '1.5' }}>
-                上記の著作権・権利に関する事項を確認し、同意します <span style={{ color: '#f87171' }}>*</span>
-              </span>
-            </label>
-          </div>
+            {/* 著作権・権利同意 */}
+            <div className={`bg-[var(--c-surface-2)] rounded-[14px] p-5 border transition-colors ${copyrightAgreed ? 'border-[#4ade80]/30' : 'border-[var(--c-border)]'}`}>
+              <p className="font-bold text-[14px] mb-2.5">著作権・権利に関する同意事項</p>
+              <ul className="text-[var(--c-text-2)] text-[13px] leading-[1.8] mb-3.5 pl-5">
+                <li>クリエイターの著作者人格権（氏名表示権・同一性保持権）は譲渡できないことを理解しています</li>
+                <li>成果物の著作権の帰属（譲渡か利用許諾か）は別途クリエイターと合意します</li>
+                <li>第三者の著作物を含む依頼の場合、著作権侵害のリスクは依頼者が負います</li>
+                <li>依頼内容が法令・公序良俗に違反しないことを確認しています</li>
+              </ul>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={copyrightAgreed}
+                  onChange={(e) => setCopyrightAgreed(e.target.checked)}
+                  className="mt-0.5 accent-brand w-4 h-4 shrink-0 cursor-pointer"
+                />
+                <span className={`text-[13px] font-semibold leading-[1.5] ${copyrightAgreed ? 'text-[#16a34a]' : 'text-[var(--c-text-2)]'}`}>
+                  上記の著作権・権利に関する事項を確認し、同意します{' '}
+                  <span className="text-[#dc2626]">*</span>
+                </span>
+              </label>
+            </div>
 
-          {/* 注意事項 */}
-          <div style={{ background: 'var(--c-accent-a06)', border: '1px solid var(--c-accent-a15)', borderRadius: '12px', padding: '16px' }}>
-            <p style={{ color: 'var(--c-text-2)', fontSize: '13px', lineHeight: '1.7', margin: 0 }}>
-              📌 依頼を送ると、クリエイターに通知が届きます。承認・辞退はクリエイター側で行います。<br />
-              予算・納期はあくまで希望目安です。詳細はクリエイターとの合意のうえで確定されます。
-            </p>
-          </div>
+            {/* 注意事項 */}
+            <div className="bg-brand-soft border border-brand/15 rounded-[12px] p-4">
+              <p className="text-[var(--c-text-2)] text-[13px] leading-[1.7] m-0 flex items-start gap-2">
+                <Info size={14} className="text-brand shrink-0 mt-0.5" aria-hidden />
+                <span>
+                  依頼を送ると、クリエイターに通知が届きます。承認・辞退はクリエイター側で行います。
+                  予算・納期はあくまで希望目安です。詳細はクリエイターとの合意のうえで確定されます。
+                </span>
+              </p>
+            </div>
 
-          {error && (
-            <p style={{ color: '#f87171', fontSize: '14px', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: '10px', padding: '12px 16px', margin: 0 }}>
-              {error}
-            </p>
-          )}
+            {error && (
+              <p className="text-[#dc2626] text-[14px] bg-[#dc2626]/8 border border-[#dc2626]/30 rounded-[10px] px-4 py-3 m-0">
+                {error}
+              </p>
+            )}
 
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <Link
-              href={`/profile/${creatorId}`}
-              style={{ flex: 1, padding: '12px 24px', borderRadius: '12px', border: '1px solid var(--c-border-3)', background: 'transparent', color: 'var(--c-text-2)', fontSize: '14px', fontWeight: '600', textDecoration: 'none', textAlign: 'center' }}
-            >
-              キャンセル
-            </Link>
-            <button
-              type="submit"
-              disabled={loading || !copyrightAgreed}
-              style={{ flex: 2, padding: '12px 24px', borderRadius: '12px', border: 'none', background: loading || !copyrightAgreed ? 'var(--c-accent-a40)' : 'var(--c-grad-primary)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: loading || !copyrightAgreed ? 'not-allowed' : 'pointer' }}
-            >
-              {loading ? '送信中...' : '依頼を送る'}
-            </button>
-          </div>
-        </form>
-        </div>{/* /左カラム */}
+            <div className="flex gap-3">
+              <Link
+                href={`/profile/${creatorId}`}
+                className="flex-1 h-12 flex items-center justify-center rounded-[12px] border border-[var(--c-border-2)] text-[var(--c-text-2)] text-[14px] font-semibold no-underline hover:bg-[var(--c-surface)] transition-colors"
+              >
+                キャンセル
+              </Link>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                disabled={!copyrightAgreed}
+                loading={loading}
+                className="flex-[2]"
+              >
+                依頼を送る
+              </Button>
+            </div>
+          </form>
+        </div>
 
         {/* 右カラム：スティッキー AI パネル */}
-        <div style={{ width: '420px', flexShrink: 0, position: 'sticky', top: '24px', height: 'calc(100vh - 48px)' }}>
+        <div className="w-[420px] shrink-0 sticky top-6 h-[calc(100vh-48px)]">
           <RequestDraftAssistant
             sidebar
             creatorName={creatorName}

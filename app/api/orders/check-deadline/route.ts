@@ -62,15 +62,12 @@ function countWeekdays(from: Date, to: Date): number {
 }
 
 // ── トークン自動リフレッシュ ─────────────────────────────────────
-async function getValidAccessToken(
-  db: ReturnType<typeof createServiceClient>,
-  creatorId: string
-): Promise<string | null> {
+async function getValidAccessToken(db: any, creatorId: string): Promise<string | null> {
   const { data } = await db
     .from('creator_tokens')
     .select('access_token, refresh_token, expires_at')
     .eq('creator_id', creatorId)
-    .single()
+    .single() as { data: { access_token: string; refresh_token: string | null; expires_at: string | null } | null }
 
   if (!data) return null
 
@@ -93,7 +90,7 @@ async function getValidAccessToken(
 
   const refreshed = await res.json()
   const expires_at = new Date(Date.now() + refreshed.expires_in * 1000).toISOString()
-  await db.from('creator_tokens').update({
+  await (db as any).from('creator_tokens').update({
     access_token: refreshed.access_token,
     expires_at,
   }).eq('creator_id', creatorId)
@@ -158,7 +155,7 @@ export async function GET(request: NextRequest) {
     try {
       const busySet = await fetchBusyDays(accessToken, today, deadlineDate)
       // 不在日のうち平日のみをカウント（土日は元々除外）
-      for (const dateStr of busySet) {
+      for (const dateStr of Array.from(busySet)) {
         const d = new Date(dateStr)
         const dow = d.getDay()
         if (dow !== 0 && dow !== 6) busyDayCount++

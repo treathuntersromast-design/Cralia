@@ -1,8 +1,10 @@
 ﻿import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import ProfilePageClient from '@/components/ProfilePageClient'
+import { AppHeader } from '@/components/layout/AppHeader'
 import { activityStyleToRoles } from '@/lib/constants/activity'
 import { INACTIVE_ORDER_STATUSES } from '@/lib/constants/statuses'
 
@@ -121,45 +123,40 @@ export default async function ProfilePage({
   const entityType = userRecord?.entity_type === 'corporate' ? '法人・団体' : '個人'
   const roles: string[] = activityStyleToRoles((userRecord as Record<string, unknown>)?.activity_style_id as number | null)
 
+  // back パラメータは許可された内部パスのみ許可（外部リダイレクト・javascript: を防ぐ）
+  const backHref = searchParams.back
+  const decoded = backHref ? decodeURIComponent(backHref) : ''
+  const ALLOWED_BACK = /^\/(search|clients|jobs|orders|projects|messages|notifications|events)(\?.*)?$/
+  const safeBack = decoded && ALLOWED_BACK.test(decoded) ? decoded : null
+  const backLabel = safeBack
+    ? safeBack.startsWith('/search')        ? '検索結果へ戻る'
+    : safeBack.startsWith('/clients')       ? 'お仕事募集中の依頼者へ戻る'
+    : safeBack.startsWith('/jobs')          ? '案件一覧へ戻る'
+    : safeBack.startsWith('/orders')        ? '依頼一覧へ戻る'
+    : safeBack.startsWith('/projects')      ? 'プロジェクトへ戻る'
+    : safeBack.startsWith('/messages')      ? 'メッセージへ戻る'
+    : safeBack.startsWith('/notifications') ? '通知へ戻る'
+    : safeBack.startsWith('/events')        ? '交流会へ戻る'
+    : '戻る'
+    : null
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--c-bg)',
-      color: 'var(--c-text)',
-    }}>
-      {/* ヘッダー */}
-      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
-          Cralia
-        </Link>
-        {(() => {
-          // back パラメータは許可された内部パスのみ許可（外部リダイレクト・javascript: を防ぐ）
-          const backHref = searchParams.back
-          const decoded = backHref ? decodeURIComponent(backHref) : ''
-          const ALLOWED_BACK = /^\/(search|clients|jobs|orders|projects|messages|notifications|events)(\?.*)?$/
-          const safeBack = decoded && ALLOWED_BACK.test(decoded) ? decoded : null
-          const backLabel = safeBack
-            ? safeBack.startsWith('/search')        ? '← 検索結果へ戻る'
-            : safeBack.startsWith('/clients')       ? '← お仕事募集中の依頼者へ戻る'
-            : safeBack.startsWith('/jobs')          ? '← 案件一覧へ戻る'
-            : safeBack.startsWith('/orders')        ? '← 依頼一覧へ戻る'
-            : safeBack.startsWith('/projects')      ? '← プロジェクトへ戻る'
-            : safeBack.startsWith('/messages')      ? '← メッセージへ戻る'
-            : safeBack.startsWith('/notifications') ? '← 通知へ戻る'
-            : safeBack.startsWith('/events')        ? '← 交流会へ戻る'
-            : '← 戻る'
-            : '← ダッシュボードへ'
-          return safeBack ? (
-            <Link href={safeBack} style={{ color: 'var(--c-text-2)', fontSize: '14px', textDecoration: 'none' }}>
+    <div className="min-h-screen bg-[var(--c-bg)]">
+      <AppHeader />
+
+      {safeBack && (
+        <div className="border-b border-[var(--c-border)] bg-[var(--c-surface)]">
+          <div className="max-w-[720px] mx-auto px-6 py-2">
+            <Link
+              href={safeBack}
+              className="inline-flex items-center gap-1.5 text-[13px] text-[var(--c-text-3)] hover:text-brand transition-colors"
+            >
+              <ArrowLeft size={13} aria-hidden />
               {backLabel}
             </Link>
-          ) : (
-            <Link href="/dashboard" style={{ color: 'var(--c-text-2)', fontSize: '14px', textDecoration: 'none' }}>
-              ← ダッシュボードへ
-            </Link>
-          )
-        })()}
-      </div>
+          </div>
+        </div>
+      )}
 
       <ProfilePageClient
         profileId={params.id}
@@ -196,3 +193,4 @@ export default async function ProfilePage({
     </div>
   )
 }
+
