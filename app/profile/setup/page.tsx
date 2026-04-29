@@ -342,9 +342,9 @@ function ProfileSetupContent() {
         }}>
           <div style={{
             background: 'rgba(22,22,31,0.98)',
-            border: '1px solid rgba(199,125,255,0.3)',
+            border: '1px solid var(--c-accent-a30)',
             borderRadius: '20px', padding: '32px', maxWidth: '400px', width: '100%',
-            boxShadow: '0 8px 40px rgba(199,125,255,0.2)',
+            boxShadow: '0 8px 40px var(--c-accent-a20)',
           }}>
             <div style={{ fontSize: '28px', marginBottom: '12px', textAlign: 'center' }}>💾</div>
             <h3 style={{ color: '#f0eff8', fontSize: '18px', fontWeight: '700', margin: '0 0 10px', textAlign: 'center' }}>
@@ -371,7 +371,7 @@ function ProfileSetupContent() {
                 style={{
                   flex: 1, padding: '12px', borderRadius: '12px',
                   border: 'none',
-                  background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+                  background: 'var(--c-grad-primary)',
                   color: '#fff', fontSize: '14px', fontWeight: '700', cursor: 'pointer',
                 }}
               >
@@ -393,7 +393,7 @@ function ProfileSetupContent() {
           <h1 style={{
             fontSize: '32px',
             fontWeight: '800',
-            background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+            background: 'var(--c-grad-primary)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             margin: '0 0 8px',
@@ -407,7 +407,7 @@ function ProfileSetupContent() {
         {step > 1 && (
           <>
             <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#c77dff', fontSize: '13px', fontWeight: '700' }}>
+              <span style={{ color: 'var(--c-accent)', fontSize: '13px', fontWeight: '700' }}>
                 {STEPS[step]}
               </span>
               <span style={{ color: '#7c7b99', fontSize: '13px' }}>
@@ -418,7 +418,7 @@ function ProfileSetupContent() {
               <div style={{
                 height: '100%',
                 width: `${(step / (visibleSteps.length - 1)) * 100}%`,
-                background: 'linear-gradient(90deg, #ff6b9d, #c77dff)',
+                background: 'var(--c-grad-primary)',
                 borderRadius: '4px',
                 transition: 'width 0.4s ease',
               }} />
@@ -431,7 +431,7 @@ function ProfileSetupContent() {
         <div style={{
           background: 'rgba(22, 22, 31, 0.9)',
           backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(199,125,255,0.2)',
+          border: '1px solid var(--c-accent-a20)',
           borderRadius: '24px',
           padding: '32px',
         }}>
@@ -456,8 +456,8 @@ function ProfileSetupContent() {
                     style={{
                       padding: '16px 20px',
                       borderRadius: '14px',
-                      border: form.entityType === value ? '2px solid #c77dff' : '1px solid rgba(255,255,255,0.1)',
-                      background: form.entityType === value ? 'rgba(199,125,255,0.12)' : 'rgba(255,255,255,0.03)',
+                      border: form.entityType === value ? '2px solid var(--c-accent)' : '1px solid rgba(255,255,255,0.1)',
+                      background: form.entityType === value ? 'var(--c-accent-a12)' : 'rgba(255,255,255,0.03)',
                       cursor: 'pointer',
                       textAlign: 'left',
                       display: 'flex',
@@ -472,7 +472,7 @@ function ProfileSetupContent() {
                       <div style={{ color: '#7c7b99', fontSize: '13px', marginTop: '2px' }}>{desc}</div>
                     </div>
                     {form.entityType === value && (
-                      <span style={{ marginLeft: 'auto', color: '#c77dff', fontSize: '20px' }}>✓</span>
+                      <span style={{ marginLeft: 'auto', color: 'var(--c-accent)', fontSize: '20px' }}>✓</span>
                     )}
                   </button>
                 ))}
@@ -513,8 +513,8 @@ function ProfileSetupContent() {
                       style={{
                         padding: '16px 20px',
                         borderRadius: '14px',
-                        border: isSelected ? '2px solid #c77dff' : '1px solid rgba(255,255,255,0.1)',
-                        background: isSelected ? 'rgba(199,125,255,0.12)' : 'rgba(255,255,255,0.03)',
+                        border: isSelected ? '2px solid var(--c-accent)' : '1px solid rgba(255,255,255,0.1)',
+                        background: isSelected ? 'var(--c-accent-a12)' : 'rgba(255,255,255,0.03)',
                         cursor: 'pointer',
                         textAlign: 'left',
                         display: 'flex',
@@ -529,7 +529,7 @@ function ProfileSetupContent() {
                         <div style={{ color: '#7c7b99', fontSize: '13px', marginTop: '2px' }}>{desc}</div>
                       </div>
                       {isSelected && (
-                        <span style={{ marginLeft: 'auto', color: '#c77dff', fontSize: '20px' }}>✓</span>
+                        <span style={{ marginLeft: 'auto', color: 'var(--c-accent)', fontSize: '20px' }}>✓</span>
                       )}
                     </button>
                   )
@@ -557,7 +557,7 @@ function ProfileSetupContent() {
 
               <div>
                 <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '6px' }}>
-                  表示名（ハンドルネーム）<span style={{ color: '#ff6b9d' }}>*</span>
+                  表示名（ハンドルネーム）<span style={{ color: '#f87171' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -628,7 +628,7 @@ function ProfileSetupContent() {
                         <button
                           type="button"
                           onClick={() => setForm((f) => ({ ...f, snsLinks: f.snsLinks.filter((_, j) => j !== i) }))}
-                          style={{ background: 'none', border: 'none', color: '#ff6b9d', cursor: 'pointer', fontSize: '18px', padding: '0 4px' }}
+                          style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '18px', padding: '0 4px' }}
                         >×</button>
                       </div>
                     )
@@ -648,7 +648,7 @@ function ProfileSetupContent() {
               {isCreator && (
                 <div>
                   <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '10px' }}>
-                    クリエイタータイプ<span style={{ color: '#ff6b9d' }}>*</span>（複数選択可）
+                    クリエイタータイプ<span style={{ color: '#f87171' }}>*</span>（複数選択可）
                   </label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {CREATOR_TYPES.map((type) => (
@@ -659,9 +659,9 @@ function ProfileSetupContent() {
                         style={{
                           padding: '8px 16px',
                           borderRadius: '20px',
-                          border: form.creatorTypes.includes(type) ? '2px solid #c77dff' : '1px solid rgba(255,255,255,0.15)',
-                          background: form.creatorTypes.includes(type) ? 'rgba(199,125,255,0.2)' : 'transparent',
-                          color: form.creatorTypes.includes(type) ? '#c77dff' : '#a9a8c0',
+                          border: form.creatorTypes.includes(type) ? '2px solid var(--c-accent)' : '1px solid rgba(255,255,255,0.15)',
+                          background: form.creatorTypes.includes(type) ? 'var(--c-accent-a20)' : 'transparent',
+                          color: form.creatorTypes.includes(type) ? 'var(--c-accent)' : '#a9a8c0',
                           fontSize: '14px',
                           fontWeight: form.creatorTypes.includes(type) ? '700' : '400',
                           cursor: 'pointer',
@@ -680,10 +680,10 @@ function ProfileSetupContent() {
                         onChange={(e) => setOtherCreatorType(e.target.value)}
                         placeholder="具体的な活動内容を入力してください（例: 作詞家、作曲家、声優）"
                         maxLength={VALIDATION.SKILL_TAG_MAX}
-                        style={{ ...inputStyle, marginTop: '10px', borderColor: !otherCreatorType.trim() ? 'rgba(255,107,157,0.5)' : 'rgba(199,125,255,0.25)' }}
+                        style={{ ...inputStyle, marginTop: '10px', borderColor: !otherCreatorType.trim() ? 'rgba(248,113,113,0.5)' : 'var(--c-accent-a25)' }}
                       />
                       {!otherCreatorType.trim() && (
-                        <p style={{ color: '#ff6b9d', fontSize: '12px', marginTop: '4px' }}>
+                        <p style={{ color: '#f87171', fontSize: '12px', marginTop: '4px' }}>
                           「その他」を選択した場合は内容の入力が必要です
                         </p>
                       )}
@@ -706,9 +706,9 @@ function ProfileSetupContent() {
                         style={{
                           padding: '8px 16px',
                           borderRadius: '20px',
-                          border: form.clientTypes.includes(value) ? '2px solid #ff6b9d' : '1px solid rgba(255,255,255,0.15)',
+                          border: form.clientTypes.includes(value) ? '2px solid var(--c-accent)' : '1px solid rgba(255,255,255,0.15)',
                           background: form.clientTypes.includes(value) ? 'rgba(255,107,157,0.2)' : 'transparent',
-                          color: form.clientTypes.includes(value) ? '#ff6b9d' : '#a9a8c0',
+                          color: form.clientTypes.includes(value) ? '#f87171' : '#a9a8c0',
                           fontSize: '14px',
                           fontWeight: form.clientTypes.includes(value) ? '700' : '400',
                           cursor: 'pointer',
@@ -744,7 +744,7 @@ function ProfileSetupContent() {
                     gap: '6px',
                     padding: '8px 10px',
                     borderRadius: '10px',
-                    border: '1px solid rgba(199,125,255,0.25)',
+                    border: '1px solid var(--c-accent-a25)',
                     background: 'rgba(255,255,255,0.05)',
                     minHeight: '48px',
                     cursor: 'text',
@@ -764,7 +764,7 @@ function ProfileSetupContent() {
                           e.stopPropagation()
                           setForm((f) => ({ ...f, skills: f.skills.filter((x) => x !== s) }))
                         }}
-                        style={{ background: 'none', border: 'none', color: '#c77dff', cursor: 'pointer', padding: '0 0 0 4px', lineHeight: 1 }}
+                        style={{ background: 'none', border: 'none', color: 'var(--c-accent)', cursor: 'pointer', padding: '0 0 0 4px', lineHeight: 1 }}
                       >×</button>
                     </span>
                   ))}
@@ -819,9 +819,9 @@ function ProfileSetupContent() {
                     style={{
                       padding: '4px 12px',
                       borderRadius: '20px',
-                      border: '1px solid rgba(199,125,255,0.4)',
-                      background: 'rgba(199,125,255,0.1)',
-                      color: '#c77dff',
+                      border: '1px solid var(--c-accent-a40)',
+                      background: 'var(--c-accent-a10)',
+                      color: 'var(--c-accent)',
                       fontSize: '12px',
                       fontWeight: '600',
                       cursor: 'pointer',
@@ -892,7 +892,7 @@ function ProfileSetupContent() {
                     <button
                       type="button"
                       onClick={() => removePortfolio(i)}
-                      style={{ background: 'none', border: 'none', color: '#ff6b9d', cursor: 'pointer', fontSize: '18px', padding: '0 8px' }}
+                      style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '18px', padding: '0 8px' }}
                     >×</button>
                   </div>
                   <input
@@ -998,8 +998,8 @@ function ProfileSetupContent() {
                       style={{
                         padding: '12px 16px',
                         borderRadius: '12px',
-                        border: form.availability === value ? '2px solid #c77dff' : '1px solid rgba(255,255,255,0.1)',
-                        background: form.availability === value ? 'rgba(199,125,255,0.12)' : 'rgba(255,255,255,0.03)',
+                        border: form.availability === value ? '2px solid var(--c-accent)' : '1px solid rgba(255,255,255,0.1)',
+                        background: form.availability === value ? 'var(--c-accent-a12)' : 'rgba(255,255,255,0.03)',
                         cursor: 'pointer',
                         textAlign: 'left',
                         display: 'flex',
@@ -1012,7 +1012,7 @@ function ProfileSetupContent() {
                         <div style={{ color: '#f0eff8', fontWeight: '600', fontSize: '14px' }}>{label}</div>
                         <div style={{ color: '#7c7b99', fontSize: '12px' }}>{desc}</div>
                       </div>
-                      {form.availability === value && <span style={{ color: '#c77dff' }}>✓</span>}
+                      {form.availability === value && <span style={{ color: 'var(--c-accent)' }}>✓</span>}
                     </button>
                   ))}
                 </div>
@@ -1039,10 +1039,10 @@ function ProfileSetupContent() {
           {/* エラー */}
           {error && (
             <p style={{
-              color: '#ff6b9d',
+              color: '#f87171',
               fontSize: '13px',
               background: 'rgba(255,107,157,0.1)',
-              border: '1px solid rgba(255,107,157,0.3)',
+              border: '1px solid rgba(248,113,113,0.3)',
               borderRadius: '8px',
               padding: '10px 14px',
               marginTop: '16px',
@@ -1083,8 +1083,8 @@ function ProfileSetupContent() {
                 borderRadius: '12px',
                 border: 'none',
                 background: !canNext() || loading
-                  ? 'rgba(199,125,255,0.3)'
-                  : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+                  ? 'var(--c-accent-a30)'
+                  : 'var(--c-grad-primary)',
                 color: '#fff',
                 fontSize: '16px',
                 fontWeight: '700',
@@ -1135,7 +1135,7 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '12px 14px',
   borderRadius: '10px',
-  border: '1px solid rgba(199,125,255,0.25)',
+  border: '1px solid var(--c-accent-a25)',
   background: 'rgba(255,255,255,0.05)',
   color: '#f0eff8',
   fontSize: '15px',
@@ -1157,8 +1157,8 @@ const suggestionStyle: React.CSSProperties = {
 const tagStyle: React.CSSProperties = {
   padding: '4px 12px',
   borderRadius: '20px',
-  background: 'rgba(199,125,255,0.2)',
-  color: '#c77dff',
+  background: 'var(--c-accent-a20)',
+  color: 'var(--c-accent)',
   fontSize: '13px',
   display: 'flex',
   alignItems: 'center',
@@ -1168,9 +1168,9 @@ const addButtonStyle: React.CSSProperties = {
   width: '100%',
   padding: '14px',
   borderRadius: '12px',
-  border: '2px dashed rgba(199,125,255,0.3)',
+  border: '2px dashed var(--c-accent-a30)',
   background: 'transparent',
-  color: '#c77dff',
+  color: 'var(--c-accent)',
   fontSize: '15px',
   fontWeight: '600',
   cursor: 'pointer',

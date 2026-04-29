@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '12px 16px', borderRadius: '10px',
-  border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)',
-  color: '#f0eff8', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
+  border: '1px solid var(--c-border-3)', background: 'var(--c-input-bg)',
+  color: 'var(--c-text)', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
 }
 
 export default function AccountSettingsPage() {
@@ -94,21 +94,21 @@ export default function AccountSettingsPage() {
   }
 
   const sectionStyle: React.CSSProperties = {
-    background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)',
+    background: 'var(--c-surface)', border: '1px solid var(--c-border)',
     borderRadius: '20px', padding: '28px', marginBottom: '20px',
   }
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)',
-      color: '#f0eff8',
+      background: 'var(--c-bg)',
+      color: 'var(--c-text)',
     }}>
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
+      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
           Cralia
         </Link>
-        <Link href="/settings" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>← 設定へ</Link>
+        <Link href="/settings" style={{ color: 'var(--c-text-2)', fontSize: '14px', textDecoration: 'none' }}>← 設定へ</Link>
       </div>
 
       <div style={{ maxWidth: '620px', margin: '0 auto', padding: '40px 24px' }}>
@@ -119,7 +119,7 @@ export default function AccountSettingsPage() {
           <h2 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 20px' }}>メールアドレスの変更</h2>
           <form onSubmit={handleEmailChange} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
-              <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '6px' }}>新しいメールアドレス</label>
+              <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '6px' }}>新しいメールアドレス</label>
               <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
                 placeholder="new@example.com" required style={inputStyle} />
             </div>
@@ -129,7 +129,7 @@ export default function AccountSettingsPage() {
               </p>
             )}
             <button type="submit" disabled={emailLoading}
-              style={{ padding: '12px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: emailLoading ? 'not-allowed' : 'pointer', opacity: emailLoading ? 0.7 : 1 }}>
+              style={{ padding: '12px', borderRadius: '10px', border: 'none', background: 'var(--c-grad-primary)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: emailLoading ? 'not-allowed' : 'pointer', opacity: emailLoading ? 0.7 : 1 }}>
               {emailLoading ? '送信中...' : '確認メールを送信'}
             </button>
           </form>
@@ -140,12 +140,12 @@ export default function AccountSettingsPage() {
           <h2 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 20px' }}>パスワードの変更</h2>
           <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
-              <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '6px' }}>新しいパスワード（8文字以上）</label>
+              <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '6px' }}>新しいパスワード（8文字以上）</label>
               <input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)}
                 placeholder="••••••••" minLength={8} required style={inputStyle} />
             </div>
             <div>
-              <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '6px' }}>新しいパスワード（確認）</label>
+              <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '6px' }}>新しいパスワード（確認）</label>
               <input type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)}
                 placeholder="••••••••" required style={inputStyle} />
             </div>
@@ -155,7 +155,7 @@ export default function AccountSettingsPage() {
               </p>
             )}
             <button type="submit" disabled={pwLoading}
-              style={{ padding: '12px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: pwLoading ? 'not-allowed' : 'pointer', opacity: pwLoading ? 0.7 : 1 }}>
+              style={{ padding: '12px', borderRadius: '10px', border: 'none', background: 'var(--c-grad-primary)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: pwLoading ? 'not-allowed' : 'pointer', opacity: pwLoading ? 0.7 : 1 }}>
               {pwLoading ? '変更中...' : 'パスワードを変更'}
             </button>
           </form>
@@ -164,12 +164,12 @@ export default function AccountSettingsPage() {
         {/* 危険ゾーン */}
         <div id="danger" style={{ ...sectionStyle, border: '1px solid rgba(248,113,113,0.25)', background: 'rgba(248,113,113,0.04)', marginBottom: 0 }}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px', color: '#f87171' }}>アカウントを削除する</h2>
-          <p style={{ color: '#a9a8c0', fontSize: '13px', margin: '0 0 20px', lineHeight: '1.6' }}>
+          <p style={{ color: 'var(--c-text-2)', fontSize: '13px', margin: '0 0 20px', lineHeight: '1.6' }}>
             アカウントを削除すると、プロフィール・ポートフォリオ・プロジェクトなど全てのデータが完全に削除されます。この操作は取り消せません。
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div>
-              <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '6px' }}>
+              <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '6px' }}>
                 確認のため「<strong style={{ color: '#f87171' }}>DELETE</strong>」と入力してください
               </label>
               <input type="text" value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)}

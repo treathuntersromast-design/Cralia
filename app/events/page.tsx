@@ -63,8 +63,7 @@ export default function EventsPage() {
       }}>
         <Link href="/dashboard" style={{
           fontSize: '24px', fontWeight: '800',
-          background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          color: 'var(--c-accent)',
           textDecoration: 'none',
         }}>
           Cralia

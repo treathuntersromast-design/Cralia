@@ -1,4 +1,4 @@
-import { redirect, notFound } from 'next/navigation'
+﻿import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
@@ -46,13 +46,13 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   const currentStep = ORDER_STATUS_STEPS.indexOf(order.status as typeof ORDER_STATUS_STEPS[number])
 
   return (
-    <main style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8' }}>
+    <main style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
       {/* ヘッダー */}
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
+      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
           Cralia
         </Link>
-        <Link href="/orders" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>← 依頼一覧へ</Link>
+        <Link href="/orders" style={{ color: 'var(--c-text-2)', fontSize: '14px', textDecoration: 'none' }}>← 依頼一覧へ</Link>
       </div>
 
       <div style={{ maxWidth: '720px', margin: '0 auto', padding: '40px 24px' }}>
@@ -65,13 +65,13 @@ export default async function OrderDetailPage({ params }: { params: { id: string
             </span>
             <span style={{
               padding: '5px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: '700',
-              color: order.order_type === 'free' ? '#60a5fa' : '#c77dff',
-              background: order.order_type === 'free' ? 'rgba(96,165,250,0.12)' : 'rgba(199,125,255,0.12)',
-              border: `1px solid ${order.order_type === 'free' ? 'rgba(96,165,250,0.3)' : 'rgba(199,125,255,0.3)'}`,
+              color: order.order_type === 'free' ? '#60a5fa' : 'var(--c-accent)',
+              background: order.order_type === 'free' ? 'rgba(96,165,250,0.12)' : 'var(--c-accent-a12)',
+              border: `1px solid ${order.order_type === 'free' ? 'rgba(96,165,250,0.3)' : 'var(--c-accent-a30)'}`,
             }}>
               {order.order_type === 'free' ? '無償依頼' : '有償依頼'}
             </span>
-            <span style={{ color: '#5c5b78', fontSize: '12px' }}>
+            <span style={{ color: 'var(--c-text-4)', fontSize: '12px' }}>
               {new Date(order.created_at).toLocaleDateString('ja-JP')} 作成
             </span>
           </div>
@@ -80,7 +80,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
         {/* 進行ステップ（完了/キャンセル以外） */}
         {!isClosed && (
-          <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '20px 24px', marginBottom: '24px' }}>
+          <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', padding: '20px 24px', marginBottom: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
               {ORDER_STATUS_STEPS.map((step, i) => {
                 const done   = currentStep > i
@@ -89,13 +89,13 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                 return (
                   <div key={step} style={{ display: 'flex', alignItems: 'center', flex: i < ORDER_STATUS_STEPS.length - 1 ? 1 : undefined }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', background: done ? '#c77dff' : active ? 'rgba(199,125,255,0.3)' : 'rgba(255,255,255,0.06)', border: active ? '2px solid #c77dff' : 'none', color: done ? '#fff' : active ? '#c77dff' : '#5c5b78' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', background: done ? 'var(--c-accent)' : active ? 'var(--c-accent-a30)' : 'var(--c-border)', border: active ? '2px solid var(--c-accent)' : 'none', color: done ? '#fff' : active ? 'var(--c-accent)' : 'var(--c-text-3)' }}>
                         {done ? '✓' : i + 1}
                       </div>
-                      <span style={{ fontSize: '10px', color: active ? '#c77dff' : done ? '#a9a8c0' : '#5c5b78', whiteSpace: 'nowrap' }}>{labels[step]}</span>
+                      <span style={{ fontSize: '10px', color: active ? 'var(--c-accent)' : done ? 'var(--c-text-2)' : 'var(--c-text-3)', whiteSpace: 'nowrap' }}>{labels[step]}</span>
                     </div>
                     {i < ORDER_STATUS_STEPS.length - 1 && (
-                      <div style={{ flex: 1, height: '2px', background: done ? '#c77dff' : 'rgba(255,255,255,0.08)', margin: '0 4px 16px' }} />
+                      <div style={{ flex: 1, height: '2px', background: done ? 'var(--c-accent)' : 'var(--c-border-2)', margin: '0 4px 16px' }} />
                     )}
                   </div>
                 )
@@ -111,10 +111,10 @@ export default async function OrderDetailPage({ params }: { params: { id: string
             { label: 'クリエイター', name: creatorUser?.display_name ?? '不明', id: order.creator_id, isYou: isCreator },
           ].map(({ label, name, id, isYou }) => (
             <Link key={id} href={`/profile/${id}?back=/orders/${order.id}`} style={{ textDecoration: 'none' }}>
-              <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '16px' }}>
-                <p style={{ color: '#7c7b99', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.08em' }}>{label}</p>
-                <p style={{ color: '#f0eff8', fontSize: '14px', fontWeight: '700', margin: 0 }}>
-                  {name} {isYou && <span style={{ color: '#c77dff', fontSize: '11px' }}>（あなた）</span>}
+              <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '14px', padding: '16px' }}>
+                <p style={{ color: 'var(--c-text-3)', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.08em' }}>{label}</p>
+                <p style={{ color: 'var(--c-text)', fontSize: '14px', fontWeight: '700', margin: 0 }}>
+                  {name} {isYou && <span style={{ color: 'var(--c-accent)', fontSize: '11px' }}>（あなた）</span>}
                 </p>
               </div>
             </Link>
@@ -122,35 +122,35 @@ export default async function OrderDetailPage({ params }: { params: { id: string
         </div>
 
         {/* 依頼詳細 */}
-        <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-          <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 14px' }}>依頼内容</h2>
-          <p style={{ color: '#d0cfea', fontSize: '14px', lineHeight: '1.8', margin: '0 0 20px', whiteSpace: 'pre-wrap' }}>{order.description}</p>
+        <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+          <h2 style={{ color: 'var(--c-text-3)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 14px' }}>依頼内容</h2>
+          <p style={{ color: 'var(--c-text-2)', fontSize: '14px', lineHeight: '1.8', margin: '0 0 20px', whiteSpace: 'pre-wrap' }}>{order.description}</p>
 
-          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
+          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', borderTop: '1px solid var(--c-border)', paddingTop: '16px' }}>
             {order.order_type !== 'free' && (
               <div>
-                <p style={{ color: '#7c7b99', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.08em' }}>予算</p>
-                <p style={{ color: '#f0eff8', fontSize: '15px', fontWeight: '700', margin: 0 }}>
+                <p style={{ color: 'var(--c-text-3)', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.08em' }}>予算</p>
+                <p style={{ color: 'var(--c-text)', fontSize: '15px', fontWeight: '700', margin: 0 }}>
                   {order.budget != null ? `¥${order.budget.toLocaleString()}` : '未定'}
                 </p>
               </div>
             )}
             <div>
-              <p style={{ color: '#7c7b99', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.08em' }}>希望納期</p>
-              <p style={{ color: '#f0eff8', fontSize: '15px', fontWeight: '700', margin: 0 }}>
+              <p style={{ color: 'var(--c-text-3)', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.08em' }}>希望納期</p>
+              <p style={{ color: 'var(--c-text)', fontSize: '15px', fontWeight: '700', margin: 0 }}>
                 {order.deadline ? new Date(order.deadline).toLocaleDateString('ja-JP') : '未定'}
               </p>
             </div>
             <div>
-              <p style={{ color: '#7c7b99', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.08em' }}>ポートフォリオ掲載</p>
-              <p style={{ fontSize: '13px', fontWeight: '700', margin: 0, color: order.portfolio_allowed ? '#c77dff' : '#5c5b78' }}>
+              <p style={{ color: 'var(--c-text-3)', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.08em' }}>ポートフォリオ掲載</p>
+              <p style={{ fontSize: '13px', fontWeight: '700', margin: 0, color: order.portfolio_allowed ? 'var(--c-accent)' : 'var(--c-text-3)' }}>
                 {order.portfolio_allowed ? '✅ 許可' : '🔒 不許可'}
               </p>
             </div>
             {order.copyright_agreed != null && (
               <div>
-                <p style={{ color: '#7c7b99', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.08em' }}>著作権同意</p>
-                <p style={{ fontSize: '13px', fontWeight: '700', margin: 0, color: order.copyright_agreed ? '#4ade80' : '#5c5b78' }}>
+                <p style={{ color: 'var(--c-text-3)', fontSize: '11px', fontWeight: '700', margin: '0 0 4px', letterSpacing: '0.08em' }}>著作権同意</p>
+                <p style={{ fontSize: '13px', fontWeight: '700', margin: 0, color: order.copyright_agreed ? '#4ade80' : 'var(--c-text-3)' }}>
                   {order.copyright_agreed ? '✅ 同意済み' : '未同意'}
                 </p>
               </div>

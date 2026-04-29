@@ -94,37 +94,37 @@ export default function CreatorProfileSettingsPage() {
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 14px', borderRadius: '10px',
-    border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(255,255,255,0.05)',
-    color: '#f0eff8', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
+    border: '1px solid var(--c-accent-a25)', background: 'var(--c-input-bg)',
+    color: 'var(--c-text)', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
   }
 
   if (fetching) {
     return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f0eff8' }}>
+      <div style={{ minHeight: '100vh', background: 'var(--c-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--c-text)' }}>
         読み込み中...
       </div>
     )
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8' }}>
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--c-bg)', color: 'var(--c-text)' }}>
+      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
           Cralia
         </Link>
-        <Link href="/settings" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>← 設定へ戻る</Link>
+        <Link href="/settings" style={{ color: 'var(--c-text-2)', fontSize: '14px', textDecoration: 'none' }}>← 設定へ戻る</Link>
       </div>
 
       <div style={{ maxWidth: '640px', margin: '0 auto', padding: '40px 24px' }}>
         <div style={{ marginBottom: '32px' }}>
           <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 6px' }}>クリエイター設定</h1>
-          <p style={{ color: '#7c7b99', fontSize: '14px', margin: 0 }}>受注上限・料金プランを設定します</p>
+          <p style={{ color: 'var(--c-text-3)', fontSize: '14px', margin: 0 }}>受注上限・料金プランを設定します</p>
         </div>
 
         {/* 受注上限 */}
-        <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
-          <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 16px' }}>同時受注上限</h2>
-          <p style={{ color: '#a9a8c0', fontSize: '13px', margin: '0 0 14px', lineHeight: '1.6' }}>
+        <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
+          <h2 style={{ color: 'var(--c-text-3)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 16px' }}>同時受注上限</h2>
+          <p style={{ color: 'var(--c-text-2)', fontSize: '13px', margin: '0 0 14px', lineHeight: '1.6' }}>
             同時に受け付ける依頼の最大件数を設定します。未設定の場合は無制限です。
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -137,19 +137,19 @@ export default function CreatorProfileSettingsPage() {
               max={999}
               style={{ ...inputStyle, width: '120px' }}
             />
-            <span style={{ color: '#7c7b99', fontSize: '13px' }}>件まで（空欄 = 無制限）</span>
+            <span style={{ color: 'var(--c-text-3)', fontSize: '13px' }}>件まで（空欄 = 無制限）</span>
           </div>
         </div>
 
         {/* AIクリエイター提案トグル */}
-        <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
-          <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 16px' }}>AIクリエイター提案</h2>
+        <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', padding: '24px', marginBottom: '20px' }}>
+          <h2 style={{ color: 'var(--c-text-3)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 16px' }}>AIクリエイター提案</h2>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
             <div>
-              <p style={{ margin: '0 0 4px', fontWeight: '700', fontSize: '14px', color: '#f0eff8' }}>
+              <p style={{ margin: '0 0 4px', fontWeight: '700', fontSize: '14px', color: 'var(--c-text)' }}>
                 依頼者へのAI提案を許可する
               </p>
-              <p style={{ margin: 0, fontSize: '12px', color: '#7c7b99', lineHeight: '1.6' }}>
+              <p style={{ margin: 0, fontSize: '12px', color: 'var(--c-text-3)', lineHeight: '1.6' }}>
                 無効にすると、依頼者が依頼内容からAIでクリエイターを探す際にあなたが提案対象から除外されます
               </p>
             </div>
@@ -161,7 +161,7 @@ export default function CreatorProfileSettingsPage() {
               aria-label="AIクリエイター提案を許可する"
               style={{
                 flexShrink: 0, width: '52px', height: '28px', borderRadius: '14px', border: 'none',
-                background: aiSuggEnabled ? 'linear-gradient(135deg, #ff6b9d, #c77dff)' : 'rgba(255,255,255,0.12)',
+                background: aiSuggEnabled ? 'var(--c-grad-primary)' : 'var(--c-border-2)',
                 cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
               }}
             >
@@ -176,21 +176,21 @@ export default function CreatorProfileSettingsPage() {
         </div>
 
         {/* 料金プラン */}
-        <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+        <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: 0 }}>料金プラン</h2>
-            <span style={{ color: '#5c5b78', fontSize: '12px' }}>{plans.length}/10</span>
+            <h2 style={{ color: 'var(--c-text-3)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: 0 }}>料金プラン</h2>
+            <span style={{ color: 'var(--c-text-4)', fontSize: '12px' }}>{plans.length}/10</span>
           </div>
-          <p style={{ color: '#a9a8c0', fontSize: '13px', margin: '0 0 16px', lineHeight: '1.6' }}>
+          <p style={{ color: 'var(--c-text-2)', fontSize: '13px', margin: '0 0 16px', lineHeight: '1.6' }}>
             プロフィールページに表示される料金プランです。依頼者の参考になります。
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: plans.length > 0 ? '16px' : '0' }}>
             {plans.map((plan, i) => (
-              <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '16px' }}>
+              <div key={i} style={{ background: 'var(--c-input-bg-2)', border: '1px solid var(--c-border)', borderRadius: '12px', padding: '16px' }}>
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                   <div style={{ flex: 2 }}>
-                    <label style={{ display: 'block', color: '#7c7b99', fontSize: '11px', fontWeight: '600', marginBottom: '6px' }}>プラン名 <span style={{ color: '#f87171' }}>*</span></label>
+                    <label style={{ display: 'block', color: 'var(--c-text-3)', fontSize: '11px', fontWeight: '600', marginBottom: '6px' }}>プラン名 <span style={{ color: '#f87171' }}>*</span></label>
                     <input
                       value={plan.label}
                       onChange={(e) => updatePlan(i, 'label', e.target.value)}
@@ -200,9 +200,9 @@ export default function CreatorProfileSettingsPage() {
                     />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', color: '#7c7b99', fontSize: '11px', fontWeight: '600', marginBottom: '6px' }}>料金（円）</label>
+                    <label style={{ display: 'block', color: 'var(--c-text-3)', fontSize: '11px', fontWeight: '600', marginBottom: '6px' }}>料金（円）</label>
                     <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#7c7b99', fontSize: '13px' }}>¥</span>
+                      <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--c-text-3)', fontSize: '13px' }}>¥</span>
                       <input
                         type="number"
                         value={plan.price}
@@ -215,7 +215,7 @@ export default function CreatorProfileSettingsPage() {
                   </div>
                 </div>
                 <div style={{ marginBottom: '10px' }}>
-                  <label style={{ display: 'block', color: '#7c7b99', fontSize: '11px', fontWeight: '600', marginBottom: '6px' }}>説明（任意）</label>
+                  <label style={{ display: 'block', color: 'var(--c-text-3)', fontSize: '11px', fontWeight: '600', marginBottom: '6px' }}>説明（任意）</label>
                   <input
                     value={plan.description}
                     onChange={(e) => updatePlan(i, 'description', e.target.value)}
@@ -241,8 +241,8 @@ export default function CreatorProfileSettingsPage() {
               onClick={addPlan}
               style={{
                 width: '100%', padding: '11px', borderRadius: '10px',
-                border: '1px dashed rgba(199,125,255,0.3)', background: 'transparent',
-                color: '#c77dff', fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+                border: '1px dashed var(--c-accent-a30)', background: 'transparent',
+                color: 'var(--c-accent)', fontSize: '13px', fontWeight: '600', cursor: 'pointer',
               }}
             >
               ＋ プランを追加
@@ -268,7 +268,7 @@ export default function CreatorProfileSettingsPage() {
           disabled={loading}
           style={{
             width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
-            background: loading ? 'rgba(199,125,255,0.4)' : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+            background: loading ? 'var(--c-accent-a40)' : 'var(--c-grad-primary)',
             color: '#fff', fontSize: '14px', fontWeight: '700',
             cursor: loading ? 'not-allowed' : 'pointer',
           }}

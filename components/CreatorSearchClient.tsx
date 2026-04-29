@@ -1,6 +1,15 @@
 'use client'
 
 import { useState, useMemo, useTransition, useCallback, useRef, useEffect } from 'react'
+
+const PAGE_SIZE = 100
+
+function getPageNumbers(current: number, total: number): (number | '...')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  if (current <= 4) return [1, 2, 3, 4, 5, '...', total]
+  if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total]
+  return [1, '...', current - 1, current, current + 1, '...', total]
+}
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import type { Creator } from '@/app/search/page'
@@ -20,7 +29,7 @@ const AVAIL_MAP: Record<string, { label: string; color: string; bg: string }> = 
 }
 
 const filterLabelStyle: React.CSSProperties = {
-  color: '#7c7b99', fontSize: '12px', marginBottom: '8px', fontWeight: '600', letterSpacing: '0.06em',
+  color: 'var(--c-text-3)', fontSize: '12px', marginBottom: '8px', fontWeight: '600', letterSpacing: '0.06em',
 }
 
 interface Props {
@@ -46,6 +55,7 @@ export default function CreatorSearchClient({
   const [selectedType,  setSelectedType]  = useState(initialType)
   const [selectedAvail, setSelectedAvail] = useState(initialAvailability)
   const [selectedSkills, setSelectedSkills] = useState<string[]>(initialSkills)
+  const [page, setPage] = useState(1)
 
   // 現在の全フィルター状態を URL に書き込む
   const pushUrl = useCallback((type: string, avail: string, q: string, id: string, skills: string[]) => {
@@ -65,6 +75,9 @@ export default function CreatorSearchClient({
   useEffect(() => {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [])
+
+  // フィルター変更時はページをリセット
+  useEffect(() => { setPage(1) }, [query, idQuery, searchMode, selectedSkills])
 
   // テキスト入力はデバウンスして URL 更新
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -147,6 +160,9 @@ export default function CreatorSearchClient({
     })
   }, [creators, query, idQuery, searchMode, selectedSkills])
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 24px' }}>
 
@@ -155,8 +171,9 @@ export default function CreatorSearchClient({
         <h1 style={{ fontSize: '28px', fontWeight: '800', margin: '0 0 6px' }}>
           クリエイターを探す
         </h1>
-        <p style={{ color: '#7c7b99', fontSize: '14px', margin: 0 }}>
+        <p style={{ color: 'var(--c-text-3)', fontSize: '14px', margin: 0 }}>
           {filtered.length} 人のクリエイターが見つかりました
+          {totalPages > 1 && <span style={{ marginLeft: '8px' }}>（{page} / {totalPages} ページ）</span>}
         </p>
       </div>
 
@@ -171,9 +188,9 @@ export default function CreatorSearchClient({
               onClick={() => setSearchMode(mode)}
               style={{
                 padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '600',
-                border: searchMode === mode ? 'none' : '1px solid rgba(255,255,255,0.12)',
-                background: searchMode === mode ? 'rgba(199,125,255,0.2)' : 'transparent',
-                color: searchMode === mode ? '#c77dff' : '#7c7b99', cursor: 'pointer',
+                border: searchMode === mode ? 'none' : '1px solid var(--c-border-2)',
+                background: searchMode === mode ? 'var(--c-accent-a20)' : 'transparent',
+                color: searchMode === mode ? 'var(--c-accent)' : 'var(--c-text-3)', cursor: 'pointer',
               }}
             >
               {mode === 'keyword' ? '🔍 キーワード検索' : '🔢 ID検索'}
@@ -191,13 +208,13 @@ export default function CreatorSearchClient({
               placeholder="名前・スキル・クリエイタータイプ・自己紹介で検索..."
               style={{
                 width: '100%', padding: '14px 16px 14px 48px', borderRadius: '14px',
-                border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(255,255,255,0.05)',
-                color: '#f0eff8', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
+                border: '1px solid var(--c-accent-a25)', background: 'var(--c-input-bg)',
+                color: 'var(--c-text)', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
               }}
             />
             {query && (
               <button type="button" onClick={() => handleQueryChange('')}
-                style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#7c7b99', cursor: 'pointer', fontSize: '18px' }}>
+                style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--c-text-3)', cursor: 'pointer', fontSize: '18px' }}>
                 ×
               </button>
             )}
@@ -213,14 +230,14 @@ export default function CreatorSearchClient({
               maxLength={8}
               style={{
                 width: '100%', padding: '14px 16px 14px 48px', borderRadius: '14px',
-                border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(255,255,255,0.05)',
-                color: '#f0eff8', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
+                border: '1px solid var(--c-accent-a25)', background: 'var(--c-input-bg)',
+                color: 'var(--c-text)', fontSize: '15px', outline: 'none', boxSizing: 'border-box',
                 fontFamily: 'monospace', letterSpacing: '0.1em',
               }}
             />
             {idQuery && (
               <button type="button" onClick={() => { setIdQuery(''); pushUrl('', '', '', '', []) }}
-                style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#7c7b99', cursor: 'pointer', fontSize: '18px' }}>
+                style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--c-text-3)', cursor: 'pointer', fontSize: '18px' }}>
                 ×
               </button>
             )}
@@ -230,8 +247,8 @@ export default function CreatorSearchClient({
 
       {/* フィルターパネル */}
       <div style={{
-        background: 'rgba(22,22,31,0.8)',
-        border: '1px solid rgba(199,125,255,0.12)',
+        background: 'var(--c-surface-2)',
+        border: '1px solid var(--c-accent-a12)',
         borderRadius: '16px',
         padding: '20px 24px',
         marginBottom: '32px',
@@ -250,8 +267,8 @@ export default function CreatorSearchClient({
                   style={{
                     padding: '6px 14px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer',
                     border: active ? `2px solid ${opt.color}` : '1px solid rgba(255,255,255,0.12)',
-                    background: active ? opt.bg : 'rgba(255,255,255,0.03)',
-                    color: active ? opt.color : '#a9a8c0', fontWeight: active ? '700' : '400',
+                    background: active ? opt.bg : 'var(--c-input-bg-2)',
+                    color: active ? opt.color : 'var(--c-text-2)', fontWeight: active ? '700' : '400',
                   }}>
                   ● {opt.label}
                 </button>
@@ -270,9 +287,9 @@ export default function CreatorSearchClient({
                 <button key={t} type="button" onClick={() => toggleType(t)}
                   style={{
                     padding: '6px 14px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer',
-                    border: active ? '2px solid #c77dff' : '1px solid rgba(255,255,255,0.12)',
-                    background: active ? 'rgba(199,125,255,0.2)' : 'rgba(255,255,255,0.03)',
-                    color: active ? '#c77dff' : '#a9a8c0', fontWeight: active ? '700' : '400',
+                    border: active ? '2px solid var(--c-accent)' : '1px solid var(--c-border-2)',
+                    background: active ? 'var(--c-accent-a20)' : 'var(--c-input-bg-2)',
+                    color: active ? 'var(--c-accent)' : 'var(--c-text-2)', fontWeight: active ? '700' : '400',
                   }}>
                   {t}
                 </button>
@@ -287,7 +304,7 @@ export default function CreatorSearchClient({
             スキル
             {selectedSkills.length > 0 && (
               <button type="button" onClick={clearSkills}
-                style={{ marginLeft: '10px', background: 'none', border: 'none', color: '#ff6b9d', fontSize: '11px', cursor: 'pointer', padding: 0 }}>
+                style={{ marginLeft: '10px', background: 'none', border: 'none', color: 'var(--c-accent-alt)', fontSize: '11px', cursor: 'pointer', padding: 0 }}>
                 クリア
               </button>
             )}
@@ -299,9 +316,9 @@ export default function CreatorSearchClient({
                 <button key={s} type="button" onClick={() => toggleSkill(s)}
                   style={{
                     padding: '6px 14px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer',
-                    border: active ? '2px solid #ff6b9d' : '1px solid rgba(255,255,255,0.12)',
-                    background: active ? 'rgba(255,107,157,0.15)' : 'rgba(255,255,255,0.03)',
-                    color: active ? '#ff6b9d' : '#a9a8c0', fontWeight: active ? '700' : '400',
+                    border: active ? '2px solid var(--c-accent-alt)' : '1px solid var(--c-border-2)',
+                    background: active ? 'var(--c-alt-a15)' : 'var(--c-input-bg-2)',
+                    color: active ? 'var(--c-accent-alt)' : 'var(--c-text-2)', fontWeight: active ? '700' : '400',
                   }}>
                   {s}
                 </button>
@@ -313,21 +330,68 @@ export default function CreatorSearchClient({
 
       {/* 結果グリッド */}
       {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 0', color: '#7c7b99' }}>
+        <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--c-text-3)' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
           <p style={{ fontSize: '16px', margin: 0 }}>条件に一致するクリエイターが見つかりませんでした</p>
-          <p style={{ fontSize: '13px', margin: '8px 0 0', color: '#5c5b78' }}>検索ワードやフィルターを変えてみてください</p>
+          <p style={{ fontSize: '13px', margin: '8px 0 0', color: 'var(--c-text-4)' }}>検索ワードやフィルターを変えてみてください</p>
         </div>
       ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-          gap: '16px',
-        }}>
-          {filtered.map((c) => (
-            <CreatorCard key={c.creator_id} creator={c} backUrl={backUrl} />
-          ))}
-        </div>
+        <>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: '16px',
+          }}>
+            {paged.map((c) => (
+              <CreatorCard key={c.creator_id} creator={c} backUrl={backUrl} />
+            ))}
+          </div>
+
+          {/* ページネーション */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', marginTop: '40px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                disabled={page === 1}
+                onClick={() => { setPage(p => p - 1); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                style={{
+                  padding: '8px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: '600',
+                  border: '1px solid var(--c-border-2)', background: 'transparent',
+                  color: page === 1 ? 'var(--c-text-4)' : 'var(--c-text-2)', cursor: page === 1 ? 'not-allowed' : 'pointer',
+                }}
+              >← 前へ</button>
+
+              {getPageNumbers(page, totalPages).map((p, i) =>
+                p === '...' ? (
+                  <span key={`el-${i}`} style={{ color: 'var(--c-text-4)', padding: '0 4px', fontSize: '13px' }}>…</span>
+                ) : (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => { setPage(p as number); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                    style={{
+                      width: '38px', height: '38px', borderRadius: '10px', fontSize: '13px', fontWeight: '700',
+                      border: page === p ? '2px solid var(--c-accent-a50)' : '1px solid var(--c-border-2)',
+                      background: page === p ? 'var(--c-accent-a20)' : 'transparent',
+                      color: page === p ? 'var(--c-accent)' : 'var(--c-text-2)', cursor: 'pointer',
+                    }}
+                  >{p}</button>
+                )
+              )}
+
+              <button
+                type="button"
+                disabled={page === totalPages}
+                onClick={() => { setPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                style={{
+                  padding: '8px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: '600',
+                  border: '1px solid var(--c-border-2)', background: 'transparent',
+                  color: page === totalPages ? 'var(--c-text-4)' : 'var(--c-text-2)', cursor: page === totalPages ? 'not-allowed' : 'pointer',
+                }}
+              >次へ →</button>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
@@ -341,8 +405,8 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
     <Link href={`/profile/${c.creator_id}?back=${backUrl}`} style={{ textDecoration: 'none', color: 'inherit' }}>
       <div
         style={{
-          background: 'rgba(22,22,31,0.9)',
-          border: '1px solid rgba(199,125,255,0.15)',
+          background: 'var(--c-surface)',
+          border: '1px solid var(--c-accent-a15)',
           borderRadius: '20px',
           overflow: 'hidden',
           cursor: 'pointer',
@@ -352,13 +416,13 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
         }}
         onMouseEnter={(e) => {
           const el = e.currentTarget as HTMLDivElement
-          el.style.borderColor = 'rgba(199,125,255,0.4)'
-          el.style.background = 'rgba(30,20,50,0.95)'
+          el.style.borderColor = 'var(--c-accent-a40)'
+          el.style.background = 'var(--c-surface-r)'
         }}
         onMouseLeave={(e) => {
           const el = e.currentTarget as HTMLDivElement
-          el.style.borderColor = 'rgba(199,125,255,0.15)'
-          el.style.background = 'rgba(22,22,31,0.9)'
+          el.style.borderColor = 'var(--c-accent-a15)'
+          el.style.background = 'var(--c-surface)'
         }}
       >
         {/* ポートフォリオサムネ（最大2枚） */}
@@ -381,7 +445,7 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
             <div style={{
               width: '44px', height: '44px', borderRadius: '50%', flexShrink: 0,
               overflow: 'hidden',
-              background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+              background: 'var(--c-grad-primary)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '17px', fontWeight: '700', color: '#fff',
             }}>
@@ -393,10 +457,10 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
               <div style={{ fontWeight: '700', fontSize: '15px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {c.display_name}
               </div>
-              <div style={{ fontSize: '11px', color: '#7c7b99', marginTop: '1px', display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <div style={{ fontSize: '11px', color: 'var(--c-text-3)', marginTop: '1px', display: 'flex', gap: '6px', alignItems: 'center' }}>
                 <span>{c.entity_type === 'corporate' ? '法人・団体' : '個人'}</span>
                 {c.display_id && (
-                  <span style={{ fontFamily: 'monospace', letterSpacing: '0.05em', color: '#5c5b78' }}>
+                  <span style={{ fontFamily: 'monospace', letterSpacing: '0.05em', color: 'var(--c-text-4)' }}>
                     ID: {c.display_id}
                   </span>
                 )}
@@ -416,13 +480,13 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
               {(c.creator_type ?? []).slice(0, 3).map((t) => (
                 <span key={t} style={{
                   padding: '3px 10px', borderRadius: '20px', fontSize: '12px',
-                  background: 'rgba(199,125,255,0.15)', color: '#c77dff', fontWeight: '600',
+                  background: 'var(--c-accent-a15)', color: 'var(--c-accent)', fontWeight: '600',
                 }}>
                   {t}
                 </span>
               ))}
               {(c.creator_type ?? []).length > 3 && (
-                <span style={{ color: '#7c7b99', fontSize: '12px', alignSelf: 'center' }}>+{(c.creator_type ?? []).length - 3}</span>
+                <span style={{ color: 'var(--c-text-3)', fontSize: '12px', alignSelf: 'center' }}>+{(c.creator_type ?? []).length - 3}</span>
               )}
             </div>
           )}
@@ -433,13 +497,13 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
               {(c.skills ?? []).slice(0, 4).map((s) => (
                 <span key={s} style={{
                   padding: '3px 10px', borderRadius: '20px', fontSize: '12px',
-                  border: '1px solid rgba(255,255,255,0.1)', color: '#a9a8c0',
+                  border: '1px solid var(--c-border-2)', color: 'var(--c-text-2)',
                 }}>
                   {s}
                 </span>
               ))}
               {(c.skills ?? []).length > 4 && (
-                <span style={{ color: '#7c7b99', fontSize: '12px', alignSelf: 'center' }}>+{(c.skills ?? []).length - 4}</span>
+                <span style={{ color: 'var(--c-text-3)', fontSize: '12px', alignSelf: 'center' }}>+{(c.skills ?? []).length - 4}</span>
               )}
             </div>
           )}
@@ -447,7 +511,7 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
           {/* bio */}
           {c.bio && (
             <p style={{
-              color: '#a9a8c0', fontSize: '13px', lineHeight: '1.6', margin: 0,
+              color: 'var(--c-text-2)', fontSize: '13px', lineHeight: '1.6', margin: 0,
               display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
             }}>
               {c.bio}
@@ -456,9 +520,9 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
 
           {/* 価格 */}
           {c.price_min != null && c.price_min >= 0 && (
-            <div style={{ paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 'auto' }}>
-              <span style={{ color: '#7c7b99', fontSize: '12px' }}>希望単価 </span>
-              <span style={{ color: '#f0eff8', fontSize: '14px', fontWeight: '600' }}>
+            <div style={{ paddingTop: '8px', borderTop: '1px solid var(--c-border)', marginTop: 'auto' }}>
+              <span style={{ color: 'var(--c-text-3)', fontSize: '12px' }}>希望単価 </span>
+              <span style={{ color: 'var(--c-text)', fontSize: '14px', fontWeight: '600' }}>
                 ¥{c.price_min.toLocaleString()} 〜
               </span>
             </div>

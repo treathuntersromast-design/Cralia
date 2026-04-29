@@ -16,10 +16,10 @@ const PREFECTURES = [
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '12px 16px',
-  background: 'rgba(255,255,255,0.06)',
-  border: '1px solid rgba(255,255,255,0.12)',
+  background: 'var(--c-input-bg)',
+  border: '1px solid var(--c-border-3)',
   borderRadius: '10px',
-  color: '#f0eff8',
+  color: 'var(--c-text)',
   fontSize: '15px',
   outline: 'none',
   boxSizing: 'border-box',
@@ -27,13 +27,13 @@ const inputStyle: React.CSSProperties = {
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
-  color: '#a9a8c0',
+  color: 'var(--c-text-2)',
   fontSize: '13px',
   marginBottom: '6px',
 }
 
 const hintStyle: React.CSSProperties = {
-  color: '#7c7b99',
+  color: 'var(--c-text-3)',
   fontSize: '12px',
   marginTop: '4px',
 }
@@ -41,11 +41,11 @@ const hintStyle: React.CSSProperties = {
 const sectionHeadStyle: React.CSSProperties = {
   fontSize: '13px',
   fontWeight: '700',
-  color: '#c77dff',
+  color: 'var(--c-accent)',
   letterSpacing: '0.06em',
   marginBottom: '14px',
   paddingBottom: '8px',
-  borderBottom: '1px solid rgba(199,125,255,0.15)',
+  borderBottom: '1px solid var(--c-accent-a15)',
 }
 
 export default function PersonalInfoPage() {
@@ -136,8 +136,8 @@ export default function PersonalInfoPage() {
 
   if (fetching) {
     return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: '#7c7b99' }}>読み込み中...</p>
+      <div style={{ minHeight: '100vh', background: 'var(--c-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'var(--c-text-3)' }}>読み込み中...</p>
       </div>
     )
   }
@@ -145,20 +145,20 @@ export default function PersonalInfoPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)',
+      background: 'var(--c-bg)',
       padding: '48px 24px',
     }}>
       <div style={{ maxWidth: '560px', margin: '0 auto' }}>
 
         {/* ヘッダー */}
         <div style={{ marginBottom: '32px' }}>
-          <Link href="/settings" style={{ color: '#c77dff', fontSize: '14px', textDecoration: 'none', display: 'inline-block', marginBottom: '20px' }}>
+          <Link href="/settings" style={{ color: 'var(--c-accent)', fontSize: '14px', textDecoration: 'none', display: 'inline-block', marginBottom: '20px' }}>
             ← 設定へ戻る
           </Link>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#f0eff8', marginBottom: '8px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-text)', marginBottom: '8px' }}>
             個人情報の登録
           </h1>
-          <p style={{ color: '#7c7b99', fontSize: '14px', lineHeight: '1.7' }}>
+          <p style={{ color: 'var(--c-text-3)', fontSize: '14px', lineHeight: '1.7' }}>
             ここで登録した情報は取引・決済・本人確認の目的のみに使用されます。他のユーザーには公開されません。
           </p>
         </div>
@@ -168,6 +168,7 @@ export default function PersonalInfoPage() {
           padding: '14px 16px',
           background: 'rgba(255,200,80,0.08)',
           border: '1px solid rgba(255,200,80,0.25)',
+
           borderRadius: '10px',
           marginBottom: '24px',
           display: 'flex',
@@ -183,7 +184,7 @@ export default function PersonalInfoPage() {
         {/* フォーム */}
         <div style={{
           background: 'rgba(22, 22, 31, 0.9)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid var(--c-border)',
           borderRadius: '16px',
           padding: '32px',
         }}>
@@ -296,7 +297,7 @@ export default function PersonalInfoPage() {
                 <div>
                   <label style={labelStyle}>
                     法人番号
-                    <span style={{ color: '#7c7b99', marginLeft: '6px', fontSize: '11px' }}>（任意）</span>
+                    <span style={{ color: 'var(--c-text-3)', marginLeft: '6px', fontSize: '11px' }}>（任意）</span>
                   </label>
                   <input
                     type="text"
@@ -323,7 +324,7 @@ export default function PersonalInfoPage() {
               <div>
                 <label style={labelStyle}>
                   適格請求書発行事業者登録番号
-                  <span style={{ color: '#7c7b99', marginLeft: '6px', fontSize: '11px' }}>（任意）</span>
+                  <span style={{ color: 'var(--c-text-3)', marginLeft: '6px', fontSize: '11px' }}>（任意）</span>
                 </label>
                 <input
                   type="text"
@@ -403,7 +404,7 @@ export default function PersonalInfoPage() {
         </div>
 
         {/* 注意事項 */}
-        <p style={{ color: '#7c7b99', fontSize: '12px', textAlign: 'center', marginTop: '20px', lineHeight: '1.7' }}>
+        <p style={{ color: 'var(--c-text-3)', fontSize: '12px', textAlign: 'center', marginTop: '20px', lineHeight: '1.7' }}>
           ご登録いただいた個人情報は暗号化されて保存されます。<br />
           詳しくは<Link href="/privacy" style={{ color: '#c77dff' }}>プライバシーポリシー</Link>をご確認ください。
         </p>

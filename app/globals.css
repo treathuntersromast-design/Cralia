@@ -2,33 +2,174 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+/* ============================================================
+   THEME: DARK — ダークネイビー青ベース + 白文字
+   ============================================================ */
+:root,
+html[data-theme="dark"] {
+  /* Backgrounds */
+  --c-bg:          linear-gradient(160deg, #010820 0%, #020d35 45%, #010820 100%);
+  --c-surface:     rgba(2,10,50,0.92);
+  --c-surface-2:   rgba(1,7,40,0.88);
+  --c-surface-3:   rgba(1,5,30,0.80);
+  --c-surface-r:   #040f55;
+
+  /* Borders */
+  --c-border:      rgba(68,136,255,0.12);
+  --c-border-2:    rgba(68,136,255,0.22);
+  --c-border-3:    rgba(68,136,255,0.34);
+
+  /* Text */
+  --c-text:        #ffffff;
+  --c-text-2:      #b0cbff;
+  --c-text-3:      #6090d0;
+  --c-text-4:      #3060a0;
+  --c-text-5:      #1a3a70;
+  --c-text-on-raised: #ffffff;
+
+  /* Form */
+  --c-input-bg:    rgba(68,136,255,0.10);
+  --c-input-bg-2:  rgba(68,136,255,0.06);
+  --c-input-border: rgba(68,136,255,0.32);
+
+  /* Accent — ダークはブルー系 */
+  --c-accent:          #4488ff;
+  --c-accent-alt:      #00bfff;
+  --c-grad-primary:    linear-gradient(135deg, #00bfff, #0044ff);
+  --c-accent-a04:      rgba(68,136,255,0.04);
+  --c-accent-a06:      rgba(68,136,255,0.06);
+  --c-accent-a08:      rgba(68,136,255,0.08);
+  --c-accent-a12:      rgba(68,136,255,0.12);
+  --c-accent-a15:      rgba(68,136,255,0.15);
+  --c-accent-a20:      rgba(68,136,255,0.20);
+  --c-accent-a25:      rgba(68,136,255,0.25);
+  --c-accent-a30:      rgba(68,136,255,0.30);
+  --c-accent-a35:      rgba(68,136,255,0.35);
+  --c-accent-a40:      rgba(68,136,255,0.40);
+  --c-accent-a50:      rgba(68,136,255,0.50);
+  --c-alt-a06:         rgba(0,191,255,0.06);
+  --c-alt-a08:         rgba(0,191,255,0.08);
+  --c-alt-a10:         rgba(0,191,255,0.10);
+  --c-alt-a12:         rgba(0,191,255,0.12);
+  --c-alt-a15:         rgba(0,191,255,0.15);
+  --c-alt-a20:         rgba(0,191,255,0.20);
+  --c-alt-a25:         rgba(0,191,255,0.25);
+  --c-alt-a30:         rgba(0,191,255,0.30);
+
+  /* Misc */
+  --c-overlay:     rgba(0,5,30,0.78);
+  --c-shadow:      rgba(0,10,60,0.55);
+  --c-code-scheme: dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+/* ============================================================
+   THEME: LIGHT — スカイブルー背景・ネイビー枠・白文字
+   ============================================================ */
+html[data-theme="light"] {
+  /* Backgrounds */
+  --c-bg:          #00bfff;
+  --c-surface:     #0001ff;
+  --c-surface-2:   rgba(0,1,220,0.88);
+  --c-surface-3:   rgba(0,1,200,0.76);
+  --c-surface-r:   #ffffff;
+
+  /* Borders */
+  --c-border:      rgba(255,255,255,0.20);
+  --c-border-2:    rgba(255,255,255,0.35);
+  --c-border-3:    rgba(255,255,255,0.50);
+
+  /* Text */
+  --c-text:        #ffffff;
+  --c-text-2:      rgba(220,235,255,0.85);
+  --c-text-3:      rgba(185,210,255,0.68);
+  --c-text-4:      rgba(150,185,240,0.52);
+  --c-text-5:      rgba(120,160,220,0.38);
+  --c-text-on-raised: #0001ff;
+
+  /* Form */
+  --c-input-bg:    rgba(255,255,255,0.18);
+  --c-input-bg-2:  rgba(255,255,255,0.10);
+  --c-input-border: rgba(255,255,255,0.42);
+
+  /* Accent — ライトはネイビー青 */
+  --c-accent:          #0001ff;
+  --c-accent-alt:      #ffffff;
+  --c-grad-primary:    linear-gradient(135deg, #0080ff, #0001ff);
+  --c-accent-a04:      rgba(0,1,255,0.04);
+  --c-accent-a06:      rgba(0,1,255,0.06);
+  --c-accent-a08:      rgba(0,1,255,0.08);
+  --c-accent-a12:      rgba(0,1,255,0.12);
+  --c-accent-a15:      rgba(0,1,255,0.15);
+  --c-accent-a20:      rgba(0,1,255,0.20);
+  --c-accent-a25:      rgba(0,1,255,0.25);
+  --c-accent-a30:      rgba(0,1,255,0.30);
+  --c-accent-a35:      rgba(0,1,255,0.35);
+  --c-accent-a40:      rgba(0,1,255,0.40);
+  --c-accent-a50:      rgba(0,1,255,0.50);
+  --c-alt-a06:         rgba(255,255,255,0.06);
+  --c-alt-a08:         rgba(255,255,255,0.08);
+  --c-alt-a10:         rgba(255,255,255,0.10);
+  --c-alt-a12:         rgba(255,255,255,0.12);
+  --c-alt-a15:         rgba(255,255,255,0.15);
+  --c-alt-a20:         rgba(255,255,255,0.20);
+  --c-alt-a25:         rgba(255,255,255,0.25);
+  --c-alt-a30:         rgba(255,255,255,0.30);
+
+  /* Misc */
+  --c-overlay:     rgba(0,0,80,0.60);
+  --c-shadow:      rgba(0,0,100,0.28);
+  --c-code-scheme: light;
 }
 
+/* ============================================================
+   BASE
+   ============================================================ */
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  color: var(--c-text);
+  background: var(--c-bg);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  transition: background 0.25s, color 0.25s;
 }
 
-/* ドロップダウン選択肢はOS描画のため、黒文字・白背景で統一 */
+input[type="date"] {
+  color-scheme: var(--c-code-scheme);
+}
+
 option {
   color: #000000;
   background-color: #ffffff;
 }
+
+/* ============================================================
+   UTILITY
+   ============================================================ */
+
+.page-root {
+  min-height: 100vh;
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+.c-surface        { background: var(--c-surface);   border-color: var(--c-border);   color: var(--c-text); }
+.c-surface-2      { background: var(--c-surface-2); border-color: var(--c-border);   color: var(--c-text); }
+.c-surface-raised { background: var(--c-surface-r); border-color: var(--c-border-2); color: var(--c-text-on-raised); }
+
+.c-text   { color: var(--c-text);   }
+.c-text-2 { color: var(--c-text-2); }
+.c-text-3 { color: var(--c-text-3); }
+.c-text-4 { color: var(--c-text-4); }
+.c-text-5 { color: var(--c-text-5); }
+
+.c-border   { border-color: var(--c-border);   }
+.c-border-2 { border-color: var(--c-border-2); }
+.c-border-3 { border-color: var(--c-border-3); }
+
+.c-input {
+  background: var(--c-input-bg);
+  border: 1px solid var(--c-input-border);
+  color: var(--c-text);
+  outline: none;
+}
+.c-input::placeholder { color: var(--c-text-4); }
+
+.c-header-border { border-bottom: 1px solid var(--c-border); }

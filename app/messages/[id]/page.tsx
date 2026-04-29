@@ -39,19 +39,19 @@ export default async function MessageThreadPage({ params }: { params: { id: stri
     : (clientUser?.display_name  ?? '依頼者')
 
   return (
-    <main style={{ height: '100dvh', background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)', color: '#f0eff8', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <main style={{ height: '100dvh', background: 'var(--c-bg)', color: 'var(--c-text)', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* ヘッダー */}
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
-        <Link href="/messages" style={{ color: '#a9a8c0', fontSize: '18px', textDecoration: 'none', lineHeight: 1 }}>←</Link>
+      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
+        <Link href="/messages" style={{ color: 'var(--c-text-2)', fontSize: '18px', textDecoration: 'none', lineHeight: 1 }}>←</Link>
         <div style={{ flex: 1, overflow: 'hidden' }}>
           <p style={{ fontWeight: '700', fontSize: '15px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {partnerName}
           </p>
-          <p style={{ color: '#5c5b78', fontSize: '12px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <p style={{ color: 'var(--c-text-4)', fontSize: '12px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {order.title}
           </p>
         </div>
-        <Link href={`/orders/${order.id}`} style={{ color: '#c77dff', fontSize: '12px', textDecoration: 'none', flexShrink: 0 }}>
+        <Link href={`/orders/${order.id}`} style={{ color: 'var(--c-accent)', fontSize: '12px', textDecoration: 'none', flexShrink: 0 }}>
           依頼詳細 →
         </Link>
       </div>

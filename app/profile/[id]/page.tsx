@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
+﻿import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
@@ -124,12 +124,12 @@ export default async function ProfilePage({
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)',
-      color: '#f0eff8',
+      background: 'var(--c-bg)',
+      color: 'var(--c-text)',
     }}>
       {/* ヘッダー */}
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textDecoration: 'none' }}>
+      <div style={{ borderBottom: '1px solid var(--c-border)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Link href="/dashboard" style={{ fontSize: '24px', fontWeight: '800', color: 'var(--c-accent)', textDecoration: 'none' }}>
           Cralia
         </Link>
         {(() => {
@@ -150,11 +150,11 @@ export default async function ProfilePage({
             : '← 戻る'
             : '← ダッシュボードへ'
           return safeBack ? (
-            <Link href={safeBack} style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>
+            <Link href={safeBack} style={{ color: 'var(--c-text-2)', fontSize: '14px', textDecoration: 'none' }}>
               {backLabel}
             </Link>
           ) : (
-            <Link href="/dashboard" style={{ color: '#a9a8c0', fontSize: '14px', textDecoration: 'none' }}>
+            <Link href="/dashboard" style={{ color: 'var(--c-text-2)', fontSize: '14px', textDecoration: 'none' }}>
               ← ダッシュボードへ
             </Link>
           )

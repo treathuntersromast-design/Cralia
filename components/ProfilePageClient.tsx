@@ -60,7 +60,7 @@ const editBtnStyle: React.CSSProperties = {
 }
 const saveBtnStyle: React.CSSProperties = {
   padding: '8px 20px', borderRadius: '10px', border: 'none',
-  background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+  background: 'var(--c-grad-primary)',
   color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer',
 }
 const cancelBtnStyle: React.CSSProperties = {
@@ -482,7 +482,7 @@ export default function ProfilePageClient(props: Props) {
               ) : (
                 <Link
                   href={`/orders/new?creator=${props.profileId}&creatorName=${encodeURIComponent(props.displayName)}`}
-                  style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '14px', fontWeight: '700', textDecoration: 'none', display: 'inline-block' }}
+                  style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', background: 'var(--c-grad-primary)', color: '#fff', fontSize: '14px', fontWeight: '700', textDecoration: 'none', display: 'inline-block' }}
                 >
                   📩 依頼する
                 </Link>

@@ -60,8 +60,7 @@ export default function SetupPromptPage() {
       }}>
         <h1 style={{
           fontSize: '28px', fontWeight: '800',
-          background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          color: 'var(--c-accent)',
           margin: '0 0 28px',
         }}>
           Cralia
@@ -99,7 +98,7 @@ export default function SetupPromptPage() {
             style={{
               width: '100%', padding: '14px',
               borderRadius: '12px', border: 'none',
-              background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+              background: 'var(--c-grad-primary)',
               color: '#fff', fontSize: '15px', fontWeight: '700',
               cursor: 'pointer',
             }}
