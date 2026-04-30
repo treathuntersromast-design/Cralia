@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect, Suspense } from 'react'
+import { Sparkles } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import BioChatModal from '@/components/BioChatModal'
@@ -327,7 +328,7 @@ function ProfileSetupContent() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)',
+      background: 'var(--c-bg)',
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'center',
@@ -341,16 +342,16 @@ function ProfileSetupContent() {
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
         }}>
           <div style={{
-            background: 'rgba(22,22,31,0.98)',
+            background: 'var(--c-surface)',
             border: '1px solid var(--c-accent-a30)',
             borderRadius: '20px', padding: '32px', maxWidth: '400px', width: '100%',
             boxShadow: '0 8px 40px var(--c-accent-a20)',
           }}>
             <div style={{ fontSize: '28px', marginBottom: '12px', textAlign: 'center' }}>💾</div>
-            <h3 style={{ color: '#f0eff8', fontSize: '18px', fontWeight: '700', margin: '0 0 10px', textAlign: 'center' }}>
+            <h3 style={{ color: 'var(--c-text)', fontSize: '18px', fontWeight: '700', margin: '0 0 10px', textAlign: 'center' }}>
               前回の入力内容があります
             </h3>
-            <p style={{ color: '#a9a8c0', fontSize: '14px', lineHeight: '1.7', margin: '0 0 24px', textAlign: 'center' }}>
+            <p style={{ color: 'var(--c-text-2)', fontSize: '14px', lineHeight: '1.7', margin: '0 0 24px', textAlign: 'center' }}>
               前回途中まで入力したプロフィール情報が保存されています。<br />
               続きから入力しますか？
             </p>
@@ -359,8 +360,8 @@ function ProfileSetupContent() {
                 onClick={discardDraft}
                 style={{
                   flex: 1, padding: '12px', borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  background: 'transparent', color: '#a9a8c0',
+                  border: '1px solid var(--c-border-2)',
+                  background: 'transparent', color: 'var(--c-text-2)',
                   fontSize: '14px', fontWeight: '600', cursor: 'pointer',
                 }}
               >
@@ -386,7 +387,7 @@ function ProfileSetupContent() {
         {/* ヘッダー */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ textAlign: 'left', marginBottom: '12px' }}>
-            <Link href="/" style={{ color: '#5c5b78', fontSize: '13px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <Link href="/" style={{ color: 'var(--c-text-3)', fontSize: '13px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               ← TOPに戻る
             </Link>
           </div>
@@ -400,7 +401,7 @@ function ProfileSetupContent() {
           }}>
             Cralia
           </h1>
-          <p style={{ color: '#a9a8c0', margin: 0 }}>プロフィールを設定しましょう</p>
+          <p style={{ color: 'var(--c-text-2)', margin: 0 }}>プロフィールを設定しましょう</p>
         </div>
 
         {/* プログレスバー（個人・法人 / 活動スタイル選択画面では非表示） */}
@@ -410,11 +411,11 @@ function ProfileSetupContent() {
               <span style={{ color: 'var(--c-accent)', fontSize: '13px', fontWeight: '700' }}>
                 {STEPS[step]}
               </span>
-              <span style={{ color: '#7c7b99', fontSize: '13px' }}>
+              <span style={{ color: 'var(--c-text-3)', fontSize: '13px' }}>
                 {step} / {visibleSteps.length - 1}
               </span>
             </div>
-            <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', marginBottom: '24px' }}>
+            <div style={{ height: '4px', background: 'var(--c-surface-3)', borderRadius: '4px', marginBottom: '24px' }}>
               <div style={{
                 height: '100%',
                 width: `${(step / (visibleSteps.length - 1)) * 100}%`,
@@ -429,7 +430,7 @@ function ProfileSetupContent() {
 
         {/* カード */}
         <div style={{
-          background: 'rgba(22, 22, 31, 0.9)',
+          background: 'var(--c-surface)',
           backdropFilter: 'blur(20px)',
           border: '1px solid var(--c-accent-a20)',
           borderRadius: '24px',
@@ -438,10 +439,10 @@ function ProfileSetupContent() {
           {/* ステップ 0: 個人・法人 */}
           {step === 0 && (
             <div>
-              <h2 style={{ color: '#f0eff8', fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>
+              <h2 style={{ color: 'var(--c-text)', fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>
                 個人・法人どちらですか？
               </h2>
-              <p style={{ color: '#7c7b99', fontSize: '14px', marginBottom: '24px' }}>
+              <p style={{ color: 'var(--c-text-3)', fontSize: '14px', marginBottom: '24px' }}>
                 後から変更も可能です。
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -456,8 +457,8 @@ function ProfileSetupContent() {
                     style={{
                       padding: '16px 20px',
                       borderRadius: '14px',
-                      border: form.entityType === value ? '2px solid var(--c-accent)' : '1px solid rgba(255,255,255,0.1)',
-                      background: form.entityType === value ? 'var(--c-accent-a12)' : 'rgba(255,255,255,0.03)',
+                      border: form.entityType === value ? '2px solid var(--c-accent)' : '1px solid var(--c-border-2)',
+                      background: form.entityType === value ? 'var(--c-accent-a12)' : 'var(--c-surface-2)',
                       cursor: 'pointer',
                       textAlign: 'left',
                       display: 'flex',
@@ -468,8 +469,8 @@ function ProfileSetupContent() {
                   >
                     <span style={{ fontSize: '28px' }}>{emoji}</span>
                     <div>
-                      <div style={{ color: '#f0eff8', fontWeight: '700', fontSize: '15px' }}>{label}</div>
-                      <div style={{ color: '#7c7b99', fontSize: '13px', marginTop: '2px' }}>{desc}</div>
+                      <div style={{ color: 'var(--c-text)', fontWeight: '700', fontSize: '15px' }}>{label}</div>
+                      <div style={{ color: 'var(--c-text-3)', fontSize: '13px', marginTop: '2px' }}>{desc}</div>
                     </div>
                     {form.entityType === value && (
                       <span style={{ marginLeft: 'auto', color: 'var(--c-accent)', fontSize: '20px' }}>✓</span>
@@ -483,10 +484,10 @@ function ProfileSetupContent() {
           {/* ステップ 1: 活動スタイル */}
           {step === 1 && (
             <div>
-              <h2 style={{ color: '#f0eff8', fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>
+              <h2 style={{ color: 'var(--c-text)', fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>
                 どのように活動しますか？
               </h2>
-              <p style={{ color: '#7c7b99', fontSize: '14px', marginBottom: '24px' }}>
+              <p style={{ color: 'var(--c-text-3)', fontSize: '14px', marginBottom: '24px' }}>
                 後から変更も可能です。
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -513,8 +514,8 @@ function ProfileSetupContent() {
                       style={{
                         padding: '16px 20px',
                         borderRadius: '14px',
-                        border: isSelected ? '2px solid var(--c-accent)' : '1px solid rgba(255,255,255,0.1)',
-                        background: isSelected ? 'var(--c-accent-a12)' : 'rgba(255,255,255,0.03)',
+                        border: isSelected ? '2px solid var(--c-accent)' : '1px solid var(--c-border-2)',
+                        background: isSelected ? 'var(--c-accent-a12)' : 'var(--c-surface-2)',
                         cursor: 'pointer',
                         textAlign: 'left',
                         display: 'flex',
@@ -525,8 +526,8 @@ function ProfileSetupContent() {
                     >
                       <span style={{ fontSize: '28px' }}>{emoji}</span>
                       <div>
-                        <div style={{ color: '#f0eff8', fontWeight: '700', fontSize: '15px' }}>{label}</div>
-                        <div style={{ color: '#7c7b99', fontSize: '13px', marginTop: '2px' }}>{desc}</div>
+                        <div style={{ color: 'var(--c-text)', fontWeight: '700', fontSize: '15px' }}>{label}</div>
+                        <div style={{ color: 'var(--c-text-3)', fontSize: '13px', marginTop: '2px' }}>{desc}</div>
                       </div>
                       {isSelected && (
                         <span style={{ marginLeft: 'auto', color: 'var(--c-accent)', fontSize: '20px' }}>✓</span>
@@ -541,7 +542,7 @@ function ProfileSetupContent() {
           {/* ステップ 2: 基本情報 */}
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <h2 style={{ color: '#f0eff8', fontSize: '18px', fontWeight: '700', margin: 0 }}>
+              <h2 style={{ color: 'var(--c-text)', fontSize: '18px', fontWeight: '700', margin: 0 }}>
                 基本情報を入力してください
               </h2>
 
@@ -556,7 +557,7 @@ function ProfileSetupContent() {
               </div>
 
               <div>
-                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '6px' }}>
+                <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '6px' }}>
                   表示名（ハンドルネーム）<span style={{ color: '#f87171' }}>*</span>
                 </label>
                 <input
@@ -567,14 +568,14 @@ function ProfileSetupContent() {
                   placeholder="例: クリエイター太郎"
                   style={inputStyle}
                 />
-                <p style={{ color: '#7c7b99', fontSize: '12px', marginTop: '4px' }}>
+                <p style={{ color: 'var(--c-text-3)', fontSize: '12px', marginTop: '4px' }}>
                   {form.displayName.length} / 30 文字
                 </p>
               </div>
 
               {/* ホームページ */}
               <div>
-                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '6px' }}>
+                <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '6px' }}>
                   ホームページ（任意）
                 </label>
                 <input
@@ -589,7 +590,7 @@ function ProfileSetupContent() {
 
               {/* SNS リンク */}
               <div>
-                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '10px' }}>
+                <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '10px' }}>
                   SNS アカウント（任意）
                 </label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -610,8 +611,8 @@ function ProfileSetupContent() {
                             <option key={label} value={label} style={{ color: '#000', background: '#fff' }}>{label}</option>
                           ))}
                         </select>
-                        <div style={{ display: 'flex', alignItems: 'center', flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', overflow: 'hidden' }}>
-                          {meta.prefix && <span style={{ padding: '10px 10px', color: '#7c7b99', fontSize: '12px', whiteSpace: 'nowrap', borderRight: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>{meta.prefix}</span>}
+                        <div style={{ display: 'flex', alignItems: 'center', flex: 1, background: 'var(--c-input-bg)', border: '1px solid var(--c-border-2)', borderRadius: '10px', overflow: 'hidden' }}>
+                          {meta.prefix && <span style={{ padding: '10px 10px', color: 'var(--c-text-3)', fontSize: '12px', whiteSpace: 'nowrap', borderRight: '1px solid var(--c-border)', flexShrink: 0 }}>{meta.prefix}</span>}
                           <input
                             type="text"
                             value={entry.id}
@@ -622,7 +623,7 @@ function ProfileSetupContent() {
                             })}
                             placeholder={meta.placeholder}
                             maxLength={100}
-                            style={{ flex: 1, padding: '10px 12px', background: 'transparent', border: 'none', color: '#f0eff8', fontSize: '14px', outline: 'none' }}
+                            style={{ flex: 1, padding: '10px 12px', background: 'transparent', border: 'none', color: 'var(--c-text)', fontSize: '14px', outline: 'none' }}
                           />
                         </div>
                         <button
@@ -647,7 +648,7 @@ function ProfileSetupContent() {
 
               {isCreator && (
                 <div>
-                  <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '10px' }}>
+                  <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '10px' }}>
                     クリエイタータイプ<span style={{ color: '#f87171' }}>*</span>（複数選択可）
                   </label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -659,9 +660,9 @@ function ProfileSetupContent() {
                         style={{
                           padding: '8px 16px',
                           borderRadius: '20px',
-                          border: form.creatorTypes.includes(type) ? '2px solid var(--c-accent)' : '1px solid rgba(255,255,255,0.15)',
+                          border: form.creatorTypes.includes(type) ? '2px solid var(--c-accent)' : '1px solid var(--c-border-2)',
                           background: form.creatorTypes.includes(type) ? 'var(--c-accent-a20)' : 'transparent',
-                          color: form.creatorTypes.includes(type) ? 'var(--c-accent)' : '#a9a8c0',
+                          color: form.creatorTypes.includes(type) ? 'var(--c-accent)' : 'var(--c-text-2)',
                           fontSize: '14px',
                           fontWeight: form.creatorTypes.includes(type) ? '700' : '400',
                           cursor: 'pointer',
@@ -694,7 +695,7 @@ function ProfileSetupContent() {
 
               {isClient && (
                 <div>
-                  <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '10px' }}>
+                  <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '10px' }}>
                     依頼者タイプ（複数選択可・任意）
                   </label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -706,9 +707,9 @@ function ProfileSetupContent() {
                         style={{
                           padding: '8px 16px',
                           borderRadius: '20px',
-                          border: form.clientTypes.includes(value) ? '2px solid var(--c-accent)' : '1px solid rgba(255,255,255,0.15)',
-                          background: form.clientTypes.includes(value) ? 'rgba(255,107,157,0.2)' : 'transparent',
-                          color: form.clientTypes.includes(value) ? '#f87171' : '#a9a8c0',
+                          border: form.clientTypes.includes(value) ? '2px solid var(--c-accent)' : '1px solid var(--c-border-2)',
+                          background: form.clientTypes.includes(value) ? 'var(--c-accent-a20)' : 'transparent',
+                          color: form.clientTypes.includes(value) ? 'rgb(var(--brand-rgb))' : 'var(--c-text-2)',
                           fontSize: '14px',
                           fontWeight: form.clientTypes.includes(value) ? '700' : '400',
                           cursor: 'pointer',
@@ -727,12 +728,12 @@ function ProfileSetupContent() {
           {/* ステップ 3: スキル・自己紹介（クリエイターのみ） */}
           {step === 3 && isCreator && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <h2 style={{ color: '#f0eff8', fontSize: '18px', fontWeight: '700', margin: 0 }}>
+              <h2 style={{ color: 'var(--c-text)', fontSize: '18px', fontWeight: '700', margin: 0 }}>
                 スキルと自己紹介
               </h2>
 
               <div>
-                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '8px' }}>
+                <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '8px' }}>
                   スキルタグ（最大20個）
                 </label>
                 {/* タグ入力ボックス：選択済みタグ＋テキスト入力がひとつの枠内に並ぶ */}
@@ -745,7 +746,7 @@ function ProfileSetupContent() {
                     padding: '8px 10px',
                     borderRadius: '10px',
                     border: '1px solid var(--c-accent-a25)',
-                    background: 'rgba(255,255,255,0.05)',
+                    background: 'var(--c-input-bg)',
                     minHeight: '48px',
                     cursor: 'text',
                   }}
@@ -788,14 +789,14 @@ function ProfileSetupContent() {
                         background: 'none',
                         border: 'none',
                         outline: 'none',
-                        color: '#f0eff8',
+                        color: 'var(--c-text)',
                         fontSize: '14px',
                         padding: '2px 4px',
                       }}
                     />
                   )}
                 </div>
-                <p style={{ color: '#7c7b99', fontSize: '12px', marginTop: '4px' }}>
+                <p style={{ color: 'var(--c-text-3)', fontSize: '12px', marginTop: '4px' }}>
                   {form.skills.length} / {VALIDATION.SKILLS_MAX} 個　※ Backspace で最後のタグを削除できます
                 </p>
                 {/* サジェスト */}
@@ -810,7 +811,7 @@ function ProfileSetupContent() {
 
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px' }}>
+                  <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px' }}>
                     自己紹介（400文字以内）
                   </label>
                   <button
@@ -827,7 +828,7 @@ function ProfileSetupContent() {
                       cursor: 'pointer',
                     }}
                   >
-                    ✨ AIに書いてもらう
+                    <Sparkles size={13} style={{ marginRight: '4px', verticalAlign: 'middle' }} aria-hidden /> AIに書いてもらう
                   </button>
                 </div>
                 <textarea
@@ -838,7 +839,7 @@ function ProfileSetupContent() {
                   placeholder={`あなたの活動やスタイルを紹介してください。\n例）はじめまして！イラストレーターの〇〇です。アニメ・ゲーム系のキャラクターデザインを得意としており、VTuberのキャラクターデザインやLive2Dモデル用イラストの制作実績が多数あります。丁寧なヒアリングをもとに、ご要望に合ったデザインをご提案します。お気軽にご相談ください！`}
                   style={{ ...inputStyle, resize: 'vertical' }}
                 />
-                <p style={{ color: '#7c7b99', fontSize: '12px', marginTop: '4px' }}>
+                <p style={{ color: 'var(--c-text-3)', fontSize: '12px', marginTop: '4px' }}>
                   {form.bio.length} / 400 文字
                 </p>
               </div>
@@ -848,7 +849,7 @@ function ProfileSetupContent() {
           {/* ステップ 4: ポートフォリオ（クリエイターのみ） */}
           {step === 4 && isCreator && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <h2 style={{ color: '#f0eff8', fontSize: '18px', fontWeight: '700', margin: 0 }}>
+              <h2 style={{ color: 'var(--c-text)', fontSize: '18px', fontWeight: '700', margin: 0 }}>
                 ポートフォリオ（最大5件）
               </h2>
               <div style={{
@@ -860,17 +861,17 @@ function ProfileSetupContent() {
                 <p style={{ color: '#f9c74f', fontSize: '13px', fontWeight: '700', margin: '0 0 4px 0' }}>
                   💡 ポートフォリオの登録を強くおすすめします
                 </p>
-                <p style={{ color: '#a9a8c0', fontSize: '13px', lineHeight: '1.6', margin: 0 }}>
+                <p style={{ color: 'var(--c-text-2)', fontSize: '13px', lineHeight: '1.6', margin: 0 }}>
                   実績やサンプルがないと依頼者に実力が伝わりにくく、案件獲得が難しくなります。
                   YouTube・X・pixiv・niconico などの作品URLを登録しておきましょう。
                 </p>
-                <p style={{ color: '#a9a8c0', fontSize: '13px', lineHeight: '1.6', margin: '8px 0 0 0' }}>
+                <p style={{ color: 'var(--c-text-2)', fontSize: '13px', lineHeight: '1.6', margin: '8px 0 0 0' }}>
                   まだ公開作品がない場合は、まず YouTube や pixiv 等にサンプルを投稿してから登録するのがおすすめです。
                 </p>
               </div>
 
               {form.portfolios.map((p, i) => (
-                <div key={i} style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div key={i} style={{ padding: '16px', background: 'var(--c-surface-2)', borderRadius: '12px', border: '1px solid var(--c-border)' }}>
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                     <select
                       value={p.platform}
@@ -911,7 +912,7 @@ function ProfileSetupContent() {
                   />
                   {/* サムネイル表示（YouTube・niconico のみ） */}
                   {fetchingIndex === i && (
-                    <p style={{ color: '#7c7b99', fontSize: '12px', margin: '0 0 8px' }}>
+                    <p style={{ color: 'var(--c-text-3)', fontSize: '12px', margin: '0 0 8px' }}>
                       タイトル・サムネを取得中...
                     </p>
                   )}
@@ -922,7 +923,7 @@ function ProfileSetupContent() {
                         alt="サムネイル"
                         style={{ width: '96px', height: '54px', objectFit: 'cover', borderRadius: '6px', flexShrink: 0 }}
                       />
-                      <span style={{ color: '#a9a8c0', fontSize: '12px' }}>サムネイルを取得しました</span>
+                      <span style={{ color: 'var(--c-text-2)', fontSize: '12px' }}>サムネイルを取得しました</span>
                     </div>
                   )}
                   <input
@@ -947,12 +948,12 @@ function ProfileSetupContent() {
           {/* ステップ 5: 希望条件（クリエイターのみ） */}
           {step === 5 && isCreator && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <h2 style={{ color: '#f0eff8', fontSize: '18px', fontWeight: '700', margin: 0 }}>
+              <h2 style={{ color: 'var(--c-text)', fontSize: '18px', fontWeight: '700', margin: 0 }}>
                 希望条件・受注状況
               </h2>
 
               <div>
-                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '6px' }}>
+                <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '6px' }}>
                   希望単価（目安）
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -964,12 +965,12 @@ function ProfileSetupContent() {
                     min={0}
                     style={{ ...inputStyle, paddingRight: '32px' }}
                   />
-                  <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#7c7b99', fontSize: '13px' }}>円</span>
+                  <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--c-text-3)', fontSize: '13px' }}>円</span>
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '6px' }}>
+                <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '6px' }}>
                   単価の補足
                 </label>
                 <textarea
@@ -982,7 +983,7 @@ function ProfileSetupContent() {
               </div>
 
               <div>
-                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '10px' }}>
+                <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '10px' }}>
                   受注状況
                 </label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -998,8 +999,8 @@ function ProfileSetupContent() {
                       style={{
                         padding: '12px 16px',
                         borderRadius: '12px',
-                        border: form.availability === value ? '2px solid var(--c-accent)' : '1px solid rgba(255,255,255,0.1)',
-                        background: form.availability === value ? 'var(--c-accent-a12)' : 'rgba(255,255,255,0.03)',
+                        border: form.availability === value ? '2px solid var(--c-accent)' : '1px solid var(--c-border-2)',
+                        background: form.availability === value ? 'var(--c-accent-a12)' : 'var(--c-surface-2)',
                         cursor: 'pointer',
                         textAlign: 'left',
                         display: 'flex',
@@ -1009,8 +1010,8 @@ function ProfileSetupContent() {
                       }}
                     >
                       <div>
-                        <div style={{ color: '#f0eff8', fontWeight: '600', fontSize: '14px' }}>{label}</div>
-                        <div style={{ color: '#7c7b99', fontSize: '12px' }}>{desc}</div>
+                        <div style={{ color: 'var(--c-text)', fontWeight: '600', fontSize: '14px' }}>{label}</div>
+                        <div style={{ color: 'var(--c-text-3)', fontSize: '12px' }}>{desc}</div>
                       </div>
                       {form.availability === value && <span style={{ color: 'var(--c-accent)' }}>✓</span>}
                     </button>
@@ -1019,7 +1020,7 @@ function ProfileSetupContent() {
               </div>
 
               <div>
-                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '13px', marginBottom: '6px' }}>
+                <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '13px', marginBottom: '6px' }}>
                   納品にかかる期間（概算で可）
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -1062,9 +1063,9 @@ function ProfileSetupContent() {
                   flex: 1,
                   padding: '14px',
                   borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.15)',
+                  border: '1px solid var(--c-border-2)',
                   background: 'transparent',
-                  color: '#a9a8c0',
+                  color: 'var(--c-text-2)',
                   fontSize: '15px',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -1107,7 +1108,7 @@ function ProfileSetupContent() {
                 type="button"
                 onClick={step === 5 ? handleSubmit : () => setStep((s) => (s + 1) as Step)}
                 disabled={loading}
-                style={{ background: 'none', border: 'none', color: '#7c7b99', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '13px', textDecoration: 'underline' }}
+                style={{ background: 'none', border: 'none', color: 'var(--c-text-3)', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '13px', textDecoration: 'underline' }}
               >
                 {step === 5 ? 'スキップして登録を完了する' : 'スキップ'}
               </button>
@@ -1136,8 +1137,8 @@ const inputStyle: React.CSSProperties = {
   padding: '12px 14px',
   borderRadius: '10px',
   border: '1px solid var(--c-accent-a25)',
-  background: 'rgba(255,255,255,0.05)',
-  color: '#f0eff8',
+  background: 'var(--c-input-bg)',
+  color: 'var(--c-text)',
   fontSize: '15px',
   outline: 'none',
   boxSizing: 'border-box',
@@ -1147,9 +1148,9 @@ const inputStyle: React.CSSProperties = {
 const suggestionStyle: React.CSSProperties = {
   padding: '4px 12px',
   borderRadius: '20px',
-  border: '1px solid rgba(255,255,255,0.1)',
+  border: '1px solid var(--c-border-2)',
   background: 'transparent',
-  color: '#7c7b99',
+  color: 'var(--c-text-3)',
   fontSize: '13px',
   cursor: 'pointer',
 }
@@ -1183,3 +1184,6 @@ export default function ProfileSetupPage() {
     </Suspense>
   )
 }
+
+
+

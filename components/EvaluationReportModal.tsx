@@ -1,7 +1,8 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { VALIDATION } from '@/lib/constants/validation'
+import { CheckCircle2 } from 'lucide-react'
 
 export default function EvaluationReportModal({
   reviewId,
@@ -47,9 +48,9 @@ export default function EvaluationReportModal({
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div style={{
-        background: '#16161f', border: '1px solid rgba(255,255,255,0.1)',
+        background: 'var(--c-surface)', border: '1px solid var(--c-border-2)',
         borderRadius: '20px', padding: '32px', maxWidth: '480px', width: '100%',
-        color: '#f0eff8',
+        color: 'var(--c-text)',
       }}>
         <h2 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 8px' }}>
           評価の報告
@@ -62,11 +63,11 @@ export default function EvaluationReportModal({
               borderRadius: '12px', padding: '16px', marginBottom: '20px',
             }}>
               <p style={{ color: '#4ade80', fontWeight: '700', fontSize: '14px', margin: '0 0 6px' }}>
-                ✅ 報告を受け付けました
+                <CheckCircle2 size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} aria-hidden /> 報告を受け付けました
               </p>
-              <p style={{ color: '#a9a8c0', fontSize: '13px', margin: 0, lineHeight: '1.7' }}>
+              <p style={{ color: 'var(--c-text-2)', fontSize: '13px', margin: 0, lineHeight: '1.7' }}>
                 内容を確認のうえ、対応いたします。<br />
-                <strong style={{ color: '#f0eff8' }}>報告への対応には 1〜2 週間程度かかる場合があります。</strong><br />
+                <strong style={{ color: 'var(--c-text)' }}>報告への対応には 1〜2 週間程度かかる場合があります。</strong><br />
                 ご了承ください。
               </p>
             </div>
@@ -74,7 +75,7 @@ export default function EvaluationReportModal({
               onClick={onClose}
               style={{
                 width: '100%', padding: '12px', borderRadius: '10px', border: 'none',
-                background: 'rgba(255,255,255,0.08)', color: '#f0eff8',
+                background: 'var(--c-surface-3)', color: 'var(--c-text)',
                 fontSize: '14px', fontWeight: '600', cursor: 'pointer',
               }}
             >
@@ -83,13 +84,13 @@ export default function EvaluationReportModal({
           </>
         ) : (
           <>
-            <p style={{ color: '#a9a8c0', fontSize: '13px', margin: '0 0 20px', lineHeight: '1.7' }}>
+            <p style={{ color: 'var(--c-text-2)', fontSize: '13px', margin: '0 0 20px', lineHeight: '1.7' }}>
               不適切な評価・事実と異なる評価についてサイトオーナーに報告できます。<br />
               <strong style={{ color: '#fbbf24' }}>報告への対応には 1〜2 週間程度かかる場合があります。</strong>
             </p>
 
             <form onSubmit={handleSubmit}>
-              <label style={{ display: 'block', color: '#7c7b99', fontSize: '11px', fontWeight: '700', letterSpacing: '0.08em', marginBottom: '8px' }}>
+              <label style={{ display: 'block', color: 'var(--c-text-3)', fontSize: '11px', fontWeight: '700', letterSpacing: '0.08em', marginBottom: '8px' }}>
                 報告理由 <span style={{ color: '#f87171' }}>*</span>
               </label>
               <textarea
@@ -100,12 +101,12 @@ export default function EvaluationReportModal({
                 rows={5}
                 style={{
                   width: '100%', padding: '10px 14px', borderRadius: '10px',
-                  border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(255,255,255,0.05)',
-                  color: '#f0eff8', fontSize: '14px', lineHeight: '1.6', resize: 'vertical',
+                  border: '1px solid var(--c-border)', background: 'var(--c-input-bg)',
+                  color: 'var(--c-text)', fontSize: '14px', lineHeight: '1.6', resize: 'vertical',
                   outline: 'none', boxSizing: 'border-box',
                 }}
               />
-              <p style={{ color: '#5c5b78', fontSize: '12px', margin: '4px 0 16px', textAlign: 'right' }}>
+              <p style={{ color: 'var(--c-text-3)', fontSize: '12px', margin: '4px 0 16px', textAlign: 'right' }}>
                 {reason.length}/{VALIDATION.REPORT_REASON_MAX}
               </p>
 
@@ -125,8 +126,8 @@ export default function EvaluationReportModal({
                   onClick={onClose}
                   style={{
                     flex: 1, padding: '11px', borderRadius: '10px',
-                    border: '1px solid rgba(255,255,255,0.15)', background: 'transparent',
-                    color: '#a9a8c0', fontSize: '14px', cursor: 'pointer',
+                    border: '1px solid var(--c-border-2)', background: 'transparent',
+                    color: 'var(--c-text-2)', fontSize: '14px', cursor: 'pointer',
                   }}
                 >
                   キャンセル
@@ -138,7 +139,7 @@ export default function EvaluationReportModal({
                     flex: 2, padding: '11px', borderRadius: '10px', border: 'none',
                     background: loading || !reason.trim()
                       ? 'rgba(248,113,113,0.3)'
-                      : 'linear-gradient(135deg, #f87171, #ff6b9d)',
+                      : 'rgb(var(--brand-rgb))',
                     color: '#fff', fontSize: '14px', fontWeight: '700',
                     cursor: loading || !reason.trim() ? 'not-allowed' : 'pointer',
                   }}
@@ -153,3 +154,4 @@ export default function EvaluationReportModal({
     </div>
   )
 }
+

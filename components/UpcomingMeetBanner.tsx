@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Video } from 'lucide-react'
 
 interface MeetEvent {
   id:          string
@@ -32,7 +33,7 @@ export default function UpcomingMeetBanner({ calConnected }: Props) {
       background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.3)',
     }}>
       <p style={{ margin: '0 0 10px', fontWeight: '700', fontSize: '14px', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <span>📹</span>
+        <Video size={16} aria-hidden />
         <span>12時間以内に Google Meet の予定があります</span>
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -44,10 +45,10 @@ export default function UpcomingMeetBanner({ calConnected }: Props) {
             <div key={m.id} style={{
               display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap',
             }}>
-              <span style={{ fontSize: '13px', color: '#a9a8c0', flexShrink: 0, minWidth: '40px' }}>
+              <span style={{ fontSize: '13px', color: 'var(--c-text-2)', flexShrink: 0, minWidth: '40px' }}>
                 {timeLabel}
               </span>
-              <span style={{ fontSize: '14px', color: '#f0eff8', flex: 1 }}>
+              <span style={{ fontSize: '14px', color: 'var(--c-text)', flex: 1 }}>
                 {m.title}
               </span>
               <a

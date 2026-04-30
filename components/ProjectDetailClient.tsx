@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
@@ -9,8 +9,8 @@ const PROJECT_STATUSES = Object.values(PROJECT_STATUS) as string[]
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px', borderRadius: '10px',
-  border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(255,255,255,0.05)',
-  color: '#f0eff8', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
+  border: '1px solid var(--c-border)', background: 'var(--c-input-bg)',
+  color: 'var(--c-text)', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
 }
 
 interface Props {
@@ -204,17 +204,17 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '8px' }}>
               <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0 }}>{project_.title}</h1>
               {project_.category && (
-                <span style={{ padding: '3px 12px', borderRadius: '20px', fontSize: '13px', background: 'rgba(199,125,255,0.15)', color: '#c77dff', fontWeight: '600' }}>
+                <span style={{ padding: '3px 12px', borderRadius: '20px', fontSize: '13px', background: 'var(--c-accent-a15)', color: 'rgb(var(--brand-rgb))', fontWeight: '600' }}>
                   {project_.category}
                 </span>
               )}
             </div>
             {project_.description && (
-              <p style={{ color: '#a9a8c0', fontSize: '14px', margin: '0 0 12px', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+              <p style={{ color: 'var(--c-text-2)', fontSize: '14px', margin: '0 0 12px', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
                 {project_.description}
               </p>
             )}
-            <p style={{ color: '#7c7b99', fontSize: '12px', margin: 0 }}>
+            <p style={{ color: 'var(--c-text-3)', fontSize: '12px', margin: 0 }}>
               作成日: {new Date(project_.created_at).toLocaleDateString('ja-JP')}
             </p>
           </div>
@@ -235,7 +235,7 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
             {showStatusMenu && isOwner && (
               <div style={{
                 position: 'absolute', top: '110%', right: 0, zIndex: 100,
-                background: '#1e1e2e', border: '1px solid rgba(199,125,255,0.25)',
+                background: '#1e1e2e', border: '1px solid var(--c-border)',
                 borderRadius: '12px', padding: '6px', minWidth: '160px',
                 boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
               }}>
@@ -246,7 +246,7 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
                       style={{
                         display: 'block', width: '100%', textAlign: 'left',
                         padding: '8px 12px', borderRadius: '8px', border: 'none',
-                        background: project_.status === s ? 'rgba(199,125,255,0.15)' : 'transparent',
+                        background: project_.status === s ? 'var(--c-accent-a15)' : 'transparent',
                         color: m.color, fontSize: '13px', cursor: 'pointer',
                       }}>
                       {m.label}
@@ -265,17 +265,17 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
           <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0 }}>メンバー構成</h2>
           {isOwner && !editingRoles && (
             <button onClick={startEditRoles}
-              style={{ padding: '6px 16px', borderRadius: '10px', border: '1px solid rgba(199,125,255,0.35)', background: 'transparent', color: '#c77dff', fontSize: '13px', cursor: 'pointer' }}>
+              style={{ padding: '6px 16px', borderRadius: '10px', border: '1px solid var(--c-border-2)', background: 'transparent', color: 'rgb(var(--brand-rgb))', fontSize: '13px', cursor: 'pointer' }}>
               役職を編集
             </button>
           )}
         </div>
 
         {editingRoles ? (
-          <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(199,125,255,0.2)', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', padding: '20px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
               {rolesDraft.map((r, i) => (
-                <div key={r.id} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${r.is_owner_role ? 'rgba(199,125,255,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius: '12px', padding: '14px' }}>
+                <div key={r.id} style={{ background: 'var(--c-surface-2)', border: `1px solid ${r.is_owner_role ? 'var(--c-border-2)' : 'var(--c-border)'}`, borderRadius: '12px', padding: '14px' }}>
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
                     <input value={r.role_name} onChange={(e) => updateRoleDraft(i, 'role_name', e.target.value)}
                       placeholder="役職名" maxLength={40} style={{ ...inputStyle, flex: 1 }} />
@@ -287,7 +287,7 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
                   <input value={r.description ?? ''} onChange={(e) => updateRoleDraft(i, 'description', e.target.value)}
                     placeholder="役割の詳細（任意）" maxLength={100}
                     style={{ ...inputStyle, fontSize: '13px', marginBottom: '8px' }} />
-                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', color: r.is_owner_role ? '#c77dff' : '#a9a8c0' }}>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', color: r.is_owner_role ? 'rgb(var(--brand-rgb))' : 'var(--c-text-2)' }}>
                     <input type="checkbox" checked={r.is_owner_role}
                       onChange={(e) => {
                         setRolesDraft((prev) => prev.map((role, j) => ({
@@ -295,7 +295,7 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
                           is_owner_role: j === i ? e.target.checked : e.target.checked ? false : role.is_owner_role,
                         })))
                       }}
-                      style={{ accentColor: '#c77dff' }} />
+                      style={{ accentColor: 'rgb(var(--brand-rgb))' }} />
                     主催（自分の役職）
                   </label>
                 </div>
@@ -303,18 +303,18 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
             </div>
             {rolesDraft.length < 20 && (
               <button onClick={addRoleDraft}
-                style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px dashed rgba(199,125,255,0.3)', background: 'transparent', color: '#c77dff', fontSize: '13px', cursor: 'pointer', marginBottom: '12px' }}>
+                style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px dashed var(--c-border-2)', background: 'transparent', color: 'rgb(var(--brand-rgb))', fontSize: '13px', cursor: 'pointer', marginBottom: '12px' }}>
                 ＋ 役職を追加
               </button>
             )}
             {rolesError && <p style={{ color: '#ff6b9d', fontSize: '13px', margin: '0 0 12px' }}>{rolesError}</p>}
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setEditingRoles(false)}
-                style={{ padding: '8px 18px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#a9a8c0', fontSize: '13px', cursor: 'pointer' }}>
+                style={{ padding: '8px 18px', borderRadius: '10px', border: '1px solid var(--c-border-2)', background: 'transparent', color: 'var(--c-text-2)', fontSize: '13px', cursor: 'pointer' }}>
                 キャンセル
               </button>
               <button onClick={saveRoles} disabled={rolesSaving}
-                style={{ padding: '8px 20px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: rolesSaving ? 'not-allowed' : 'pointer', opacity: rolesSaving ? 0.7 : 1 }}>
+                style={{ padding: '8px 20px', borderRadius: '10px', border: 'none', background: 'rgb(var(--brand-rgb))', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: rolesSaving ? 'not-allowed' : 'pointer', opacity: rolesSaving ? 0.7 : 1 }}>
                 {rolesSaving ? '保存中...' : '保存'}
               </button>
             </div>
@@ -323,34 +323,34 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
             {roles.map((r) => (
               <div key={r.id} style={{
-                background: 'rgba(22,22,31,0.9)',
-                border: `1px solid ${r.is_owner_role ? 'rgba(199,125,255,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                background: 'var(--c-surface)',
+                border: `1px solid ${r.is_owner_role ? 'rgba(30,64,255,0.3)' : 'var(--c-surface-3)'}`,
                 borderRadius: '14px', padding: '16px',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontWeight: '700', fontSize: '15px' }}>{r.role_name}</span>
                   {r.is_owner_role && (
-                    <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: 'rgba(199,125,255,0.15)', color: '#c77dff', fontWeight: '600' }}>主催</span>
+                    <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: 'var(--c-accent-a15)', color: 'rgb(var(--brand-rgb))', fontWeight: '600' }}>主催</span>
                   )}
                 </div>
                 {r.description && (
-                  <p style={{ color: '#a9a8c0', fontSize: '12px', margin: '0 0 10px', lineHeight: '1.5' }}>{r.description}</p>
+                  <p style={{ color: 'var(--c-text-2)', fontSize: '12px', margin: '0 0 10px', lineHeight: '1.5' }}>{r.description}</p>
                 )}
                 {r.assigned_user_id ? (
                   <Link href={`/profile/${r.assigned_user_id}`} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
                     {r.assigned_avatar_url ? (
                       <img src={r.assigned_avatar_url} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
                     ) : (
-                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#fff', fontWeight: '700' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgb(var(--brand-rgb))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#fff', fontWeight: '700' }}>
                         {(r.assigned_user_name ?? '?')[0]}
                       </div>
                     )}
-                    <span style={{ color: '#f0eff8', fontSize: '13px', fontWeight: '600' }}>{r.assigned_user_name ?? 'ユーザー'}</span>
+                    <span style={{ color: 'var(--c-text)', fontSize: '13px', fontWeight: '600' }}>{r.assigned_user_name ?? 'ユーザー'}</span>
                   </Link>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: '2px dashed rgba(199,125,255,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', color: '#c77dff' }}>+</div>
-                    <Link href="/search" style={{ color: '#c77dff', fontSize: '12px', textDecoration: 'none' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: '2px dashed var(--c-border-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', color: 'rgb(var(--brand-rgb))' }}>+</div>
+                    <Link href="/search" style={{ color: 'rgb(var(--brand-rgb))', fontSize: '12px', textDecoration: 'none' }}>
                       メンバーを探す
                     </Link>
                   </div>
@@ -365,13 +365,13 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
       {totalTasks > 0 && (
         <div style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '14px', color: '#a9a8c0' }}>進捗</span>
+            <span style={{ fontSize: '14px', color: 'var(--c-text-2)' }}>進捗</span>
             <span style={{ fontSize: '14px', fontWeight: '700', color: '#4ade80' }}>{donePct}%</span>
           </div>
-          <div style={{ height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+          <div style={{ height: '8px', borderRadius: '4px', background: 'var(--c-surface-3)', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${donePct}%`, background: 'linear-gradient(90deg, #4ade80, #22d3ee)', borderRadius: '4px', transition: 'width 0.4s ease' }} />
           </div>
-          <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '12px', color: '#7c7b99' }}>
+          <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '12px', color: 'var(--c-text-3)' }}>
             <span>未着手: {todoTasks.length}</span>
             <span>進行中: {inProgressTasks.length}</span>
             <span>完了: {doneTasks.length}</span>
@@ -385,14 +385,14 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
           <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0 }}>タスク</h2>
           {isOwner && !editingTasks && (
             <button onClick={startEditTasks}
-              style={{ padding: '6px 16px', borderRadius: '10px', border: '1px solid rgba(199,125,255,0.35)', background: 'transparent', color: '#c77dff', fontSize: '13px', cursor: 'pointer' }}>
+              style={{ padding: '6px 16px', borderRadius: '10px', border: '1px solid var(--c-border-2)', background: 'transparent', color: 'rgb(var(--brand-rgb))', fontSize: '13px', cursor: 'pointer' }}>
               タスクを編集
             </button>
           )}
         </div>
 
         {editingTasks ? (
-          <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(199,125,255,0.2)', borderRadius: '16px', padding: '20px' }}>
+          <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', padding: '20px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
               {tasksDraft.map((t, i) => (
                 <div key={t.id} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -426,28 +426,28 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
             </div>
             {tasksDraft.length < 50 && (
               <button onClick={addTaskDraft}
-                style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px dashed rgba(199,125,255,0.3)', background: 'transparent', color: '#c77dff', fontSize: '13px', cursor: 'pointer', marginBottom: '12px' }}>
+                style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px dashed var(--c-border-2)', background: 'transparent', color: 'rgb(var(--brand-rgb))', fontSize: '13px', cursor: 'pointer', marginBottom: '12px' }}>
                 ＋ タスクを追加
               </button>
             )}
             {tasksError && <p style={{ color: '#ff6b9d', fontSize: '13px', margin: '0 0 12px' }}>{tasksError}</p>}
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setEditingTasks(false)}
-                style={{ padding: '8px 18px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#a9a8c0', fontSize: '13px', cursor: 'pointer' }}>
+                style={{ padding: '8px 18px', borderRadius: '10px', border: '1px solid var(--c-border-2)', background: 'transparent', color: 'var(--c-text-2)', fontSize: '13px', cursor: 'pointer' }}>
                 キャンセル
               </button>
               <button onClick={saveTasks} disabled={tasksSaving}
-                style={{ padding: '8px 20px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: tasksSaving ? 'not-allowed' : 'pointer', opacity: tasksSaving ? 0.7 : 1 }}>
+                style={{ padding: '8px 20px', borderRadius: '10px', border: 'none', background: 'rgb(var(--brand-rgb))', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: tasksSaving ? 'not-allowed' : 'pointer', opacity: tasksSaving ? 0.7 : 1 }}>
                 {tasksSaving ? '保存中...' : '保存'}
               </button>
             </div>
           </div>
         ) : tasks.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 24px', background: 'rgba(22,22,31,0.8)', borderRadius: '16px', border: '1px dashed rgba(199,125,255,0.2)' }}>
-            <p style={{ color: '#7c7b99', fontSize: '14px', margin: '0 0 16px' }}>タスクがまだありません</p>
+          <div style={{ textAlign: 'center', padding: '48px 24px', background: 'var(--c-surface)', borderRadius: '16px', border: '1px dashed var(--c-border)' }}>
+            <p style={{ color: 'var(--c-text-3)', fontSize: '14px', margin: '0 0 16px' }}>タスクがまだありません</p>
             {isOwner && (
               <button onClick={startEditTasks}
-                style={{ padding: '10px 24px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>
+                style={{ padding: '10px 24px', borderRadius: '12px', border: 'none', background: 'rgb(var(--brand-rgb))', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>
                 タスクを追加する
               </button>
             )}
@@ -458,11 +458,11 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
               const colTasks = tasks.filter((t) => t.status === col)
               const colMeta = TASK_STATUS_MAP[col]
               return (
-                <div key={col} style={{ background: 'rgba(22,22,31,0.7)', borderRadius: '14px', padding: '14px', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div key={col} style={{ background: 'var(--c-surface-2)', borderRadius: '14px', padding: '14px', border: '1px solid var(--c-border)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                     <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: colMeta.color, flexShrink: 0 }} />
                     <span style={{ fontSize: '13px', fontWeight: '700', color: colMeta.color }}>{colMeta.label}</span>
-                    <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#7c7b99' }}>{colTasks.length}</span>
+                    <span style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--c-text-3)' }}>{colTasks.length}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {colTasks.map((t) => {
@@ -471,21 +471,21 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
                         <div key={t.id}
                           onClick={() => isOwner && toggleTaskStatus(t.id, t.status)}
                           style={{
-                            background: 'rgba(255,255,255,0.04)', borderRadius: '10px', padding: '10px 12px',
+                            background: 'var(--c-surface-2)', borderRadius: '10px', padding: '10px 12px',
                             cursor: isOwner ? 'pointer' : 'default',
-                            border: '1px solid rgba(255,255,255,0.06)',
+                            border: '1px solid var(--c-border)',
                             transition: 'border-color 0.15s',
                           }}
-                          onMouseEnter={(e) => { if (isOwner) (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(199,125,255,0.25)' }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,0.06)' }}
+                          onMouseEnter={(e) => { if (isOwner) (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--c-border-2)' }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--c-border)' }}
                         >
                           <p style={{ fontSize: '13px', fontWeight: '600', margin: '0 0 4px', lineHeight: '1.4' }}>{t.title}</p>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                             {assignedRole && (
-                              <span style={{ fontSize: '11px', color: '#a9a8c0' }}>{assignedRole.role_name}</span>
+                              <span style={{ fontSize: '11px', color: 'var(--c-text-2)' }}>{assignedRole.role_name}</span>
                             )}
                             {t.due_date && (
-                              <span style={{ fontSize: '11px', color: '#7c7b99' }}>
+                              <span style={{ fontSize: '11px', color: 'var(--c-text-3)' }}>
                                 {new Date(t.due_date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}
                               </span>
                             )}
@@ -511,3 +511,4 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
     </div>
   )
 }
+

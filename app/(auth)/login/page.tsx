@@ -3,12 +3,12 @@
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { Card } from '@/components/ui/Card'
 import { Field } from '@/components/ui/Field'
 import { Button } from '@/components/ui/Button'
 
-const inputCls = 'w-full h-11 px-3.5 rounded-input border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[15px] outline-none focus:border-brand transition'
+const inputCls = 'w-full h-11 px-3.5 rounded-[8px] border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[15px] outline-none focus:border-brand transition'
 
 function GoogleLogo() {
   return (
@@ -27,10 +27,11 @@ function LoginContent() {
   const nextPath = searchParams.get('next') ?? '/dashboard'
   const errorParam = searchParams.get('error')
 
-  const [email,    setEmail]    = useState('')
-  const [password, setPassword] = useState('')
-  const [loading,  setLoading]  = useState(false)
-  const [error,    setError]    = useState<string | null>(
+  const [email,        setEmail]        = useState('')
+  const [password,     setPassword]     = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState<string | null>(
     errorParam === 'auth_callback_failed' ? '認証に失敗しました。再度お試しください。' : null
   )
 
@@ -57,56 +58,71 @@ function LoginContent() {
   }
 
   return (
-    <div>
-      <div className="text-center mb-8">
-        <h1 className="text-[32px] font-bold text-brand leading-none">Cralia</h1>
-        <p className="text-[14px] text-[var(--c-text-3)] mt-1.5">クリエイターマッチングプラットフォーム</p>
+    <>
+      <h1 className="text-[22px] font-bold text-center mb-1">ログイン</h1>
+      <p className="text-[13px] text-center text-[var(--c-text-3)] mb-7">アカウントにアクセス</p>
+
+      <button
+        type="button" onClick={handleGoogleLogin} disabled={loading}
+        className="w-full flex items-center justify-center gap-2.5 h-11 px-4 rounded-[8px] border border-[var(--c-border-3)] bg-white text-[14px] font-semibold text-[#3c4043] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-5"
+      >
+        <GoogleLogo /> Googleでログイン
+      </button>
+
+      <div className="flex items-center gap-3 mb-5">
+        <div className="flex-1 h-px bg-[var(--c-border-2)]" />
+        <span className="text-[13px] text-[var(--c-text-3)]">または</span>
+        <div className="flex-1 h-px bg-[var(--c-border-2)]" />
       </div>
 
-      <Card padded bordered>
-        <h2 className="text-[20px] font-bold text-center mb-6">ログイン</h2>
+      <form onSubmit={handleEmailLogin} className="flex flex-col gap-4">
+        <Field label="メールアドレス" htmlFor="email" required>
+          <input
+            id="email" type="email" value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required placeholder="your@email.com"
+            className={inputCls}
+          />
+        </Field>
 
-        <button
-          type="button" onClick={handleGoogleLogin} disabled={loading}
-          className="w-full flex items-center justify-center gap-2.5 h-11 px-4 rounded-[8px] border border-[var(--c-border-3)] bg-white text-[14px] font-semibold text-[#3c4043] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-5"
-        >
-          <GoogleLogo /> Googleでログイン
-        </button>
+        <Field label="パスワード" htmlFor="password" required>
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="••••••••"
+              className={`${inputCls} pr-11`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              aria-label={showPassword ? 'パスワードを隠す' : 'パスワードを表示'}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--c-text-3)] hover:text-brand transition-colors"
+            >
+              {showPassword ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
+            </button>
+          </div>
+        </Field>
 
-        <div className="flex items-center gap-3 mb-5">
-          <div className="flex-1 h-px bg-[var(--c-border-2)]" />
-          <span className="text-[13px] text-[var(--c-text-3)]">または</span>
-          <div className="flex-1 h-px bg-[var(--c-border-2)]" />
-        </div>
+        {error && (
+          <p className="text-[13px] text-[#dc2626] bg-[#dc2626]/8 border border-[#dc2626]/25 rounded-[8px] px-3.5 py-2.5 m-0">
+            {error}
+          </p>
+        )}
 
-        <form onSubmit={handleEmailLogin} className="flex flex-col gap-4">
-          <Field label="メールアドレス" htmlFor="email" required>
-            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              required placeholder="your@email.com" className={inputCls} />
-          </Field>
+        <Button type="submit" variant="primary" size="lg" loading={loading} className="w-full mt-1">
+          ログイン
+        </Button>
+      </form>
 
-          <Field label="パスワード" htmlFor="password" required>
-            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              required placeholder="••••••••" className={inputCls} />
-          </Field>
-
-          {error && (
-            <p className="text-[13px] text-[#dc2626] bg-[#dc2626]/8 border border-[#dc2626]/25 rounded-[8px] px-3.5 py-2.5 m-0">
-              {error}
-            </p>
-          )}
-
-          <Button type="submit" variant="primary" size="lg" loading={loading} className="w-full mt-1">
-            ログイン
-          </Button>
-        </form>
-
-        <p className="text-center mt-5 text-[14px] text-[var(--c-text-3)]">
-          アカウントをお持ちでない方は{' '}
-          <Link href="/signup" className="text-brand font-semibold no-underline hover:underline">新規登録</Link>
-        </p>
-      </Card>
-    </div>
+      <p className="text-[13px] text-center text-[var(--c-text-3)] mt-6">
+        アカウントをお持ちでない方は{' '}
+        <Link href="/signup" className="text-brand font-semibold no-underline hover:underline">新規登録</Link>
+      </p>
+    </>
   )
 }
 

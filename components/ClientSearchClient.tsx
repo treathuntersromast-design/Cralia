@@ -245,7 +245,7 @@ function ClientCard({ client: c }: { client: Client }) {
       <div className="flex items-center gap-3">
         <div className="w-[52px] h-[52px] rounded-full shrink-0 overflow-hidden bg-brand flex items-center justify-center text-[20px] font-bold text-white">
           {c.avatar_url
-            ? <img src={c.avatar_url} alt={c.display_name} className="w-full h-full object-cover" />
+            ? <img src={c.avatar_url} alt={`${c.display_name ?? '依頼者'} のプロフィール画像`} className="w-full h-full object-cover" />
             : initial}
         </div>
         <div className="flex-1 overflow-hidden">

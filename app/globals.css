@@ -13,15 +13,15 @@ html[data-theme="light"] {
   --brand-soft:     #dbeafe;
 
   /* Backgrounds */
-  --c-bg:          #38bdf8;         /* Sky 400 */
+  --c-bg:          #7dd3fc;         /* Sky 300 */
   --c-surface:     #ffffff;
   --c-surface-2:   #ffffff;
   --c-surface-3:   #dbeafe;
   --c-surface-r:   #1e40ff;
 
   /* Borders */
-  --c-border:      #bfdbfe;
-  --c-border-2:    #93c5fd;
+  --c-border:      #93c5fd;
+  --c-border-2:    #60a5fa;
   --c-border-3:    #60a5fa;
 
   /* Text */

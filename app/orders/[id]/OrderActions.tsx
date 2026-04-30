@@ -1,7 +1,8 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { AlertTriangle, Lightbulb } from 'lucide-react'
 
 interface DeadlineCheck {
   feasible:     boolean
@@ -20,35 +21,35 @@ function getActions(status: string, isClient: boolean, isCreator: boolean): Acti
 
   if (status === 'pending') {
     if (isCreator) {
-      actions.push({ label: '✅ 依頼を承認する',   nextStatus: 'accepted',  style: 'primary' })
-      actions.push({ label: '❌ 依頼を辞退する',   nextStatus: 'cancelled', style: 'danger'  })
+      actions.push({ label: '依頼を承認する',   nextStatus: 'accepted',  style: 'primary' })
+      actions.push({ label: '依頼を辞退する',   nextStatus: 'cancelled', style: 'danger'  })
     }
     if (isClient) {
-      actions.push({ label: '🚫 依頼を取り消す',   nextStatus: 'cancelled', style: 'danger'  })
+      actions.push({ label: '依頼を取り消す',   nextStatus: 'cancelled', style: 'danger'  })
     }
   }
 
   if (status === 'accepted') {
     if (isCreator) {
-      actions.push({ label: '▶️ 制作を開始する',   nextStatus: 'in_progress', style: 'primary' })
+      actions.push({ label: '制作を開始する',   nextStatus: 'in_progress', style: 'primary' })
     }
-    actions.push({ label: '🚫 キャンセルする',     nextStatus: 'cancelled',   style: 'danger'  })
+    actions.push({ label: 'キャンセルする',     nextStatus: 'cancelled',   style: 'danger'  })
   }
 
   if (status === 'in_progress') {
     if (isCreator) {
-      actions.push({ label: '📦 納品する',         nextStatus: 'delivered',   style: 'primary' })
+      actions.push({ label: '納品する',         nextStatus: 'delivered',   style: 'primary' })
     }
-    actions.push({ label: '🚫 キャンセルする',     nextStatus: 'cancelled',   style: 'danger'  })
+    actions.push({ label: 'キャンセルする',     nextStatus: 'cancelled',   style: 'danger'  })
   }
 
   if (status === 'delivered') {
     if (isClient) {
-      actions.push({ label: '🎉 完了にする',       nextStatus: 'completed',   style: 'primary' })
-      actions.push({ label: '⚠️ 異議を申し立てる', nextStatus: 'disputed',    style: 'danger'  })
+      actions.push({ label: '完了にする',       nextStatus: 'completed',   style: 'primary' })
+      actions.push({ label: '異議を申し立てる', nextStatus: 'disputed',    style: 'danger'  })
     }
     if (isCreator) {
-      actions.push({ label: '🔄 修正対応（進行中に戻す）', nextStatus: 'in_progress', style: 'secondary' })
+      actions.push({ label: '修正対応（進行中に戻す）', nextStatus: 'in_progress', style: 'secondary' })
     }
   }
 
@@ -127,13 +128,13 @@ export default function OrderActions({
   const btnStyles: Record<string, React.CSSProperties> = {
     primary: {
       flex: 1, padding: '14px 20px', borderRadius: '12px', border: 'none',
-      background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+      background: 'rgb(var(--brand-rgb))',
       color: '#fff', fontSize: '14px', fontWeight: '700', cursor: 'pointer',
     },
     secondary: {
       flex: 1, padding: '14px 20px', borderRadius: '12px',
-      border: '1px solid rgba(199,125,255,0.3)', background: 'transparent',
-      color: '#c77dff', fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+      border: '1px solid var(--c-border-2)', background: 'transparent',
+      color: 'rgb(var(--brand-rgb))', fontSize: '14px', fontWeight: '600', cursor: 'pointer',
     },
     danger: {
       flex: 1, padding: '14px 20px', borderRadius: '12px',
@@ -143,8 +144,8 @@ export default function OrderActions({
   }
 
   return (
-    <div style={{ background: 'rgba(22,22,31,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '24px' }}>
-      <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', margin: '0 0 16px' }}>アクション</h2>
+    <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', padding: '24px' }}>
+      <h2 style={{ color: 'var(--c-text-3)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', margin: '0 0 16px' }}>アクション</h2>
 
       {/* 納期タイトネスアラート（クリエイター向け） */}
       {deadlineWarning?.warningLevel && (
@@ -156,8 +157,8 @@ export default function OrderActions({
           border: `1px solid ${deadlineWarning.warningLevel === 'danger'
             ? 'rgba(248,113,113,0.35)' : 'rgba(251,191,36,0.35)'}`,
         }}>
-          <span style={{ fontSize: '20px', flexShrink: 0, marginTop: '1px' }}>
-            {deadlineWarning.warningLevel === 'danger' ? '⚠️' : '💡'}
+          <span style={{ flexShrink: 0, marginTop: '1px', color: deadlineWarning.warningLevel === 'danger' ? '#f87171' : '#fbbf24' }}>
+            {deadlineWarning.warningLevel === 'danger' ? <AlertTriangle size={20} aria-hidden /> : <Lightbulb size={20} aria-hidden />}
           </span>
           <div style={{ flex: 1 }}>
             <p style={{
@@ -168,7 +169,7 @@ export default function OrderActions({
                 ? '納期がタイトです — 承認前にご確認ください'
                 : '納期の余裕がやや少ないです — 承認前にご確認ください'}
             </p>
-            <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#a9a8c0', lineHeight: '1.6' }}>
+            <p style={{ margin: '0 0 12px', fontSize: '13px', color: 'var(--c-text-2)', lineHeight: '1.6' }}>
               {deadlineWarning.message}
             </p>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -177,8 +178,8 @@ export default function OrderActions({
                 onClick={() => { setDeadlineWarning(null); setPendingStatus(null) }}
                 style={{
                   padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '600',
-                  border: '1px solid rgba(255,255,255,0.15)', background: 'transparent',
-                  color: '#a9a8c0', cursor: 'pointer',
+                  border: '1px solid var(--c-border-2)', background: 'transparent',
+                  color: 'var(--c-text-2)', cursor: 'pointer',
                 }}
               >
                 キャンセル

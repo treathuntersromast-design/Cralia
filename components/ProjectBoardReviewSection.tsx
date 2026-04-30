@@ -1,9 +1,10 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import EvaluationReportModal from './EvaluationReportModal'
 import { VALIDATION } from '@/lib/constants/validation'
+import { Star, CheckCircle2 } from 'lucide-react'
 
 type Review = {
   id: string
@@ -94,27 +95,27 @@ export default function ProjectBoardReviewSection({
 
   return (
     <>
-      <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '24px', marginTop: '24px' }}>
-        <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 4px' }}>
+      <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', padding: '24px', marginTop: '24px' }}>
+        <h2 style={{ color: 'var(--c-text-3)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 4px' }}>
           メンバー評価
         </h2>
-        <p style={{ color: '#5c5b78', fontSize: '12px', margin: '0 0 20px' }}>
+        <p style={{ color: 'var(--c-text-3)', fontSize: '12px', margin: '0 0 20px' }}>
           プロジェクト完了後の相互評価（評価しない / 全員評価するの二択）
         </p>
 
         {/* 自分への評価一覧 */}
         {myReceivedReviews.length > 0 && (
           <div style={{ marginBottom: '24px' }}>
-            <p style={{ color: '#7c7b99', fontSize: '11px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 10px' }}>
+            <p style={{ color: 'var(--c-text-3)', fontSize: '11px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 10px' }}>
               自分への評価
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {myReceivedReviews.map((r) => (
-                <div key={r.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '14px' }}>
+                <div key={r.id} style={{ background: 'var(--c-surface-2)', border: '1px solid var(--c-border)', borderRadius: '12px', padding: '14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: r.comment ? '8px' : '0', flexWrap: 'wrap', gap: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <StarDisplay rating={r.rating} />
-                      <span style={{ color: '#5c5b78', fontSize: '12px' }}>
+                      <span style={{ color: 'var(--c-text-3)', fontSize: '12px' }}>
                         {new Date(r.created_at).toLocaleDateString('ja-JP')}
                       </span>
                     </div>
@@ -130,7 +131,7 @@ export default function ProjectBoardReviewSection({
                     </button>
                   </div>
                   {r.comment && (
-                    <p style={{ color: '#d0cfea', fontSize: '14px', margin: 0, lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>{r.comment}</p>
+                    <p style={{ color: 'var(--c-text)', fontSize: '14px', margin: 0, lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>{r.comment}</p>
                   )}
                 </div>
               ))}
@@ -141,14 +142,14 @@ export default function ProjectBoardReviewSection({
         {/* 自分が出した評価の確認 */}
         {hasReviewed && (
           <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '12px', padding: '14px' }}>
-            <p style={{ color: '#4ade80', fontWeight: '700', fontSize: '14px', margin: 0 }}>✅ メンバー評価を投稿済みです</p>
+            <p style={{ color: '#4ade80', fontWeight: '700', fontSize: '14px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={16} aria-hidden /> メンバー評価を投稿済みです</p>
           </div>
         )}
 
         {/* 評価フォーム */}
         {canReview && !submitted && (
           <form onSubmit={handleSubmit}>
-            <p style={{ color: '#a9a8c0', fontSize: '13px', fontWeight: '600', margin: '0 0 16px' }}>
+            <p style={{ color: 'var(--c-text-2)', fontSize: '13px', fontWeight: '600', margin: '0 0 16px' }}>
               全メンバーを一括評価（{otherMembers.length}名）
             </p>
 
@@ -157,8 +158,8 @@ export default function ProjectBoardReviewSection({
                 const ev = evals[member.userId]
                 const h  = hoveredMap[member.userId] ?? 0
                 return (
-                  <div key={member.userId} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '16px' }}>
-                    <p style={{ color: '#f0eff8', fontSize: '14px', fontWeight: '700', margin: '0 0 10px' }}>
+                  <div key={member.userId} style={{ background: 'var(--c-surface-2)', border: '1px solid var(--c-border)', borderRadius: '12px', padding: '16px' }}>
+                    <p style={{ color: 'var(--c-text)', fontSize: '14px', fontWeight: '700', margin: '0 0 10px' }}>
                       {member.name}
                     </p>
 
@@ -173,14 +174,14 @@ export default function ProjectBoardReviewSection({
                           onMouseLeave={() => setHoveredMap((prev) => ({ ...prev, [member.userId]: 0 }))}
                           style={{
                             background: 'none', border: 'none', cursor: 'pointer', padding: '2px',
-                            fontSize: '24px', lineHeight: 1,
-                            filter: (h || ev.rating) >= s ? 'none' : 'grayscale(1) opacity(0.3)',
+                            lineHeight: 1, color: '#fbbf24',
+                            opacity: (h || ev.rating) >= s ? 1 : 0.25,
                             transform: h === s ? 'scale(1.15)' : 'scale(1)',
-                            transition: 'transform 0.1s',
+                            transition: 'transform 0.1s, opacity 0.1s',
                           }}
                           aria-label={`${s}星`}
                         >
-                          ⭐
+                          <Star size={24} fill={(h || ev.rating) >= s ? '#fbbf24' : 'none'} aria-hidden />
                         </button>
                       ))}
                       {(h || ev.rating) > 0 && (
@@ -199,12 +200,12 @@ export default function ProjectBoardReviewSection({
                       rows={2}
                       style={{
                         width: '100%', padding: '8px 12px', borderRadius: '8px',
-                        border: '1px solid rgba(199,125,255,0.2)', background: 'rgba(255,255,255,0.04)',
-                        color: '#f0eff8', fontSize: '13px', lineHeight: '1.5', resize: 'vertical',
+                        border: '1px solid var(--c-border)', background: 'var(--c-surface-2)',
+                        color: 'var(--c-text)', fontSize: '13px', lineHeight: '1.5', resize: 'vertical',
                         outline: 'none', boxSizing: 'border-box',
                       }}
                     />
-                    <p style={{ color: '#5c5b78', fontSize: '11px', margin: '3px 0 0', textAlign: 'right' }}>
+                    <p style={{ color: 'var(--c-text-3)', fontSize: '11px', margin: '3px 0 0', textAlign: 'right' }}>
                       {ev.comment.length}/{VALIDATION.REVIEW_COMMENT_MAX}
                     </p>
                   </div>
@@ -224,7 +225,7 @@ export default function ProjectBoardReviewSection({
                 disabled={loading || !allRated}
                 style={{
                   flex: 1, padding: '12px', borderRadius: '10px', border: 'none',
-                  background: loading || !allRated ? 'rgba(199,125,255,0.3)' : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+                  background: loading || !allRated ? 'rgba(30,64,255,0.3)' : 'rgb(var(--brand-rgb))',
                   color: '#fff', fontSize: '14px', fontWeight: '700',
                   cursor: loading || !allRated ? 'not-allowed' : 'pointer',
                 }}
@@ -232,7 +233,7 @@ export default function ProjectBoardReviewSection({
                 {loading ? '投稿中...' : `全員（${otherMembers.length}名）を一括評価する`}
               </button>
             </div>
-            <p style={{ color: '#5c5b78', fontSize: '12px', margin: '8px 0 0' }}>
+            <p style={{ color: 'var(--c-text-3)', fontSize: '12px', margin: '8px 0 0' }}>
               ※ 一部だけの評価は受け付けていません。全員分の星評価を入力してから投稿してください。
             </p>
           </form>
@@ -240,16 +241,16 @@ export default function ProjectBoardReviewSection({
 
         {submitted && (
           <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '12px', padding: '16px' }}>
-            <p style={{ color: '#4ade80', fontWeight: '700', fontSize: '14px', margin: 0 }}>✅ メンバー評価を投稿しました</p>
+            <p style={{ color: '#4ade80', fontWeight: '700', fontSize: '14px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={16} aria-hidden /> メンバー評価を投稿しました</p>
           </div>
         )}
 
         {!isCompleted && (
-          <p style={{ color: '#5c5b78', fontSize: '13px', margin: 0 }}>プロジェクト完了後に評価できます</p>
+          <p style={{ color: 'var(--c-text-3)', fontSize: '13px', margin: 0 }}>プロジェクト完了後に評価できます</p>
         )}
 
         {isCompleted && otherMembers.length === 0 && (
-          <p style={{ color: '#5c5b78', fontSize: '13px', margin: 0 }}>評価できるメンバーがいません</p>
+          <p style={{ color: 'var(--c-text-3)', fontSize: '13px', margin: 0 }}>評価できるメンバーがいません</p>
         )}
       </div>
 
@@ -267,10 +268,11 @@ function StarDisplay({ rating }: { rating: number }) {
   return (
     <div style={{ display: 'flex', gap: '2px' }}>
       {[1, 2, 3, 4, 5].map((s) => (
-        <span key={s} style={{ fontSize: '15px', filter: s <= rating ? 'none' : 'grayscale(1) opacity(0.25)' }}>
-          ⭐
+        <span key={s} style={{ color: '#fbbf24', opacity: s <= rating ? 1 : 0.25 }}>
+          <Star size={15} fill={s <= rating ? '#fbbf24' : 'none'} aria-hidden />
         </span>
       ))}
     </div>
   )
 }
+

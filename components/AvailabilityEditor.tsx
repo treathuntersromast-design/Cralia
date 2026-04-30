@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 
@@ -62,26 +62,26 @@ export default function AvailabilityEditor({ current, isOwner, lastSeen }: Props
                   gap: '10px',
                   padding: '10px 16px',
                   borderRadius: '12px',
-                  border: opt.value === value ? `2px solid ${opt.color}` : '1px solid rgba(255,255,255,0.1)',
-                  background: opt.value === value ? opt.bg : 'rgba(255,255,255,0.03)',
+                  border: opt.value === value ? `2px solid ${opt.color}` : '1px solid var(--c-border-2)',
+                  background: opt.value === value ? opt.bg : 'var(--c-surface-2)',
                   cursor: saving ? 'not-allowed' : 'pointer',
                   textAlign: 'left',
                   opacity: saving ? 0.6 : 1,
                 }}
               >
                 <span style={{ color: opt.color, fontWeight: '700', fontSize: '14px' }}>● {opt.label}</span>
-                <span style={{ color: '#7c7b99', fontSize: '12px' }}>{opt.desc}</span>
+                <span style={{ color: 'var(--c-text-3)', fontSize: '12px' }}>{opt.desc}</span>
                 {opt.value === value && <span style={{ color: opt.color, marginLeft: 'auto' }}>✓</span>}
               </button>
             ))}
             <button
               type="button"
               onClick={() => { setEditing(false); setError(null) }}
-              style={{ background: 'none', border: 'none', color: '#7c7b99', fontSize: '13px', cursor: 'pointer', textAlign: 'left', padding: '4px 0' }}
+              style={{ background: 'none', border: 'none', color: 'var(--c-text-3)', fontSize: '13px', cursor: 'pointer', textAlign: 'left', padding: '4px 0' }}
             >
               キャンセル
             </button>
-            {error && <p style={{ color: '#ff6b9d', fontSize: '12px', margin: 0 }}>{error}</p>}
+            {error && <p style={{ color: '#dc2626', fontSize: '12px', margin: 0 }}>{error}</p>}
           </div>
         ) : (
           <>
@@ -92,16 +92,16 @@ export default function AvailabilityEditor({ current, isOwner, lastSeen }: Props
             }}>
               ● {selected.label}
             </span>
-            <span style={{ color: '#7c7b99', fontSize: '13px' }}>{selected.desc}</span>
+            <span style={{ color: 'var(--c-text-3)', fontSize: '13px' }}>{selected.desc}</span>
             {isOwner && (
               <button
                 type="button"
                 onClick={() => setEditing(true)}
                 style={{
                   padding: '4px 12px', borderRadius: '20px',
-                  border: '1px solid rgba(199,125,255,0.3)',
-                  background: 'rgba(199,125,255,0.08)',
-                  color: '#c77dff', fontSize: '12px', cursor: 'pointer',
+                  border: '1px solid var(--c-border-2)',
+                  background: 'var(--c-accent-a08)',
+                  color: 'rgb(var(--brand-rgb))', fontSize: '12px', cursor: 'pointer',
                 }}
               >
                 変更
@@ -110,9 +110,10 @@ export default function AvailabilityEditor({ current, isOwner, lastSeen }: Props
           </>
         )}
       </div>
-      <span style={{ color: '#7c7b99', fontSize: '12px', flexShrink: 0 }}>
+      <span style={{ color: 'var(--c-text-3)', fontSize: '12px', flexShrink: 0 }}>
         最終ログイン: {lastSeen}
       </span>
     </div>
   )
 }
+

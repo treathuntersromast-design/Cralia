@@ -1,14 +1,17 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { FileEdit } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/Button'
 
 const DRAFT_KEY = 'Cralia_setup_draft'
 
 export default function SetupPromptPage() {
   const router = useRouter()
-  const [ready, setReady] = useState(false)
+  const [ready,    setReady]    = useState(false)
   const [hasDraft, setHasDraft] = useState(false)
 
   useEffect(() => {
@@ -32,93 +35,58 @@ export default function SetupPromptPage() {
   }
 
   if (!ready) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)',
-      }} />
-    )
+    return <div className="min-h-screen c-app-bg-tint" />
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0d0d14 0%, #1a0a2e 50%, #0d0d14 100%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '24px',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-    }}>
-      <div style={{
-        background: 'rgba(22,22,31,0.98)',
-        border: '1px solid rgba(199,125,255,0.3)',
-        borderRadius: '24px',
-        padding: '40px 36px',
-        maxWidth: '420px',
-        width: '100%',
-        boxShadow: '0 8px 40px rgba(199,125,255,0.15)',
-        textAlign: 'center',
-      }}>
-        <h1 style={{
-          fontSize: '28px', fontWeight: '800',
-          color: 'var(--c-accent)',
-          margin: '0 0 28px',
-        }}>
-          Cralia
-        </h1>
-
-        <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
-
-        {hasDraft ? (
-          <>
-            <h2 style={{ color: '#f0eff8', fontSize: '18px', fontWeight: '700', margin: '0 0 12px', lineHeight: '1.5' }}>
-              入力途中の情報があります
-            </h2>
-            <p style={{ color: '#a9a8c0', fontSize: '14px', lineHeight: '1.8', margin: '0 0 32px' }}>
-              セットアップページに入力途中の情報が<br />
-              保存されています。<br />
-              続きから記載しますか？
-            </p>
-          </>
-        ) : (
-          <>
-            <h2 style={{ color: '#f0eff8', fontSize: '18px', fontWeight: '700', margin: '0 0 12px', lineHeight: '1.5' }}>
-              プロフィールの設定が完了していません
-            </h2>
-            <p style={{ color: '#a9a8c0', fontSize: '14px', lineHeight: '1.8', margin: '0 0 32px' }}>
-              Cralia を利用するには<br />
-              プロフィールの設定が必要です。<br />
-              今すぐ設定しますか？
-            </p>
-          </>
-        )}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <button
-            onClick={handleYes}
-            style={{
-              width: '100%', padding: '14px',
-              borderRadius: '12px', border: 'none',
-              background: 'var(--c-grad-primary)',
-              color: '#fff', fontSize: '15px', fontWeight: '700',
-              cursor: 'pointer',
-            }}
-          >
-            {hasDraft ? 'はい、続きから入力する' : 'はい、設定する'}
-          </button>
-          <button
-            onClick={handleNo}
-            style={{
-              width: '100%', padding: '14px',
-              borderRadius: '12px',
-              border: '1px solid rgba(255,255,255,0.12)',
-              background: 'transparent',
-              color: '#a9a8c0', fontSize: '15px', fontWeight: '600',
-              cursor: 'pointer',
-            }}
-          >
-            いいえ、ログインページへ戻る
-          </button>
+    <div className="min-h-screen c-app-bg-tint flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-[420px]">
+        <div className="text-center mb-8">
+          <Link href="/" className="text-2xl font-bold text-brand no-underline">
+            Cralia
+          </Link>
         </div>
+
+        <div className="c-card-float rounded-[20px] p-8 sm:p-10 text-center">
+          <div className="w-14 h-14 rounded-full bg-[var(--brand-soft)] text-[rgb(var(--brand-rgb))] mx-auto mb-5 flex items-center justify-center">
+            <FileEdit size={26} aria-hidden />
+          </div>
+
+          {hasDraft ? (
+            <>
+              <h1 className="text-[20px] font-bold text-[var(--c-text)] mb-2">
+                入力途中の情報があります
+              </h1>
+              <p className="text-[13.5px] text-[var(--c-text-2)] leading-relaxed mb-7">
+                セットアップページに入力途中の情報が保存されています。<br />
+                続きから記入しますか？
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-[20px] font-bold text-[var(--c-text)] mb-2">
+                プロフィールの設定が完了していません
+              </h1>
+              <p className="text-[13.5px] text-[var(--c-text-2)] leading-relaxed mb-7">
+                Cralia を利用するにはプロフィールの設定が必要です。<br />
+                今すぐ設定しますか？
+              </p>
+            </>
+          )}
+
+          <div className="flex flex-col gap-2.5">
+            <Button variant="primary" size="lg" className="w-full" onClick={handleYes}>
+              {hasDraft ? 'はい、続きから入力する' : 'はい、設定する'}
+            </Button>
+            <Button variant="ghost" size="lg" className="w-full" onClick={handleNo}>
+              いいえ、ログインページへ戻る
+            </Button>
+          </div>
+        </div>
+
+        <p className="text-center mt-6 text-[12px] text-[var(--c-text-3)]">
+          &copy; {new Date().getFullYear()} Cralia
+        </p>
       </div>
     </div>
   )

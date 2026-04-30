@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { Sparkles, FileText } from 'lucide-react'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -80,19 +81,19 @@ export default function BioChatModal({ creatorTypes, skills, onApply, onClose }:
     >
       <div style={{
         width: '100%', maxWidth: '540px', maxHeight: '80vh',
-        background: 'linear-gradient(135deg, #13131f, #1a0a2e)',
-        border: '1px solid rgba(199,125,255,0.25)',
+        background: 'var(--c-surface)',
+        border: '1px solid var(--c-border)',
         borderRadius: '20px',
         display: 'flex', flexDirection: 'column',
         overflow: 'hidden',
       }}>
         {/* ヘッダー */}
-        <div style={{ padding: '18px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <p style={{ color: '#f0eff8', fontWeight: '700', fontSize: '15px', margin: 0 }}>✨ AI 自己紹介アシスタント</p>
-            <p style={{ color: '#7c7b99', fontSize: '12px', margin: '2px 0 0' }}>質問に答えると自己紹介文を提案します</p>
+            <p style={{ color: 'var(--c-text)', fontWeight: '700', fontSize: '15px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}><Sparkles size={16} aria-hidden /> AI 自己紹介アシスタント</p>
+            <p style={{ color: 'var(--c-text-3)', fontSize: '12px', margin: '2px 0 0' }}>質問に答えると自己紹介文を提案します</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#7c7b99', cursor: 'pointer', fontSize: '22px', lineHeight: 1 }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--c-text-3)', cursor: 'pointer', fontSize: '22px', lineHeight: 1 }}>×</button>
         </div>
 
         {/* メッセージ一覧 */}
@@ -103,8 +104,8 @@ export default function BioChatModal({ creatorTypes, skills, onApply, onClose }:
                 maxWidth: '85%',
                 padding: '10px 14px',
                 borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                background: m.role === 'user' ? 'linear-gradient(135deg, #ff6b9d, #c77dff)' : 'rgba(255,255,255,0.07)',
-                color: '#f0eff8',
+                background: m.role === 'user' ? 'rgb(var(--brand-rgb))' : 'var(--c-surface-3)',
+                color: 'var(--c-text)',
                 fontSize: '14px',
                 lineHeight: '1.7',
                 whiteSpace: 'pre-wrap',
@@ -117,18 +118,18 @@ export default function BioChatModal({ creatorTypes, skills, onApply, onClose }:
           {/* 提案された自己紹介文 */}
           {proposedBio && (
             <div style={{
-              background: 'rgba(199,125,255,0.08)',
-              border: '1px solid rgba(199,125,255,0.3)',
+              background: 'var(--c-accent-a08)',
+              border: '1px solid var(--c-border-2)',
               borderRadius: '12px',
               padding: '14px',
             }}>
-              <p style={{ color: '#c77dff', fontSize: '12px', fontWeight: '700', margin: '0 0 8px' }}>📝 自己紹介文の案（{proposedBio.length}文字）</p>
-              <p style={{ color: '#f0eff8', fontSize: '14px', lineHeight: '1.8', margin: '0 0 12px', whiteSpace: 'pre-wrap' }}>{proposedBio}</p>
+              <p style={{ color: 'rgb(var(--brand-rgb))', fontSize: '12px', fontWeight: '700', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: '5px' }}><FileText size={13} aria-hidden /> 自己紹介文の案（{proposedBio.length}文字）</p>
+              <p style={{ color: 'var(--c-text)', fontSize: '14px', lineHeight: '1.8', margin: '0 0 12px', whiteSpace: 'pre-wrap' }}>{proposedBio}</p>
               <button
                 onClick={() => { onApply(proposedBio); onClose() }}
                 style={{
                   width: '100%', padding: '10px', borderRadius: '10px', border: 'none',
-                  background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+                  background: 'rgb(var(--brand-rgb))',
                   color: '#fff', fontSize: '14px', fontWeight: '700', cursor: 'pointer',
                 }}
               >
@@ -139,7 +140,7 @@ export default function BioChatModal({ creatorTypes, skills, onApply, onClose }:
 
           {loading && (
             <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-              <div style={{ padding: '10px 16px', borderRadius: '16px 16px 16px 4px', background: 'rgba(255,255,255,0.07)', color: '#7c7b99', fontSize: '14px' }}>
+              <div style={{ padding: '10px 16px', borderRadius: '16px 16px 16px 4px', background: 'var(--c-surface-3)', color: 'var(--c-text-3)', fontSize: '14px' }}>
                 考え中...
               </div>
             </div>
@@ -148,7 +149,7 @@ export default function BioChatModal({ creatorTypes, skills, onApply, onClose }:
         </div>
 
         {/* 入力欄 */}
-        <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: '8px' }}>
+        <div style={{ padding: '12px 16px', borderTop: '1px solid var(--c-border)', display: 'flex', gap: '8px' }}>
           <input
             type="text"
             value={input}
@@ -158,9 +159,9 @@ export default function BioChatModal({ creatorTypes, skills, onApply, onClose }:
             disabled={loading}
             style={{
               flex: 1, padding: '10px 14px',
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: '10px', color: '#f0eff8', fontSize: '14px', outline: 'none',
+              background: 'var(--c-input-bg)',
+              border: '1px solid var(--c-border-2)',
+              borderRadius: '10px', color: 'var(--c-text)', fontSize: '14px', outline: 'none',
             }}
           />
           <button
@@ -168,7 +169,7 @@ export default function BioChatModal({ creatorTypes, skills, onApply, onClose }:
             disabled={!input.trim() || loading}
             style={{
               padding: '10px 16px', borderRadius: '10px', border: 'none',
-              background: !input.trim() || loading ? 'rgba(199,125,255,0.3)' : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+              background: !input.trim() || loading ? 'rgba(30,64,255,0.3)' : 'rgb(var(--brand-rgb))',
               color: '#fff', fontSize: '14px', fontWeight: '700',
               cursor: !input.trim() || loading ? 'not-allowed' : 'pointer',
             }}
@@ -180,3 +181,4 @@ export default function BioChatModal({ creatorTypes, skills, onApply, onClose }:
     </div>
   )
 }
+

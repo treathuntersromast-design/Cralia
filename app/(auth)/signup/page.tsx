@@ -2,13 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { Eye, EyeOff, Mail } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { Card } from '@/components/ui/Card'
 import { Field } from '@/components/ui/Field'
 import { Button } from '@/components/ui/Button'
-import { Mail } from 'lucide-react'
 
-const inputCls = 'w-full h-11 px-3.5 rounded-input border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[15px] outline-none focus:border-brand transition'
+const inputCls = 'w-full h-11 px-3.5 rounded-[8px] border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[15px] outline-none focus:border-brand transition'
 
 function GoogleLogo() {
   return (
@@ -22,12 +21,13 @@ function GoogleLogo() {
 }
 
 export default function SignupPage() {
-  const [email,       setEmail]       = useState('')
-  const [password,    setPassword]    = useState('')
-  const [termsAgreed, setTermsAgreed] = useState(false)
-  const [loading,     setLoading]     = useState(false)
-  const [error,       setError]       = useState<string | null>(null)
-  const [done,        setDone]        = useState(false)
+  const [email,        setEmail]        = useState('')
+  const [password,     setPassword]     = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [termsAgreed,  setTermsAgreed]  = useState(false)
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState<string | null>(null)
+  const [done,         setDone]         = useState(false)
 
   const supabase = createClient()
 
@@ -66,7 +66,7 @@ export default function SignupPage() {
 
   if (done) {
     return (
-      <Card padded bordered className="text-center">
+      <div className="text-center">
         <div className="w-14 h-14 rounded-full bg-brand-soft text-brand flex items-center justify-center mx-auto mb-5">
           <Mail size={24} aria-hidden />
         </div>
@@ -81,71 +81,87 @@ export default function SignupPage() {
         <Link href="/login" className="inline-block mt-6 text-brand text-[14px] font-semibold no-underline hover:underline">
           ← ログインページへ
         </Link>
-      </Card>
+      </div>
     )
   }
 
   return (
-    <div>
-      <div className="text-center mb-8">
-        <h1 className="text-[32px] font-bold text-brand leading-none">Cralia</h1>
-        <p className="text-[14px] text-[var(--c-text-3)] mt-1.5">クリエイターマッチングプラットフォーム</p>
+    <>
+      <h1 className="text-[22px] font-bold text-center mb-1">新規登録</h1>
+      <p className="text-[13px] text-center text-[var(--c-text-3)] mb-7">無料でアカウントを作成</p>
+
+      <button
+        type="button" onClick={handleGoogleSignup} disabled={loading}
+        className="w-full flex items-center justify-center gap-2.5 h-11 px-4 rounded-[8px] border border-[var(--c-border-3)] bg-white text-[14px] font-semibold text-[#3c4043] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-5"
+      >
+        <GoogleLogo /> Googleで登録
+      </button>
+
+      <div className="flex items-center gap-3 mb-5">
+        <div className="flex-1 h-px bg-[var(--c-border-2)]" />
+        <span className="text-[13px] text-[var(--c-text-3)]">または</span>
+        <div className="flex-1 h-px bg-[var(--c-border-2)]" />
       </div>
 
-      <Card padded bordered>
-        <h2 className="text-[20px] font-bold text-center mb-6">新規登録</h2>
+      <form onSubmit={handleEmailSignup} className="flex flex-col gap-4">
+        <Field label="メールアドレス" htmlFor="su-email" required>
+          <input
+            id="su-email" type="email" value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required placeholder="your@email.com"
+            className={inputCls}
+          />
+        </Field>
 
-        <button
-          type="button" onClick={handleGoogleSignup} disabled={loading}
-          className="w-full flex items-center justify-center gap-2.5 h-11 px-4 rounded-[8px] border border-[var(--c-border-3)] bg-white text-[14px] font-semibold text-[#3c4043] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-5"
-        >
-          <GoogleLogo /> Googleで登録
-        </button>
+        <Field label="パスワード（6文字以上）" htmlFor="su-pw" required>
+          <div className="relative">
+            <input
+              id="su-pw"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              placeholder="••••••••"
+              className={`${inputCls} pr-11`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              aria-label={showPassword ? 'パスワードを隠す' : 'パスワードを表示'}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--c-text-3)] hover:text-brand transition-colors"
+            >
+              {showPassword ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
+            </button>
+          </div>
+        </Field>
 
-        <div className="flex items-center gap-3 mb-5">
-          <div className="flex-1 h-px bg-[var(--c-border-2)]" />
-          <span className="text-[13px] text-[var(--c-text-3)]">または</span>
-          <div className="flex-1 h-px bg-[var(--c-border-2)]" />
-        </div>
+        <label className="flex items-start gap-2.5 cursor-pointer">
+          <input type="checkbox" checked={termsAgreed} onChange={(e) => setTermsAgreed(e.target.checked)}
+            className="mt-0.5 shrink-0 accent-brand w-4 h-4" />
+          <span className="text-[13px] text-[var(--c-text-2)] leading-relaxed">
+            <Link href="/terms" target="_blank" className="text-brand font-semibold no-underline hover:underline">利用規約</Link>
+            {' '}および{' '}
+            <Link href="/privacy" target="_blank" className="text-brand font-semibold no-underline hover:underline">プライバシーポリシー</Link>
+            に同意します（18歳未満の方は保護者の同意が必要です）
+          </span>
+        </label>
 
-        <form onSubmit={handleEmailSignup} className="flex flex-col gap-4">
-          <Field label="メールアドレス" htmlFor="su-email" required>
-            <input id="su-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              required placeholder="your@email.com" className={inputCls} />
-          </Field>
+        {error && (
+          <p className="text-[13px] text-[#dc2626] bg-[#dc2626]/8 border border-[#dc2626]/25 rounded-[8px] px-3.5 py-2.5 m-0">
+            {error}
+          </p>
+        )}
 
-          <Field label="パスワード（6文字以上）" htmlFor="su-pw" required>
-            <input id="su-pw" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              required minLength={6} placeholder="••••••••" className={inputCls} />
-          </Field>
+        <Button type="submit" variant="primary" size="lg" loading={loading} disabled={!termsAgreed} className="w-full mt-1">
+          登録する
+        </Button>
+      </form>
 
-          <label className="flex items-start gap-2.5 cursor-pointer">
-            <input type="checkbox" checked={termsAgreed} onChange={(e) => setTermsAgreed(e.target.checked)}
-              className="mt-0.5 shrink-0 accent-brand w-4 h-4" />
-            <span className="text-[13px] text-[var(--c-text-2)] leading-relaxed">
-              <Link href="/terms" target="_blank" className="text-brand font-semibold no-underline hover:underline">利用規約</Link>
-              {' '}および{' '}
-              <Link href="/privacy" target="_blank" className="text-brand font-semibold no-underline hover:underline">プライバシーポリシー</Link>
-              に同意します（18歳未満の方は保護者の同意が必要です）
-            </span>
-          </label>
-
-          {error && (
-            <p className="text-[13px] text-[#dc2626] bg-[#dc2626]/8 border border-[#dc2626]/25 rounded-[8px] px-3.5 py-2.5 m-0">
-              {error}
-            </p>
-          )}
-
-          <Button type="submit" variant="primary" size="lg" loading={loading} disabled={!termsAgreed} className="w-full mt-1">
-            登録する
-          </Button>
-        </form>
-
-        <p className="text-center mt-5 text-[14px] text-[var(--c-text-3)]">
-          すでにアカウントをお持ちの方は{' '}
-          <Link href="/login" className="text-brand font-semibold no-underline hover:underline">ログイン</Link>
-        </p>
-      </Card>
-    </div>
+      <p className="text-[13px] text-center text-[var(--c-text-3)] mt-6">
+        すでにアカウントをお持ちの方は{' '}
+        <Link href="/login" className="text-brand font-semibold no-underline hover:underline">ログイン</Link>
+      </p>
+    </>
   )
 }

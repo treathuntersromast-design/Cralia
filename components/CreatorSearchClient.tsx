@@ -404,7 +404,7 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
                 <img
                   key={i}
                   src={thumb}
-                  alt=""
+                  alt={`${c.display_name ?? 'クリエイター'} のポートフォリオ ${i + 1}`}
                   className="w-full aspect-video object-cover block"
                 />
               ))
@@ -421,7 +421,7 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
           <div className="flex items-center gap-2.5">
             <div className="w-11 h-11 rounded-full shrink-0 overflow-hidden bg-brand flex items-center justify-center text-[17px] font-bold text-white">
               {c.avatar_url
-                ? <img src={c.avatar_url} alt={c.display_name} className="w-full h-full object-cover" />
+                ? <img src={c.avatar_url} alt={`${c.display_name ?? 'クリエイター'} のプロフィール画像`} className="w-full h-full object-cover" />
                 : initial}
             </div>
             <div className="overflow-hidden flex-1">

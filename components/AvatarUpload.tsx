@@ -55,7 +55,7 @@ export default function AvatarUpload({ currentUrl, displayName, size = 80, onUpl
           height: size,
           borderRadius: '50%',
           overflow: 'hidden',
-          background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+          background: 'rgb(var(--brand-rgb))',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -63,7 +63,7 @@ export default function AvatarUpload({ currentUrl, displayName, size = 80, onUpl
           fontWeight: '700',
           color: '#fff',
           cursor: readonly ? 'default' : 'pointer',
-          border: readonly ? 'none' : '2px solid rgba(199,125,255,0.4)',
+          border: readonly ? 'none' : '2px solid var(--c-accent-a40)',
           flexShrink: 0,
           position: 'relative',
         }}
@@ -71,7 +71,7 @@ export default function AvatarUpload({ currentUrl, displayName, size = 80, onUpl
         {preview ? (
           <img
             src={preview}
-            alt={displayName}
+            alt={displayName ? `${displayName} のプロフィール画像` : 'プロフィール画像'}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         ) : (
@@ -94,7 +94,7 @@ export default function AvatarUpload({ currentUrl, displayName, size = 80, onUpl
           >
             {uploading
               ? <span style={{ color: '#fff', fontSize: '12px' }}>...</span>
-              : <span style={{ color: '#fff', fontSize: '20px' }}>📷</span>
+              : <span style={{ color: '#fff', fontSize: '20px' }}>＋</span>
             }
           </div>
         )}
@@ -108,7 +108,7 @@ export default function AvatarUpload({ currentUrl, displayName, size = 80, onUpl
           style={{
             background: 'none',
             border: 'none',
-            color: uploading ? '#7c7b99' : '#c77dff',
+            color: uploading ? 'var(--c-text-3)' : 'rgb(var(--brand-rgb))',
             fontSize: '12px',
             cursor: uploading ? 'not-allowed' : 'pointer',
             textDecoration: 'underline',
@@ -120,7 +120,7 @@ export default function AvatarUpload({ currentUrl, displayName, size = 80, onUpl
       )}
 
       {error && (
-        <p style={{ color: '#ff6b9d', fontSize: '12px', margin: 0, textAlign: 'center' }}>{error}</p>
+        <p style={{ color: '#dc2626', fontSize: '12px', margin: 0, textAlign: 'center' }}>{error}</p>
       )}
 
       <input

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -71,8 +71,8 @@ export default function EditOrderModal({
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '12px 14px', borderRadius: '10px',
-    border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(255,255,255,0.05)',
-    color: '#f0eff8', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
+    border: '1px solid var(--c-border)', background: 'var(--c-input-bg)',
+    color: 'var(--c-text)', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
   }
 
   return (
@@ -83,8 +83,8 @@ export default function EditOrderModal({
         style={{
           display: 'flex', alignItems: 'center', gap: '6px',
           width: '100%', padding: '14px 20px', borderRadius: '12px', marginBottom: '12px',
-          border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(199,125,255,0.06)',
-          color: '#c77dff', fontSize: '14px', fontWeight: '600', cursor: 'pointer', justifyContent: 'center',
+          border: '1px solid var(--c-border)', background: 'var(--c-accent-a06)',
+          color: 'rgb(var(--brand-rgb))', fontSize: '14px', fontWeight: '600', cursor: 'pointer', justifyContent: 'center',
         }}
       >
         ✏️ 依頼内容を編集する
@@ -99,7 +99,7 @@ export default function EditOrderModal({
           onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}
         >
           <div style={{
-            background: '#16161f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px',
+            background: 'var(--c-surface)', border: '1px solid var(--c-border-2)', borderRadius: '20px',
             padding: '32px', width: '100%', maxWidth: '560px', maxHeight: '90vh', overflowY: 'auto',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -107,7 +107,7 @@ export default function EditOrderModal({
               <button
                 type="button"
                 onClick={handleClose}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#7c7b99', fontSize: '20px', lineHeight: 1 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-text-3)', fontSize: '20px', lineHeight: 1 }}
                 aria-label="閉じる"
               >
                 ×
@@ -117,7 +117,7 @@ export default function EditOrderModal({
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               {/* タイトル */}
               <div>
-                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '12px', fontWeight: '600', marginBottom: '8px' }}>
+                <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '12px', fontWeight: '600', marginBottom: '8px' }}>
                   依頼タイトル <span style={{ color: '#f87171' }}>*</span>
                 </label>
                 <input
@@ -127,12 +127,12 @@ export default function EditOrderModal({
                   required
                   style={inputStyle}
                 />
-                <p style={{ color: '#5c5b78', fontSize: '12px', margin: '4px 0 0', textAlign: 'right' }}>{title.length}/100</p>
+                <p style={{ color: 'var(--c-text-3)', fontSize: '12px', margin: '4px 0 0', textAlign: 'right' }}>{title.length}/100</p>
               </div>
 
               {/* 依頼内容 */}
               <div>
-                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '12px', fontWeight: '600', marginBottom: '8px' }}>
+                <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '12px', fontWeight: '600', marginBottom: '8px' }}>
                   依頼内容
                 </label>
                 <textarea
@@ -142,16 +142,16 @@ export default function EditOrderModal({
                   rows={8}
                   style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6' }}
                 />
-                <p style={{ color: '#5c5b78', fontSize: '12px', margin: '4px 0 0', textAlign: 'right' }}>{description.length}/2000</p>
+                <p style={{ color: 'var(--c-text-3)', fontSize: '12px', margin: '4px 0 0', textAlign: 'right' }}>{description.length}/2000</p>
               </div>
 
               {/* 予算 */}
               <div>
-                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '12px', fontWeight: '600', marginBottom: '8px' }}>
+                <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '12px', fontWeight: '600', marginBottom: '8px' }}>
                   予算（任意）
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#7c7b99', fontSize: '14px' }}>¥</span>
+                  <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--c-text-3)', fontSize: '14px' }}>¥</span>
                   <input
                     type="number"
                     value={budget}
@@ -164,7 +164,7 @@ export default function EditOrderModal({
 
               {/* 納期 */}
               <div>
-                <label style={{ display: 'block', color: '#a9a8c0', fontSize: '12px', fontWeight: '600', marginBottom: '8px' }}>
+                <label style={{ display: 'block', color: 'var(--c-text-2)', fontSize: '12px', fontWeight: '600', marginBottom: '8px' }}>
                   希望納期（任意）
                 </label>
                 <input
@@ -186,14 +186,14 @@ export default function EditOrderModal({
                 <button
                   type="button"
                   onClick={handleClose}
-                  style={{ flex: 1, padding: '13px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#a9a8c0', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
+                  style={{ flex: 1, padding: '13px', borderRadius: '10px', border: '1px solid var(--c-border-2)', background: 'transparent', color: 'var(--c-text-2)', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
                 >
                   キャンセル
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  style={{ flex: 2, padding: '13px', borderRadius: '10px', border: 'none', background: loading ? 'rgba(199,125,255,0.4)' : 'linear-gradient(135deg, #ff6b9d, #c77dff)', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer' }}
+                  style={{ flex: 2, padding: '13px', borderRadius: '10px', border: 'none', background: loading ? 'rgba(30,64,255,0.4)' : 'rgb(var(--brand-rgb))', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer' }}
                 >
                   {loading ? '更新中...' : '更新する'}
                 </button>

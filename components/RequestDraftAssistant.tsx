@@ -1,6 +1,7 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { Sparkles, PenLine, Search, Info } from 'lucide-react'
 
 interface Message {
   role:    'user' | 'assistant'
@@ -145,8 +146,8 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
       }}>
         <div>
-          <p style={{ margin: 0, fontWeight: '800', fontSize: '16px', color: 'var(--c-text)' }}>
-            ✨ AI 依頼文アシスタント
+          <p style={{ margin: 0, fontWeight: '800', fontSize: '16px', color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Sparkles size={16} aria-hidden /> AI 依頼文アシスタント
           </p>
           <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--c-text-3)' }}>
             依頼先：{creatorName} さん
@@ -177,13 +178,13 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
               onClick={() => startSession('create')}
               style={{
                 padding: '18px', borderRadius: '14px', textAlign: 'left',
-                border: '1px solid rgba(199,125,255,0.3)',
-                background: 'rgba(199,125,255,0.06)',
+                border: '1px solid var(--c-border-2)',
+                background: 'var(--c-accent-a06)',
                 cursor: 'pointer',
               }}
             >
-              <p style={{ margin: '0 0 4px', fontWeight: '800', fontSize: '15px', color: '#c77dff' }}>
-                ✍️ 一から作成する
+              <p style={{ margin: '0 0 4px', fontWeight: '800', fontSize: '15px', color: 'rgb(var(--brand-rgb))', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <PenLine size={15} aria-hidden /> 一から作成する
               </p>
               <p style={{ margin: 0, fontSize: '13px', color: 'var(--c-text-3)', lineHeight: '1.6' }}>
                 概要・用途を伝えながら、AIと一緒に依頼文を作ります
@@ -196,14 +197,14 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
               disabled={!existingDraft.trim()}
               style={{
                 padding: '18px', borderRadius: '14px', textAlign: 'left',
-                border: `1px solid ${existingDraft.trim() ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.08)'}`,
-                background: existingDraft.trim() ? 'rgba(251,191,36,0.06)' : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${existingDraft.trim() ? 'rgba(251,191,36,0.3)' : 'var(--c-surface-3)'}`,
+                background: existingDraft.trim() ? 'rgba(251,191,36,0.06)' : 'var(--c-surface-2)',
                 cursor: existingDraft.trim() ? 'pointer' : 'not-allowed',
                 opacity: existingDraft.trim() ? 1 : 0.5,
               }}
             >
-              <p style={{ margin: '0 0 4px', fontWeight: '800', fontSize: '15px', color: existingDraft.trim() ? '#fbbf24' : '#5c5b78' }}>
-                🔍 既存の依頼文を添削する
+              <p style={{ margin: '0 0 4px', fontWeight: '800', fontSize: '15px', color: existingDraft.trim() ? '#fbbf24' : 'var(--c-text-3)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Search size={15} aria-hidden /> 既存の依頼文を添削する
               </p>
               <p style={{ margin: 0, fontSize: '13px', color: 'var(--c-text-3)', lineHeight: '1.6' }}>
                 {existingDraft.trim()
@@ -217,9 +218,9 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
             padding: '12px 14px', borderRadius: '10px',
             background: 'var(--c-input-bg-2)', border: '1px solid var(--c-border)',
           }}>
-            <p style={{ margin: 0, fontSize: '12px', color: 'var(--c-text-4)', lineHeight: '1.7' }}>
-              📌 AIは概要・用途が含まれているか確認します。<br />
-              外部SNSや連絡先への誘導は原則禁止です（双方の合意がある場合を除く）。
+            <p style={{ margin: 0, fontSize: '12px', color: 'var(--c-text-4)', lineHeight: '1.7', display: 'flex', alignItems: 'flex-start', gap: '5px' }}>
+              <Info size={13} style={{ flexShrink: 0, marginTop: '2px' }} aria-hidden /> <span>AIは概要・用途が含まれているか確認します。<br />
+              外部SNSや連絡先への誘導は原則禁止です（双方の合意がある場合を除く）。</span>
             </p>
           </div>
         </div>
@@ -232,8 +233,8 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
             borderBottom: '1px solid var(--c-border)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
           }}>
-            <span style={{ fontSize: '12px', color: 'var(--c-text-3)' }}>
-              {mode === 'create' ? '✍️ 作成モード' : '🔍 添削モード'}
+            <span style={{ fontSize: '12px', color: 'var(--c-text-3)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              {mode === 'create' ? <><PenLine size={12} aria-hidden /> 作成モード</> : <><Search size={12} aria-hidden /> 添削モード</>}
             </span>
             <button
               type="button"
@@ -258,8 +259,8 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
                 <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: '8px' }}>
                   <div style={{
                     maxWidth: '85%', padding: '10px 14px', borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                    background: isUser ? 'rgba(199,125,255,0.2)' : 'rgba(255,255,255,0.06)',
-                    border: `1px solid ${isUser ? 'rgba(199,125,255,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                    background: isUser ? 'var(--c-accent-a20)' : 'rgba(255,255,255,0.06)',
+                    border: `1px solid ${isUser ? 'rgba(30,64,255,0.3)' : 'var(--c-surface-3)'}`,
                     fontSize: '13px', color: 'var(--c-text)', lineHeight: '1.7', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                   }}>
                     {displayText || (isUser ? '' : '...')}
@@ -268,12 +269,12 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
                   {inlineDraft && (
                     <div style={{
                       maxWidth: '90%', padding: '14px 16px', borderRadius: '14px',
-                      background: 'rgba(199,125,255,0.08)', border: '1px solid rgba(199,125,255,0.25)',
+                      background: 'var(--c-accent-a08)', border: '1px solid var(--c-border)',
                     }}>
-                      <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: '700', color: '#c77dff', letterSpacing: '0.06em' }}>
+                      <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: '700', color: 'rgb(var(--brand-rgb))', letterSpacing: '0.06em' }}>
                         依頼文（案）
                       </p>
-                      <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#d0cfea', lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                      <p style={{ margin: '0 0 12px', fontSize: '13px', color: 'var(--c-text)', lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                         {inlineDraft}
                       </p>
                       <button
@@ -281,7 +282,7 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
                         onClick={() => handleApplyDraft(inlineDraft)}
                         style={{
                           ...btnBase,
-                          background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+                          background: 'rgb(var(--brand-rgb))',
                           color: '#fff', fontSize: '13px', padding: '8px 16px',
                         }}
                       >
@@ -297,7 +298,7 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
               <div style={{ display: 'flex', alignItems: 'flex-start' }}>
                 <div style={{
                   padding: '10px 14px', borderRadius: '16px 16px 16px 4px',
-                  background: 'rgba(255,255,255,0.06)', border: '1px solid var(--c-border)',
+                  background: 'var(--c-input-bg)', border: '1px solid var(--c-border)',
                   fontSize: '13px', color: 'var(--c-text-3)',
                 }}>
                   考え中...
@@ -315,17 +316,17 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
           {/* 最新の依頼文案がある場合、下部に固定表示 */}
           {latestDraft && (
             <div style={{
-              padding: '10px 16px', borderTop: '1px solid rgba(199,125,255,0.2)',
-              background: 'rgba(199,125,255,0.05)', flexShrink: 0,
+              padding: '10px 16px', borderTop: '1px solid var(--c-border)',
+              background: 'var(--c-accent-a06)', flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
             }}>
-              <p style={{ margin: 0, fontSize: '12px', color: '#c77dff' }}>✨ 依頼文の案があります</p>
+              <p style={{ margin: 0, fontSize: '12px', color: 'rgb(var(--brand-rgb))', display: 'flex', alignItems: 'center', gap: '4px' }}><Sparkles size={13} aria-hidden /> 依頼文の案があります</p>
               <button
                 type="button"
                 onClick={() => handleApplyDraft(latestDraft)}
                 style={{
                   ...btnBase,
-                  background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+                  background: 'rgb(var(--brand-rgb))',
                   color: '#fff', fontSize: '12px', padding: '7px 14px', flexShrink: 0,
                 }}
               >
@@ -350,7 +351,7 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
               disabled={loading}
               style={{
                 flex: 1, padding: '10px 12px', borderRadius: '10px', resize: 'none',
-                border: '1px solid rgba(199,125,255,0.25)', background: 'var(--c-input-bg)',
+                border: '1px solid var(--c-border)', background: 'var(--c-input-bg)',
                 color: 'var(--c-text)', fontSize: '14px', outline: 'none', lineHeight: '1.5',
               }}
             />
@@ -362,8 +363,8 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
                 ...btnBase,
                 alignSelf: 'flex-end',
                 background: loading || !input.trim()
-                  ? 'rgba(199,125,255,0.2)'
-                  : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+                  ? 'var(--c-accent-a20)'
+                  : 'rgb(var(--brand-rgb))',
                 color: '#fff', padding: '10px 16px',
                 cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
               }}
@@ -400,12 +401,12 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
           width: '100%', padding: '13px', borderRadius: '12px', fontSize: '14px',
           fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center',
           justifyContent: 'center', gap: '8px',
-          border: '1px solid rgba(199,125,255,0.35)',
-          background: 'rgba(199,125,255,0.08)',
-          color: '#c77dff',
+          border: '1px solid var(--c-border-2)',
+          background: 'var(--c-accent-a08)',
+          color: 'rgb(var(--brand-rgb))',
         }}
       >
-        ✨ AIで依頼文を作成・添削する
+        <Sparkles size={15} aria-hidden /> AIで依頼文を作成・添削する
       </button>
 
       {open && (
@@ -431,3 +432,4 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
     </>
   )
 }
+

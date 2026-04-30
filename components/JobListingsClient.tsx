@@ -1,8 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { CREATOR_TYPES } from '@/lib/constants/lists'
+import { CheckCircle2 } from 'lucide-react'
 
 interface JobListing {
   id: string
@@ -28,11 +29,11 @@ interface Props {
   postedSuccess: boolean
 }
 
-const filterBtnStyle = (active: boolean, color = '#c77dff'): React.CSSProperties => ({
+const filterBtnStyle = (active: boolean, color = 'rgb(var(--brand-rgb))'): React.CSSProperties => ({
   padding: '6px 16px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer',
-  border: active ? `2px solid ${color}` : '1px solid rgba(255,255,255,0.12)',
-  background: active ? `rgba(${color === '#c77dff' ? '199,125,255' : '74,222,128'},0.12)` : 'rgba(255,255,255,0.04)',
-  color: active ? color : '#a9a8c0',
+  border: active ? `2px solid ${color}` : '1px solid var(--c-border-2)',
+  background: active ? 'var(--c-accent-a12)' : 'var(--c-surface-2)',
+  color: active ? color : 'var(--c-text-2)',
   fontWeight: active ? '700' : '400',
 })
 
@@ -71,7 +72,7 @@ export default function JobListingsClient({ listings, currentUserId, postedSucce
           borderRadius: '14px', padding: '14px 20px', marginBottom: '28px',
           display: 'flex', alignItems: 'center', gap: '10px',
         }}>
-          <span style={{ fontSize: '18px' }}>✅</span>
+          <CheckCircle2 size={18} color="#4ade80" aria-hidden />
           <p style={{ margin: 0, fontSize: '14px', color: '#4ade80' }}>案件を投稿しました。クリエイターからの連絡をお待ちください。</p>
         </div>
       )}
@@ -80,7 +81,7 @@ export default function JobListingsClient({ listings, currentUserId, postedSucce
       <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ fontSize: '28px', fontWeight: '800', margin: '0 0 6px' }}>案件を探す</h1>
-          <p style={{ color: '#7c7b99', fontSize: '14px', margin: 0 }}>
+          <p style={{ color: 'var(--c-text-3)', fontSize: '14px', margin: 0 }}>
             {filtered.length} 件の案件が見つかりました
           </p>
         </div>
@@ -89,7 +90,7 @@ export default function JobListingsClient({ listings, currentUserId, postedSucce
           style={{
             display: 'inline-flex', alignItems: 'center', gap: '6px',
             padding: '10px 22px', borderRadius: '14px',
-            background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+            background: 'rgb(var(--brand-rgb))',
             color: '#fff', fontSize: '14px', fontWeight: '700', textDecoration: 'none', whiteSpace: 'nowrap',
           }}
         >
@@ -99,13 +100,13 @@ export default function JobListingsClient({ listings, currentUserId, postedSucce
 
       {/* フィルター */}
       <div style={{
-        background: 'rgba(22,22,31,0.8)', border: '1px solid rgba(199,125,255,0.12)',
+        background: 'var(--c-surface)', border: '1px solid var(--c-border)',
         borderRadius: '16px', padding: '20px 24px', marginBottom: '32px',
         display: 'flex', flexDirection: 'column', gap: '16px',
       }}>
         {/* クリエイタータイプ */}
         <div>
-          <p style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', margin: '0 0 10px' }}>
+          <p style={{ color: 'var(--c-text-3)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', margin: '0 0 10px' }}>
             クリエイタータイプ
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -121,7 +122,7 @@ export default function JobListingsClient({ listings, currentUserId, postedSucce
         </div>
         {/* 報酬 */}
         <div>
-          <p style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', margin: '0 0 10px' }}>
+          <p style={{ color: 'var(--c-text-3)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.06em', margin: '0 0 10px' }}>
             報酬
           </p>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -136,10 +137,10 @@ export default function JobListingsClient({ listings, currentUserId, postedSucce
 
       {/* 案件一覧 */}
       {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 0', color: '#7c7b99' }}>
+        <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--c-text-3)' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
           <p style={{ fontSize: '16px', margin: '0 0 8px' }}>条件に一致する案件がありませんでした</p>
-          <p style={{ fontSize: '13px', color: '#5c5b78' }}>フィルターを変えてみてください</p>
+          <p style={{ fontSize: '13px', color: 'var(--c-text-3)' }}>フィルターを変えてみてください</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -153,7 +154,7 @@ export default function JobListingsClient({ listings, currentUserId, postedSucce
               <div
                 key={job.id}
                 style={{
-                  background: 'rgba(22,22,31,0.9)', border: `1px solid ${isOwn ? 'rgba(199,125,255,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                  background: 'var(--c-surface)', border: `1px solid ${isOwn ? 'rgba(30,64,255,0.3)' : 'var(--c-border)'}`,
                   borderRadius: '18px', padding: '22px 24px', cursor: 'pointer',
                   transition: 'border-color 0.15s',
                 }}
@@ -164,7 +165,7 @@ export default function JobListingsClient({ listings, currentUserId, postedSucce
                   {/* アバター */}
                   <div style={{
                     width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0,
-                    background: job.users?.avatar_url ? 'transparent' : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+                    background: job.users?.avatar_url ? 'transparent' : 'rgb(var(--brand-rgb))',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
                   }}>
                     {job.users?.avatar_url
@@ -179,17 +180,17 @@ export default function JobListingsClient({ listings, currentUserId, postedSucce
                         {job.title}
                       </p>
                       {isOwn && (
-                        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '20px', background: 'rgba(199,125,255,0.15)', color: '#c77dff', fontWeight: '700', flexShrink: 0 }}>
+                        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '20px', background: 'var(--c-accent-a15)', color: 'rgb(var(--brand-rgb))', fontWeight: '700', flexShrink: 0 }}>
                           自分の投稿
                         </span>
                       )}
                     </div>
-                    <p style={{ color: '#7c7b99', fontSize: '12px', margin: 0 }}>
+                    <p style={{ color: 'var(--c-text-3)', fontSize: '12px', margin: 0 }}>
                       {job.users?.display_name ?? '名前なし'} · {new Date(job.created_at).toLocaleDateString('ja-JP')}
                     </p>
                   </div>
 
-                  <span style={{ color: '#5c5b78', fontSize: '14px', flexShrink: 0, alignSelf: 'center' }}>
+                  <span style={{ color: 'var(--c-text-3)', fontSize: '14px', flexShrink: 0, alignSelf: 'center' }}>
                     {expanded ? '▲' : '▼'}
                   </span>
                 </div>
@@ -199,13 +200,13 @@ export default function JobListingsClient({ listings, currentUserId, postedSucce
                   <span style={{
                     padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700',
                     background: job.order_type === 'paid' ? 'rgba(74,222,128,0.12)' : 'rgba(169,168,192,0.1)',
-                    color: job.order_type === 'paid' ? '#4ade80' : '#a9a8c0',
+                    color: job.order_type === 'paid' ? '#4ade80' : 'var(--c-text-2)',
                     border: `1px solid ${job.order_type === 'paid' ? 'rgba(74,222,128,0.25)' : 'rgba(169,168,192,0.2)'}`,
                   }}>
                     {job.order_type === 'paid' ? '有償' : '無償'}
                   </span>
                   {job.creator_types.map((t) => (
-                    <span key={t} style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', background: 'rgba(199,125,255,0.1)', color: '#c77dff', border: '1px solid rgba(199,125,255,0.2)' }}>
+                    <span key={t} style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', background: 'var(--c-accent-a12)', color: 'rgb(var(--brand-rgb))', border: '1px solid var(--c-border)' }}>
                       {t}
                     </span>
                   ))}
@@ -229,7 +230,7 @@ export default function JobListingsClient({ listings, currentUserId, postedSucce
                         {job.description}
                       </p>
                     ) : (
-                      <p style={{ color: '#5c5b78', fontSize: '13px', margin: '0 0 16px' }}>詳細説明なし</p>
+                      <p style={{ color: 'var(--c-text-3)', fontSize: '13px', margin: '0 0 16px' }}>詳細説明なし</p>
                     )}
 
                     {!isOwn && (
@@ -239,7 +240,7 @@ export default function JobListingsClient({ listings, currentUserId, postedSucce
                         style={{
                           display: 'inline-flex', alignItems: 'center', gap: '6px',
                           padding: '10px 22px', borderRadius: '12px',
-                          background: 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+                          background: 'rgb(var(--brand-rgb))',
                           color: '#fff', fontSize: '14px', fontWeight: '700', textDecoration: 'none',
                         }}
                       >
@@ -248,7 +249,7 @@ export default function JobListingsClient({ listings, currentUserId, postedSucce
                     )}
                     {isOwn && (
                       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '13px', color: '#7c7b99', alignSelf: 'center' }}>自分が投稿した案件です</span>
+                        <span style={{ fontSize: '13px', color: 'var(--c-text-3)', alignSelf: 'center' }}>自分が投稿した案件です</span>
                         <CloseButton jobId={job.id} />
                       </div>
                     )}
@@ -291,7 +292,7 @@ function CloseButton({ jobId }: { jobId: string }) {
       type="button" onClick={handleClose} disabled={closing}
       style={{
         padding: '8px 18px', borderRadius: '10px', border: '1px solid rgba(255,107,157,0.3)',
-        background: 'rgba(255,107,157,0.08)', color: '#ff6b9d',
+        background: 'rgba(255,107,157,0.08)', color: 'rgb(var(--brand-rgb))',
         fontSize: '13px', cursor: closing ? 'not-allowed' : 'pointer', fontWeight: '600',
       }}
     >

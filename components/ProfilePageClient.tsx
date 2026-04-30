@@ -528,7 +528,7 @@ export default function ProfilePageClient(props: Props) {
                     className="text-brand/70 hover:text-brand leading-none"
                     aria-label={`${s}を削除`}
                   >
-                    <X size={12} />
+                    <X size={12} aria-hidden="true" />
                   </button>
                 </span>
               ))}
@@ -663,7 +663,7 @@ export default function ProfilePageClient(props: Props) {
                     className="p-2 text-[#dc2626] hover:bg-[#fef2f2] rounded-[6px] transition-colors"
                     aria-label="削除"
                   >
-                    <X size={16} />
+                    <X size={16} aria-hidden="true" />
                   </button>
                 </div>
                 <input
@@ -683,7 +683,7 @@ export default function ProfilePageClient(props: Props) {
                 )}
                 {p.thumbnail_url && fetchingIdx !== i && (
                   <div className="flex items-center gap-2.5 mb-2">
-                    <img src={p.thumbnail_url} alt="" className="w-20 h-[45px] object-cover rounded-[4px]" />
+                    <img src={p.thumbnail_url} alt={`${p.title || p.platform} のサムネイル`} className="w-20 h-[45px] object-cover rounded-[4px]" />
                     <span className="text-[12px] text-[var(--c-text-3)]">サムネイル取得済み</span>
                   </div>
                 )}
@@ -727,7 +727,7 @@ export default function ProfilePageClient(props: Props) {
                   aria-label={`${p.title || p.platform}を開く`}
                 >
                   {p.thumbnail_url ? (
-                    <img src={p.thumbnail_url} alt={p.title || p.platform} className="w-full aspect-video object-cover" />
+                    <img src={p.thumbnail_url} alt={`${displayName ?? 'クリエイター'} の作品 ${i + 1}`} className="w-full aspect-video object-cover" />
                   ) : (
                     <div className="w-full aspect-video bg-brand-soft flex items-center justify-center">
                       <ExternalLink size={28} className="text-brand/40" aria-hidden="true" />
@@ -819,7 +819,7 @@ export default function ProfilePageClient(props: Props) {
                     className="p-2 text-[#dc2626] hover:bg-[#fef2f2] rounded-[6px] transition-colors"
                     aria-label="削除"
                   >
-                    <X size={16} />
+                    <X size={16} aria-hidden="true" />
                   </button>
                 </div>
               )

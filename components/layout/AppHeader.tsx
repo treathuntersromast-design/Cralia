@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Icon } from '@/components/ui/Icon'
 import LogoutButton from '@/components/LogoutButton'
 import ThemeToggle from '@/components/ThemeToggle'
+import { MobileMenu } from './MobileMenu'
 
 interface AppHeaderProps {
   unreadNotifications?: number
@@ -22,6 +23,7 @@ export function AppHeader({ unreadNotifications = 0, unreadMessages = 0 }: AppHe
         </Link>
 
         <div className="flex items-center gap-1">
+          {/* 通知・メッセージは常時表示 */}
           <Link href="/notifications" className="relative">
             <Button variant="ghost" size="sm" className="min-w-0 px-2.5" aria-label="通知">
               <Icon name="Bell" size={18} aria-hidden />
@@ -48,14 +50,19 @@ export function AppHeader({ unreadNotifications = 0, unreadMessages = 0 }: AppHe
             )}
           </Link>
 
-          <Link href="/settings">
-            <Button variant="ghost" size="sm" className="min-w-0 px-2.5" aria-label="設定">
-              <Icon name="Settings" size={18} aria-hidden />
-            </Button>
-          </Link>
+          {/* PC 専用 */}
+          <div className="hidden md:flex items-center gap-1">
+            <Link href="/settings">
+              <Button variant="ghost" size="sm" className="min-w-0 px-2.5" aria-label="設定">
+                <Icon name="Settings" size={18} aria-hidden />
+              </Button>
+            </Link>
+            <ThemeToggle />
+            <LogoutButton />
+          </div>
 
-          <ThemeToggle />
-          <LogoutButton />
+          {/* モバイル専用 */}
+          <MobileMenu isLoggedIn />
         </div>
       </Container>
     </header>

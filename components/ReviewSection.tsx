@@ -1,9 +1,10 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import EvaluationReportModal from './EvaluationReportModal'
 import { VALIDATION } from '@/lib/constants/validation'
+import { Star, CheckCircle2 } from 'lucide-react'
 
 type Review = {
   id: string
@@ -86,8 +87,8 @@ export default function ReviewSection({
 
   return (
     <>
-      <div style={{ background: 'rgba(22,22,31,0.9)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '24px', marginTop: '24px' }}>
-        <h2 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 20px' }}>評価</h2>
+      <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '16px', padding: '24px', marginTop: '24px' }}>
+        <h2 style={{ color: 'var(--c-text-3)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: '0 0 20px' }}>評価</h2>
 
         {/* 既存評価一覧 */}
         {reviews.length > 0 && (
@@ -98,14 +99,14 @@ export default function ReviewSection({
                               : 'メンバーからの評価'
               const isMyReview = r.reviewee_id === currentUserId
               return (
-                <div key={r.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '16px' }}>
+                <div key={r.id} style={{ background: 'var(--c-surface-2)', border: '1px solid var(--c-border)', borderRadius: '12px', padding: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <StarDisplay rating={r.rating} />
-                      <span style={{ color: '#7c7b99', fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <span style={{ color: 'var(--c-text-3)', fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '20px', background: 'var(--c-input-bg)', border: '1px solid var(--c-border)' }}>
                         {typeLabel}
                       </span>
-                      <span style={{ color: '#5c5b78', fontSize: '12px' }}>
+                      <span style={{ color: 'var(--c-text-3)', fontSize: '12px' }}>
                         {new Date(r.created_at).toLocaleDateString('ja-JP')}
                       </span>
                     </div>
@@ -123,7 +124,7 @@ export default function ReviewSection({
                     )}
                   </div>
                   {r.comment && (
-                    <p style={{ color: '#d0cfea', fontSize: '14px', margin: 0, lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>{r.comment}</p>
+                    <p style={{ color: 'var(--c-text)', fontSize: '14px', margin: 0, lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>{r.comment}</p>
                   )}
                 </div>
               )
@@ -132,13 +133,13 @@ export default function ReviewSection({
         )}
 
         {reviews.length === 0 && !canReview && (
-          <p style={{ color: '#5c5b78', fontSize: '14px', margin: 0 }}>まだ評価はありません</p>
+          <p style={{ color: 'var(--c-text-3)', fontSize: '14px', margin: 0 }}>まだ評価はありません</p>
         )}
 
         {/* 評価投稿フォーム */}
         {canReview && !submitted && (
           <form onSubmit={handleSubmit}>
-            <p style={{ color: '#a9a8c0', fontSize: '13px', fontWeight: '600', margin: '0 0 12px' }}>{reviewLabel}</p>
+            <p style={{ color: 'var(--c-text-2)', fontSize: '13px', fontWeight: '600', margin: '0 0 12px' }}>{reviewLabel}</p>
 
             {/* 星評価 */}
             <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
@@ -151,14 +152,14 @@ export default function ReviewSection({
                   onMouseLeave={() => setHovered(0)}
                   style={{
                     background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
-                    fontSize: '28px', lineHeight: 1,
-                    filter: (hovered || rating) >= s ? 'none' : 'grayscale(1) opacity(0.3)',
+                    lineHeight: 1, color: '#fbbf24',
+                    opacity: (hovered || rating) >= s ? 1 : 0.25,
                     transform: hovered === s ? 'scale(1.15)' : 'scale(1)',
-                    transition: 'transform 0.1s',
+                    transition: 'transform 0.1s, opacity 0.1s',
                   }}
                   aria-label={`${s}星`}
                 >
-                  ⭐
+                  <Star size={28} fill={(hovered || rating) >= s ? '#fbbf24' : 'none'} aria-hidden />
                 </button>
               ))}
               {(hovered || rating) > 0 && (
@@ -177,12 +178,12 @@ export default function ReviewSection({
               rows={4}
               style={{
                 width: '100%', padding: '10px 14px', borderRadius: '10px',
-                border: '1px solid rgba(199,125,255,0.25)', background: 'rgba(255,255,255,0.05)',
-                color: '#f0eff8', fontSize: '14px', lineHeight: '1.6', resize: 'vertical',
+                border: '1px solid var(--c-border)', background: 'var(--c-input-bg)',
+                color: 'var(--c-text)', fontSize: '14px', lineHeight: '1.6', resize: 'vertical',
                 outline: 'none', boxSizing: 'border-box',
               }}
             />
-            <p style={{ color: '#5c5b78', fontSize: '12px', margin: '4px 0 12px', textAlign: 'right' }}>{comment.length}/{VALIDATION.REVIEW_COMMENT_MAX}</p>
+            <p style={{ color: 'var(--c-text-3)', fontSize: '12px', margin: '4px 0 12px', textAlign: 'right' }}>{comment.length}/{VALIDATION.REVIEW_COMMENT_MAX}</p>
 
             {error && (
               <p style={{ color: '#f87171', fontSize: '13px', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px' }}>
@@ -195,7 +196,7 @@ export default function ReviewSection({
               disabled={loading || rating === 0}
               style={{
                 padding: '12px 28px', borderRadius: '10px', border: 'none',
-                background: loading || rating === 0 ? 'rgba(199,125,255,0.3)' : 'linear-gradient(135deg, #ff6b9d, #c77dff)',
+                background: loading || rating === 0 ? 'rgba(30,64,255,0.3)' : 'rgb(var(--brand-rgb))',
                 color: '#fff', fontSize: '14px', fontWeight: '700',
                 cursor: loading || rating === 0 ? 'not-allowed' : 'pointer',
               }}
@@ -207,7 +208,7 @@ export default function ReviewSection({
 
         {submitted && (
           <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '12px', padding: '16px' }}>
-            <p style={{ color: '#4ade80', fontWeight: '700', fontSize: '14px', margin: 0 }}>✅ 評価を投稿しました</p>
+            <p style={{ color: '#4ade80', fontWeight: '700', fontSize: '14px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={16} aria-hidden /> 評価を投稿しました</p>
           </div>
         )}
       </div>
@@ -227,10 +228,11 @@ function StarDisplay({ rating }: { rating: number }) {
   return (
     <div style={{ display: 'flex', gap: '2px' }}>
       {[1, 2, 3, 4, 5].map((s) => (
-        <span key={s} style={{ fontSize: '16px', filter: s <= rating ? 'none' : 'grayscale(1) opacity(0.25)' }}>
-          ⭐
+        <span key={s} style={{ color: '#fbbf24', opacity: s <= rating ? 1 : 0.25 }}>
+          <Star size={16} fill={s <= rating ? '#fbbf24' : 'none'} aria-hidden />
         </span>
       ))}
     </div>
   )
 }
+
