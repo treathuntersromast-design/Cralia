@@ -22,16 +22,16 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<Variant, string> = {
-  primary:   'bg-brand text-white hover:bg-brand-ink border-transparent',
-  secondary: 'bg-white text-brand border-brand/30 hover:border-brand hover:bg-brand/5',
-  ghost:     'bg-transparent text-[var(--c-text-2)] border-transparent hover:bg-[var(--c-accent-a06)] hover:text-brand',
+  primary:   'bg-[rgb(var(--brand-rgb))] text-white hover:bg-[rgb(var(--brand-ink-rgb))] border-transparent',
+  secondary: 'bg-white text-[rgb(var(--brand-rgb))] border-[rgb(var(--brand-rgb)/0.30)] hover:border-[rgb(var(--brand-rgb))] hover:bg-[rgb(var(--brand-rgb)/0.05)]',
+  ghost:     'bg-transparent text-[var(--c-text-2)] border-transparent hover:bg-[var(--c-accent-a06)] hover:text-[rgb(var(--brand-rgb))]',
   danger:    'bg-[#dc2626] text-white border-transparent hover:bg-[#b91c1c]',
 }
 
 const sizeClasses: Record<Size, string> = {
-  sm: 'h-9  text-[13px] px-3.5 gap-1.5',
-  md: 'h-11 text-[14px] px-5   gap-2',
-  lg: 'h-13 text-[15px] px-6   gap-2.5',
+  sm: 'h-9     text-[13px] px-3.5 gap-1.5',
+  md: 'h-11    text-[14px] px-5   gap-2   min-w-[112px]',
+  lg: 'h-[52px] text-[15px] px-7   gap-2.5 min-w-[160px]',
 }
 
 export function Button({

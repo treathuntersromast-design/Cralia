@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Icon } from '@/components/ui/Icon'
 import LogoutButton from '@/components/LogoutButton'
+import ThemeToggle from '@/components/ThemeToggle'
 
 interface AppHeaderProps {
   unreadNotifications?: number
@@ -14,7 +15,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ unreadNotifications = 0, unreadMessages = 0 }: AppHeaderProps) {
   return (
-    <header className="h-16 border-b border-[var(--c-border)] bg-[var(--c-surface)]">
+    <header className="h-16 border-b border-[var(--c-border)] bg-gradient-to-b from-[#f4f7ff] to-white sticky top-0 z-30 backdrop-blur">
       <Container className="h-full flex items-center justify-between">
         <Link href="/dashboard" className="text-xl font-bold text-brand no-underline">
           Cralia
@@ -53,6 +54,7 @@ export function AppHeader({ unreadNotifications = 0, unreadMessages = 0 }: AppHe
             </Button>
           </Link>
 
+          <ThemeToggle />
           <LogoutButton />
         </div>
       </Container>

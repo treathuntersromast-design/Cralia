@@ -9,14 +9,17 @@
  * />
  */
 import React from 'react'
+import Link from 'next/link'
 import clsx from 'clsx'
 import type { LucideIcon } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 
 interface EmptyStateProps {
   icon?:        LucideIcon
   title:        string
   description?: string
   action?:      React.ReactNode
+  cta?:         { label: string; href: string }
   className?:   string
 }
 
@@ -25,6 +28,7 @@ export function EmptyState({
   title,
   description,
   action,
+  cta,
   className,
 }: EmptyStateProps) {
   return (
@@ -46,6 +50,11 @@ export function EmptyState({
         <p className="text-[14px] text-[var(--c-text-3)] max-w-[360px] leading-relaxed mb-6">
           {description}
         </p>
+      )}
+      {cta && (
+        <Link href={cta.href} className="no-underline mt-2">
+          <Button variant="primary" size="sm">{cta.label}</Button>
+        </Link>
       )}
       {action && <div>{action}</div>}
     </div>

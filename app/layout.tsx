@@ -2,7 +2,6 @@ import './globals.css'
 import type { Metadata, Viewport } from 'next'
 import { Inter, Noto_Sans_JP } from 'next/font/google'
 import { ThemeProvider } from '@/lib/theme/ThemeContext'
-import ThemeToggle from '@/components/ThemeToggle'
 import ScrollToTopButton from '@/components/ScrollToTopButton'
 
 const inter = Inter({
@@ -51,7 +50,6 @@ export default function RootLayout({
       <body className={`${inter.variable} ${notoSansJP.variable} font-sans antialiased text-[15px] leading-[1.7]`}>
         <ThemeProvider>
           {children}
-          <ThemeToggle />
           <ScrollToTopButton />
         </ThemeProvider>
       </body>

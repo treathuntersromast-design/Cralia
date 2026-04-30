@@ -11,13 +11,12 @@ import { AppHeader } from '@/components/layout/AppHeader'
 import { Container } from '@/components/ui/Container'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { QuickActions } from '@/components/dashboard/QuickActions'
 import {
   CheckCircle2, Target, Inbox, Send, Calendar,
-  Star, CircleDollarSign, Search, Megaphone,
-  ListChecks, Handshake, MessageCircle, Bell,
-  Users, AlertTriangle, User, Settings,
-  type LucideIcon,
+  Star, Wallet, AlertTriangle, User, Settings,
 } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -184,25 +183,6 @@ export default async function DashboardPage() {
   const todayStr   = new Date().toISOString().slice(0, 10)
   const todayTasks = myTasks.filter((t) => t.due_date != null && t.due_date <= todayStr).slice(0, 3)
 
-  type QA = { href: string; icon: LucideIcon; label: string }
-  const quickActions: QA[] = [
-    { href: '/search',        icon: Search,        label: 'クリエイターを探す'   },
-    { href: '/clients',       icon: Megaphone,     label: 'お仕事募集中の依頼者' },
-    { href: '/jobs',          icon: ListChecks,    label: '案件を探す'           },
-    { href: '/jobs/new',      icon: Megaphone,     label: 'クリエイターを募集する' },
-    { href: '/projects',      icon: Target,        label: 'マイプロジェクト'     },
-    { href: '/orders',        icon: Handshake,     label: '依頼管理'             },
-    { href: '/messages',      icon: MessageCircle, label: 'メッセージ'           },
-    { href: '/notifications', icon: Bell,          label: unreadCount > 0 ? `通知 (${unreadCount})` : '通知' },
-    { href: '/events',        icon: Users,         label: '交流会'               },
-  ]
-
-  const statItems = [
-    { icon: CheckCircle2,     label: '完了件数',            value: `${totalCompleted} 件` },
-    { icon: Star,             label: '平均評価',            value: avgRating != null ? `${avgRating} / 5.0` : '評価なし', sub: avgRating != null ? `(${ratings.length}件)` : undefined },
-    { icon: CircleDollarSign, label: '有償案件収益（合計）', value: totalEarnings > 0 ? `¥${totalEarnings.toLocaleString()}` : '—' },
-  ]
-
   const sectionLabel = 'text-[11px] font-bold tracking-[0.1em] text-[var(--c-text-3)] uppercase mb-3'
 
   return (
@@ -225,13 +205,15 @@ export default async function DashboardPage() {
             <Badge tone="brand" variant="soft" className="mt-1">{roleLabels}</Badge>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Link href={`/profile/${user.id}`}
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[6px] bg-brand text-white text-[13px] font-medium no-underline hover:bg-brand-ink transition-colors">
-              <User size={13} aria-hidden /> プロフィール
+            <Link href={`/profile/${user.id}`} className="no-underline">
+              <Button variant="primary" size="sm" leftIcon={<User size={14} aria-hidden />}>
+                プロフィール
+              </Button>
             </Link>
-            <Link href="/settings"
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[6px] border border-brand/25 text-brand text-[13px] font-medium no-underline hover:bg-brand/5 transition-colors">
-              <Settings size={13} aria-hidden /> 設定
+            <Link href="/settings" className="no-underline">
+              <Button variant="ghost" size="sm" leftIcon={<Settings size={14} aria-hidden />}>
+                設定
+              </Button>
             </Link>
           </div>
         </div>
@@ -253,7 +235,13 @@ export default async function DashboardPage() {
                 </Link>
               </div>
               {todayTasks.length === 0 ? (
-                <EmptyState icon={CheckCircle2} title="今日のタスクはありません" className="py-10" />
+                <EmptyState
+                  icon={CheckCircle2}
+                  title="今日のタスクはありません"
+                  description="プロジェクトを作成すると、ここに今日のタスクが並びます"
+                  cta={{ label: 'プロジェクトを作成', href: '/projects/new' }}
+                  className="py-10"
+                />
               ) : (
                 <div className="flex flex-col gap-2">
                   {todayTasks.map((t) => {
@@ -404,36 +392,44 @@ export default async function DashboardPage() {
             {isCreatorRole && (
               <section>
                 <h2 className={sectionLabel}>受注実績</h2>
-                <div className="flex flex-col gap-2">
-                  {statItems.map(({ icon: IconComp, label, value, sub }) => (
-                    <Card key={label} bordered className="p-4 flex items-center gap-4">
-                      <IconComp size={20} className="text-brand shrink-0" aria-hidden />
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-[var(--c-text-3)] tracking-wide mb-0.5">{label}</p>
-                        <p className="text-[18px] font-extrabold text-[var(--c-text)] leading-none">{value}</p>
-                        {sub && <p className="text-[11px] text-[var(--c-text-3)] mt-0.5">{sub}</p>}
+                <Card padded bordered className="bg-white">
+                  <div className="grid grid-cols-3 divide-x divide-[var(--c-border)]">
+                    <div className="px-4 first:pl-0">
+                      <div className="flex items-center gap-2 text-[var(--c-text-3)] text-xs mb-1">
+                        <CheckCircle2 size={14} aria-hidden />完了件数
                       </div>
-                    </Card>
-                  ))}
-                </div>
+                      <div className="text-2xl font-bold text-[var(--c-text)]">
+                        {totalCompleted}<span className="text-sm font-normal ml-1">件</span>
+                      </div>
+                    </div>
+                    <div className="px-4">
+                      <div className="flex items-center gap-2 text-[var(--c-text-3)] text-xs mb-1">
+                        <Star size={14} aria-hidden />平均評価
+                      </div>
+                      <div className="text-2xl font-bold text-[var(--c-text)]">
+                        {avgRating ?? '—'}
+                      </div>
+                    </div>
+                    <div className="px-4 last:pr-0">
+                      <div className="flex items-center gap-2 text-[var(--c-text-3)] text-xs mb-1">
+                        <Wallet size={14} aria-hidden />収益
+                      </div>
+                      <div className="text-2xl font-bold text-[var(--c-text)]">
+                        {totalEarnings > 0 ? `¥${totalEarnings.toLocaleString()}` : '—'}
+                      </div>
+                    </div>
+                  </div>
+                  {totalCompleted === 0 && (
+                    <p className="mt-3 pt-3 border-t border-[var(--c-border)] text-xs text-[var(--c-text-3)]">
+                      最初の案件を完了すると、ここに実績が表示されます
+                    </p>
+                  )}
+                </Card>
               </section>
             )}
 
             {/* クイックアクション */}
-            <section>
-              <h2 className={sectionLabel}>クイックアクション</h2>
-              <div className="grid grid-cols-2 gap-2">
-                {quickActions.map(({ href, icon: IconComp, label }) => (
-                  <Link key={href} href={href}
-                    className="flex items-center gap-2 p-3 rounded-card border border-[var(--c-border-2)] bg-[var(--c-surface)]
-                      text-[13px] font-semibold text-[var(--c-text)] no-underline
-                      hover:border-brand hover:text-brand transition-colors">
-                    <IconComp size={14} className="shrink-0" aria-hidden />
-                    <span className="truncate">{label}</span>
-                  </Link>
-                ))}
-              </div>
-            </section>
+            <QuickActions unreadCount={unreadCount} />
 
             {/* カレンダー */}
             <DashboardCalendar calConnected={calConnected} />

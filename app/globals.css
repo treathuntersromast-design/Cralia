@@ -3,63 +3,63 @@
 @tailwind utilities;
 
 /* ============================================================
-   THEME: LIGHT (default) — 紙白背景・紺文字・青アクセント
+   THEME: LIGHT (default) — Sky 水色背景・白カード・純青アクセント
    ============================================================ */
 :root,
 html[data-theme="light"] {
   /* Brand — Tailwind config が参照する RGB チャンネル */
-  --brand-rgb:      29, 78, 216;    /* #1d4ed8 */
-  --brand-ink-rgb:  11, 42, 138;    /* #0b2a8a */
-  --brand-soft:     #eaf0ff;
+  --brand-rgb:      30, 64, 255;    /* #1e40ff */
+  --brand-ink-rgb:  17, 36, 158;    /* #11249e */
+  --brand-soft:     #dbeafe;
 
   /* Backgrounds */
-  --c-bg:          #fafbfd;
+  --c-bg:          #38bdf8;         /* Sky 400 */
   --c-surface:     #ffffff;
   --c-surface-2:   #ffffff;
-  --c-surface-3:   #f1f3f9;
-  --c-surface-r:   #ffffff;
+  --c-surface-3:   #dbeafe;
+  --c-surface-r:   #1e40ff;
 
   /* Borders */
-  --c-border:      #e6e9f1;
-  --c-border-2:    #dfe3ee;
-  --c-border-3:    #cdd3e3;
+  --c-border:      #bfdbfe;
+  --c-border-2:    #93c5fd;
+  --c-border-3:    #60a5fa;
 
   /* Text */
   --c-text:           #0b1530;
-  --c-text-2:         #374264;
-  --c-text-3:         #6b7896;
-  --c-text-4:         #9aa4be;
-  --c-text-5:         #b9c0d3;
+  --c-text-2:         #1e3a8a;
+  --c-text-3:         #475569;
+  --c-text-4:         #64748b;
+  --c-text-5:         #94a3b8;
   --c-text-on-raised: #ffffff;
 
   /* Form */
   --c-input-bg:     #ffffff;
-  --c-input-bg-2:   #f6f7fb;
-  --c-input-border: #cdd3e3;
+  --c-input-bg-2:   #f0f9ff;
+  --c-input-border: #93c5fd;
 
   /* Legacy accent vars (still referenced by older components) */
-  --c-accent:          #1d4ed8;
-  --c-accent-alt:      #0b2a8a;
-  --c-grad-primary:    linear-gradient(135deg, #1d4ed8, #0b2a8a);
-  --c-accent-a04:      rgba(29,78,216,0.04);
-  --c-accent-a06:      rgba(29,78,216,0.06);
-  --c-accent-a08:      rgba(29,78,216,0.08);
-  --c-accent-a12:      rgba(29,78,216,0.12);
-  --c-accent-a15:      rgba(29,78,216,0.15);
-  --c-accent-a20:      rgba(29,78,216,0.20);
-  --c-accent-a25:      rgba(29,78,216,0.25);
-  --c-accent-a30:      rgba(29,78,216,0.30);
-  --c-accent-a35:      rgba(29,78,216,0.35);
-  --c-accent-a40:      rgba(29,78,216,0.40);
-  --c-accent-a50:      rgba(29,78,216,0.50);
-  --c-alt-a06:         rgba(11,42,138,0.06);
-  --c-alt-a08:         rgba(11,42,138,0.08);
-  --c-alt-a10:         rgba(11,42,138,0.10);
-  --c-alt-a12:         rgba(11,42,138,0.12);
-  --c-alt-a15:         rgba(11,42,138,0.15);
-  --c-alt-a20:         rgba(11,42,138,0.20);
-  --c-alt-a25:         rgba(11,42,138,0.25);
-  --c-alt-a30:         rgba(11,42,138,0.30);
+  --c-accent:          #1e40ff;
+  --c-accent-alt:      #11249e;
+  --c-grad-primary:    linear-gradient(135deg, #1e40ff, #11249e);
+  --c-accent-a04:      rgba(30,64,255,0.04);
+  --c-accent-a06:      rgba(30,64,255,0.06);
+  --c-accent-a08:      rgba(30,64,255,0.08);
+  --c-accent-a12:      rgba(30,64,255,0.12);
+  --c-accent-a15:      rgba(30,64,255,0.15);
+  --c-accent-a20:      rgba(30,64,255,0.20);
+  --c-accent-a25:      rgba(30,64,255,0.25);
+  --c-accent-a30:      rgba(30,64,255,0.30);
+  --c-accent-a35:      rgba(30,64,255,0.35);
+  --c-accent-a40:      rgba(30,64,255,0.40);
+  --c-accent-a50:      rgba(30,64,255,0.50);
+  --c-alt-a06:         rgba(17,36,158,0.06);
+  --c-alt-a08:         rgba(17,36,158,0.08);
+  --c-alt-a10:         rgba(17,36,158,0.10);
+  --c-alt-a12:         rgba(17,36,158,0.12);
+  --c-alt-a15:         rgba(17,36,158,0.15);
+  --c-alt-a20:         rgba(17,36,158,0.20);
+  --c-alt-a25:         rgba(17,36,158,0.25);
+  --c-alt-a30:         rgba(17,36,158,0.30);
 
   /* Misc */
   --c-overlay:     rgba(11,21,48,0.55);
@@ -203,3 +203,27 @@ option {
 .c-input::placeholder { color: var(--c-text-4); }
 
 .c-header-border { border-bottom: 1px solid var(--c-border); }
+
+.c-header-bg {
+  background: #ffffff;
+  border-bottom: 1px solid #bfdbfe;
+}
+
+.c-hero-bg {
+  background: radial-gradient(ellipse 600px 400px at 50% 0%, #eaf0ff 0%, transparent 70%);
+}
+
+.c-app-bg-tint {
+  background: var(--c-bg);
+}
+
+.c-section-tint {
+  background: var(--c-surface-3);
+}
+
+/* 白カードを Sky 上で浮かせるための影 */
+.c-card-float {
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  box-shadow: 0 4px 14px rgba(11,21,48,0.10);
+}

@@ -33,7 +33,7 @@ export function Card({
         'rounded-[10px] bg-[var(--c-surface)] transition-all duration-150',
         padded   && 'p-6',
         bordered  && 'border border-[var(--c-border-2)]',
-        hoverable && 'hover:shadow-[0_4px_14px_rgba(11,21,48,.08)] hover:border-brand cursor-pointer',
+        hoverable && 'cursor-pointer hover:shadow-[0_8px_24px_rgba(11,21,48,.10)] hover:-translate-y-0.5 transition-all duration-200',
         className,
       )}
       {...props}

@@ -1,13 +1,13 @@
 import Link from 'next/link'
 import {
   Search, Target, Megaphone, Briefcase,
-  MessageCircle, ShieldCheck, Sparkles, Users,
+  MessageCircle, ShieldCheck, Sparkles, Users, ArrowRight,
   type LucideIcon,
 } from 'lucide-react'
 import { SiteHeader } from '@/components/layout/SiteHeader'
 import { SiteFooter } from '@/components/layout/SiteFooter'
-import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 
 interface Feature {
   icon:  LucideIcon
@@ -26,23 +26,18 @@ const FEATURES: Feature[] = [
   { icon: Users,         title: '交流会への参加',        desc: 'Craliaが企画するクリエイター交流会に参加しよう。新しい仲間や仕事のきっかけが生まれます。' },
 ]
 
-const ctaBtnCls = `
-  inline-flex items-center justify-center
-  h-[52px] px-8 min-w-[160px]
-  rounded-[6px] bg-brand text-white
-  text-[15px] font-medium no-underline
-  hover:bg-brand-ink transition-colors duration-150
-`.replace(/\s+/g, ' ').trim()
-
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[var(--c-bg)] text-[var(--c-text)]">
+    <div className="min-h-screen c-app-bg-tint text-[var(--c-text)]">
       <SiteHeader />
 
       {/* Hero */}
       <section className="py-24 md:py-32 px-6 text-center">
         <div className="max-w-[720px] mx-auto flex flex-col items-center gap-6">
-          <Badge tone="brand" variant="soft">クリエイターマッチング</Badge>
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[var(--c-border)] text-[12px] font-medium text-[var(--c-text-2)]">
+            <Sparkles size={12} className="text-[rgb(var(--brand-rgb))]" aria-hidden />
+            クリエイターマッチング
+          </span>
 
           <h1 className="text-[40px] md:text-[56px] font-bold leading-[1.15] tracking-[-0.02em]">
             すべてのクリエイターが<br />
@@ -54,21 +49,21 @@ export default function HomePage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 mt-2">
-            <Link href="/signup" className={ctaBtnCls}>
-              無料で始める
+            <Link href="/signup" className="no-underline">
+              <Button variant="primary" size="lg">無料で始める</Button>
             </Link>
             <Link
               href="/search"
-              className="text-[15px] text-brand font-medium no-underline hover:underline"
+              className="inline-flex items-center gap-1 text-[15px] text-brand font-medium no-underline hover:underline"
             >
-              &gt; クリエイターを探す
+              クリエイターを探す <ArrowRight size={16} aria-hidden />
             </Link>
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-6 c-section-tint">
         <div className="max-w-[1080px] mx-auto">
           <h2 className="text-2xl font-semibold text-center mb-12">
             Craliaでできること
@@ -98,8 +93,8 @@ export default function HomePage() {
           <p className="text-base text-[var(--c-text-2)]">
             登録は無料。プロフィールを作って創作の仲間を見つけましょう。
           </p>
-          <Link href="/signup" className={ctaBtnCls}>
-            無料登録
+          <Link href="/signup" className="no-underline">
+            <Button variant="primary" size="lg">無料登録</Button>
           </Link>
         </div>
       </section>

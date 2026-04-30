@@ -153,7 +153,7 @@ export default function ClientSearchClient({ clients, initialEntity, initialQ }:
       {/* フィルターパネル */}
       <div className="bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-[16px] px-6 py-5 mb-8">
         <p className="text-[12px] text-[var(--c-text-3)] font-semibold tracking-wider uppercase mb-2">活動形態</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="inline-flex p-1 bg-[var(--c-surface-3)] rounded-lg gap-1">
           {ENTITY_OPTIONS.map((opt) => {
             const active = selectedEntity === opt.value
             return (
@@ -161,10 +161,10 @@ export default function ClientSearchClient({ clients, initialEntity, initialQ }:
                 key={opt.value}
                 type="button"
                 onClick={() => toggleEntity(opt.value)}
-                className={`px-4 py-1.5 rounded-full text-[13px] transition-colors ${
+                className={`px-4 py-1.5 rounded-md text-[13px] font-semibold transition-all ${
                   active
-                    ? 'border-2 border-brand bg-brand-soft text-brand font-bold'
-                    : 'border border-[var(--c-border-2)] bg-[var(--c-input-bg)] text-[var(--c-text-2)]'
+                    ? 'bg-white shadow-sm text-[rgb(var(--brand-rgb))]'
+                    : 'text-[var(--c-text-3)] hover:text-[var(--c-text-2)]'
                 }`}
               >
                 {opt.label}

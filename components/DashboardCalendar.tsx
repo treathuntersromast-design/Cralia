@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { Calendar as CalendarIcon } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 
 interface CalendarEvent {
   id:      string
@@ -12,13 +14,12 @@ interface CalendarEvent {
   colorId: string | null
 }
 
-// Google Calendar のカラーID → 表示色
 const GCAL_COLORS: Record<string, string> = {
   '1': '#a4bdfc', '2': '#7ae7bf', '3': '#dbadff', '4': '#ff887c',
   '5': '#fbd75b', '6': '#ffb878', '7': '#46d6db', '8': '#e1e1e1',
   '9': '#5484ed', '10': '#51b749', '11': '#dc2127',
 }
-const DEFAULT_EVENT_COLOR = '#c77dff'
+const DEFAULT_EVENT_COLOR = '#1e40ff'
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
 
@@ -26,14 +27,12 @@ function getDaysInMonth(year: number, month: number): Date[] {
   const days: Date[] = []
   const first = new Date(year, month - 1, 1)
   const last  = new Date(year, month,     0)
-  // 月初の曜日分だけ前月の日を埋める
   for (let i = 0; i < first.getDay(); i++) {
     days.push(new Date(year, month - 1, -first.getDay() + i + 1))
   }
   for (let d = 1; d <= last.getDate(); d++) {
     days.push(new Date(year, month - 1, d))
   }
-  // 6行になるよう末尾を埋める
   while (days.length % 7 !== 0) {
     days.push(new Date(year, month, days.length - last.getDate() - first.getDay() + 1))
   }
@@ -50,10 +49,10 @@ interface Props {
 
 export default function DashboardCalendar({ calConnected }: Props) {
   const now = new Date()
-  const [year,   setYear]   = useState(now.getFullYear())
-  const [month,  setMonth]  = useState(now.getMonth() + 1)
-  const [events, setEvents] = useState<CalendarEvent[]>([])
-  const [loading, setLoading] = useState(false)
+  const [year,        setYear]        = useState(now.getFullYear())
+  const [month,       setMonth]       = useState(now.getMonth() + 1)
+  const [events,      setEvents]      = useState<CalendarEvent[]>([])
+  const [loading,     setLoading]     = useState(false)
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
 
   const fetchEvents = useCallback(async (y: number, m: number) => {
@@ -88,7 +87,6 @@ export default function DashboardCalendar({ calConnected }: Props) {
   const days = getDaysInMonth(year, month)
   const todayStr = toDateStr(now)
 
-  // 日付ごとのイベントマップ
   const eventsByDate: Record<string, CalendarEvent[]> = {}
   for (const ev of events) {
     const dateStr = ev.start.slice(0, 10)
@@ -99,46 +97,37 @@ export default function DashboardCalendar({ calConnected }: Props) {
   const selectedEvents = selectedDay ? (eventsByDate[selectedDay] ?? []) : []
 
   return (
-    <div style={{ marginBottom: '32px' }}>
+    <div className="mb-8">
       {/* セクションヘッダー */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-        <h3 style={{ color: '#7c7b99', fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', margin: 0 }}>
+      <div className="flex items-center justify-between mb-3.5">
+        <h3 className="text-[11px] font-bold tracking-[0.08em] text-[var(--c-text-3)] uppercase m-0">
           カレンダー
         </h3>
         {calConnected && (
-          <span style={{ fontSize: '11px', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80', display: 'inline-block' }} />
+          <span className="text-[11px] text-[#16a34a] flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] inline-block" />
             Googleカレンダーより取得
           </span>
         )}
       </div>
 
-      <div style={{
-        background: 'rgba(22,22,31,0.9)',
-        border: '1px solid rgba(255,255,255,0.07)',
-        borderRadius: '20px',
-        overflow: 'hidden',
-      }}>
+      <div className="bg-white border border-[var(--c-border)] rounded-[20px] overflow-hidden">
         {/* 月ナビゲーション */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '16px 20px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-        }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-border)]">
           <button
             type="button"
             onClick={prevMonth}
-            style={{ background: 'none', border: 'none', color: '#a9a8c0', fontSize: '18px', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px' }}
+            className="bg-transparent border-0 text-[var(--c-text-3)] text-[18px] cursor-pointer px-2 py-1 rounded-lg hover:bg-[var(--c-surface-3)] transition-colors"
           >
             ‹
           </button>
-          <span style={{ fontWeight: '700', fontSize: '15px', color: '#f0eff8' }}>
+          <span className="font-bold text-[15px] text-[var(--c-text)]">
             {year}年 {month}月
           </span>
           <button
             type="button"
             onClick={nextMonth}
-            style={{ background: 'none', border: 'none', color: '#a9a8c0', fontSize: '18px', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px' }}
+            className="bg-transparent border-0 text-[var(--c-text-3)] text-[18px] cursor-pointer px-2 py-1 rounded-lg hover:bg-[var(--c-surface-3)] transition-colors"
           >
             ›
           </button>
@@ -146,14 +135,16 @@ export default function DashboardCalendar({ calConnected }: Props) {
 
         {calConnected ? (
           /* ── 連携済み：カレンダーグリッド ── */
-          <div style={{ padding: '16px 20px' }}>
+          <div className="px-5 py-4">
             {/* 曜日ヘッダー */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '4px' }}>
+            <div className="grid grid-cols-7 gap-0.5 mb-1">
               {WEEKDAYS.map((wd, i) => (
-                <div key={wd} style={{
-                  textAlign: 'center', fontSize: '11px', fontWeight: '700', padding: '4px 0',
-                  color: i === 0 ? '#f87171' : i === 6 ? '#60a5fa' : '#5c5b78',
-                }}>
+                <div
+                  key={wd}
+                  className={`text-center text-[11px] font-bold py-1 ${
+                    i === 0 ? 'text-[#ef4444]' : i === 6 ? 'text-[#3b82f6]' : 'text-[var(--c-text-4)]'
+                  }`}
+                >
                   {wd}
                 </div>
               ))}
@@ -161,11 +152,11 @@ export default function DashboardCalendar({ calConnected }: Props) {
 
             {/* 日付グリッド */}
             {loading ? (
-              <div style={{ textAlign: 'center', padding: '32px 0', color: '#5c5b78', fontSize: '13px' }}>
+              <div className="text-center py-8 text-[var(--c-text-4)] text-[13px]">
                 読み込み中...
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
+              <div className="grid grid-cols-7 gap-0.5">
                 {days.map((d, idx) => {
                   const dateStr     = toDateStr(d)
                   const isThisMonth = d.getMonth() + 1 === month
@@ -179,52 +170,38 @@ export default function DashboardCalendar({ calConnected }: Props) {
                       key={dateStr + idx}
                       type="button"
                       onClick={() => setSelectedDay(isSelected ? null : dateStr)}
-                      style={{
-                        position: 'relative',
-                        background: isSelected
-                          ? 'rgba(199,125,255,0.2)'
+                      className={[
+                        'relative rounded-lg p-1.5 pb-1 cursor-pointer flex flex-col items-center gap-0.5 min-h-[44px] transition-colors border',
+                        isSelected
+                          ? 'bg-[rgba(30,64,255,0.12)] border-[rgba(30,64,255,0.4)]'
                           : isToday
-                          ? 'rgba(199,125,255,0.1)'
-                          : 'transparent',
-                        border: isSelected
-                          ? '1px solid rgba(199,125,255,0.5)'
-                          : isToday
-                          ? '1px solid rgba(199,125,255,0.3)'
-                          : '1px solid transparent',
-                        borderRadius: '8px',
-                        padding: '6px 2px 4px',
-                        cursor: 'pointer',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
-                        minHeight: '44px',
-                        opacity: isThisMonth ? 1 : 0.3,
-                      }}
+                          ? 'bg-[rgba(30,64,255,0.06)] border-[rgba(30,64,255,0.2)]'
+                          : 'bg-transparent border-transparent hover:bg-[var(--c-surface-3)]',
+                        isThisMonth ? 'opacity-100' : 'opacity-30',
+                      ].join(' ')}
                     >
-                      <span style={{
-                        fontSize: '12px', fontWeight: isToday ? '800' : '400',
-                        color: isToday
-                          ? '#c77dff'
+                      <span className={`text-[12px] ${
+                        isToday
+                          ? 'font-extrabold text-[rgb(var(--brand-rgb))]'
                           : isWeekend === 'sun'
-                          ? '#f87171'
+                          ? 'font-normal text-[#ef4444]'
                           : isWeekend === 'sat'
-                          ? '#60a5fa'
-                          : '#f0eff8',
-                      }}>
+                          ? 'font-normal text-[#3b82f6]'
+                          : 'font-normal text-[var(--c-text)]'
+                      }`}>
                         {d.getDate()}
                       </span>
                       {/* イベントドット（最大3件） */}
-                      <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                      <div className="flex gap-0.5 flex-wrap justify-center">
                         {dayEvents.slice(0, 3).map((ev) => (
                           <span
                             key={ev.id}
-                            style={{
-                              width: '5px', height: '5px', borderRadius: '50%',
-                              background: ev.colorId ? (GCAL_COLORS[ev.colorId] ?? DEFAULT_EVENT_COLOR) : DEFAULT_EVENT_COLOR,
-                              flexShrink: 0,
-                            }}
+                            className="w-[5px] h-[5px] rounded-full shrink-0 inline-block"
+                            style={{ background: ev.colorId ? (GCAL_COLORS[ev.colorId] ?? DEFAULT_EVENT_COLOR) : DEFAULT_EVENT_COLOR }}
                           />
                         ))}
                         {dayEvents.length > 3 && (
-                          <span style={{ fontSize: '8px', color: '#7c7b99', lineHeight: '5px' }}>+</span>
+                          <span className="text-[8px] text-[var(--c-text-4)] leading-[5px]">+</span>
                         )}
                       </div>
                     </button>
@@ -235,33 +212,29 @@ export default function DashboardCalendar({ calConnected }: Props) {
 
             {/* 選択日のイベント一覧 */}
             {selectedDay && (
-              <div style={{
-                marginTop: '12px',
-                borderTop: '1px solid rgba(255,255,255,0.06)',
-                paddingTop: '12px',
-              }}>
-                <p style={{ fontSize: '12px', color: '#7c7b99', margin: '0 0 8px' }}>
+              <div className="mt-3 pt-3 border-t border-[var(--c-border)]">
+                <p className="text-[12px] text-[var(--c-text-3)] m-0 mb-2">
                   {new Date(selectedDay + 'T00:00:00').toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })}
                 </p>
                 {selectedEvents.length === 0 ? (
-                  <p style={{ fontSize: '13px', color: '#5c5b78', margin: 0 }}>予定はありません</p>
+                  <p className="text-[13px] text-[var(--c-text-4)] m-0">予定はありません</p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div className="flex flex-col gap-1.5">
                     {selectedEvents.map((ev) => {
                       const color = ev.colorId ? (GCAL_COLORS[ev.colorId] ?? DEFAULT_EVENT_COLOR) : DEFAULT_EVENT_COLOR
                       const timeLabel = ev.allDay
                         ? '終日'
                         : new Date(ev.start).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
                       return (
-                        <div key={ev.id} style={{
-                          display: 'flex', alignItems: 'center', gap: '8px',
-                          padding: '6px 10px', borderRadius: '8px',
-                          background: `${color}18`, borderLeft: `3px solid ${color}`,
-                        }}>
-                          <span style={{ fontSize: '11px', color: '#7c7b99', flexShrink: 0, minWidth: '32px' }}>
+                        <div
+                          key={ev.id}
+                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
+                          style={{ background: `${color}18`, borderLeft: `3px solid ${color}` }}
+                        >
+                          <span className="text-[11px] text-[var(--c-text-3)] shrink-0 min-w-[32px]">
                             {timeLabel}
                           </span>
-                          <span style={{ fontSize: '13px', color: '#f0eff8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <span className="text-[13px] text-[var(--c-text)] overflow-hidden text-ellipsis whitespace-nowrap">
                             {ev.title}
                           </span>
                         </div>
@@ -276,22 +249,23 @@ export default function DashboardCalendar({ calConnected }: Props) {
           /* ── 未連携：グレーアウトカレンダー＋連携促進 ── */
           <div>
             {/* ぼかしたカレンダー（ダミー） */}
-            <div style={{ padding: '16px 20px', filter: 'blur(3px)', opacity: 0.25, pointerEvents: 'none', userSelect: 'none' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '4px' }}>
+            <div className="px-5 py-4 blur-[3px] opacity-25 pointer-events-none select-none">
+              <div className="grid grid-cols-7 gap-0.5 mb-1">
                 {WEEKDAYS.map((wd) => (
-                  <div key={wd} style={{ textAlign: 'center', fontSize: '11px', color: '#5c5b78', padding: '4px 0' }}>{wd}</div>
+                  <div key={wd} className="text-center text-[11px] text-[var(--c-text-4)] py-1">{wd}</div>
                 ))}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
+              <div className="grid grid-cols-7 gap-0.5">
                 {Array.from({ length: 35 }, (_, i) => (
-                  <div key={i} style={{
-                    borderRadius: '8px', padding: '6px 2px', minHeight: '44px',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
-                    background: i === 10 ? 'rgba(199,125,255,0.1)' : 'transparent',
-                  }}>
-                    <span style={{ fontSize: '12px', color: '#f0eff8' }}>{(i % 31) + 1}</span>
+                  <div
+                    key={i}
+                    className={`rounded-lg p-1.5 min-h-[44px] flex flex-col items-center gap-0.5 ${
+                      i === 10 ? 'bg-[rgba(30,64,255,0.06)]' : ''
+                    }`}
+                  >
+                    <span className="text-[12px] text-[var(--c-text)]">{(i % 31) + 1}</span>
                     {[3, 8, 15, 22].includes(i) && (
-                      <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#c77dff' }} />
+                      <span className="w-[5px] h-[5px] rounded-full bg-[rgb(var(--brand-rgb))] inline-block" />
                     )}
                   </div>
                 ))}
@@ -299,35 +273,18 @@ export default function DashboardCalendar({ calConnected }: Props) {
             </div>
 
             {/* 連携促進オーバーレイ */}
-            <div style={{
-              margin: '-160px 0 0',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              padding: '24px 20px 28px',
-              textAlign: 'center',
-              position: 'relative',
-            }}>
-              <div style={{
-                width: '48px', height: '48px', borderRadius: '14px', marginBottom: '12px',
-                background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px',
-              }}>
-                📅
+            <div className="flex flex-col items-center justify-center px-5 pb-7 text-center relative -mt-[160px]">
+              <div className="w-12 h-12 rounded-[14px] mb-3 bg-[var(--c-surface-3)] border border-[var(--c-border-2)] flex items-center justify-center">
+                <CalendarIcon size={22} className="text-[rgb(var(--brand-rgb))]" aria-hidden />
               </div>
-              <p style={{ fontWeight: '700', fontSize: '14px', color: '#f0eff8', margin: '0 0 6px' }}>
+              <p className="font-bold text-[14px] text-[var(--c-text)] m-0 mb-1.5">
                 Googleカレンダーと連携しましょう
               </p>
-              <p style={{ fontSize: '12px', color: '#7c7b99', margin: '0 0 16px', lineHeight: '1.6', maxWidth: '280px' }}>
+              <p className="text-[12px] text-[var(--c-text-3)] m-0 mb-4 leading-[1.6] max-w-[280px]">
                 連携すると、ダッシュボードで予定を確認できます。依頼時の納期提案にも活用されます。
               </p>
-              <Link
-                href="/settings/calendar"
-                style={{
-                  padding: '10px 24px', borderRadius: '10px',
-                  background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.35)',
-                  color: '#4ade80', fontSize: '13px', fontWeight: '700', textDecoration: 'none',
-                }}
-              >
-                連携する →
+              <Link href="/settings/calendar" className="no-underline">
+                <Button variant="primary" size="sm">連携する</Button>
               </Link>
             </div>
           </div>

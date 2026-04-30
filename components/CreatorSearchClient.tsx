@@ -3,7 +3,7 @@
 import { useState, useMemo, useTransition, useCallback, useRef, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Search, Hash, X } from 'lucide-react'
+import { Search, Hash, X, CheckCircle, AlertCircle, XCircle, ImageIcon, type LucideIcon } from 'lucide-react'
 import type { Creator } from '@/app/search/page'
 import { CREATOR_TYPES, SKILL_SUGGESTIONS } from '@/lib/constants/lists'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -18,15 +18,15 @@ function getPageNumbers(current: number, total: number): (number | '...')[] {
 }
 
 const AVAIL_OPTIONS = [
-  { value: 'open',     label: '受付中',       color: 'text-[#16a34a]', bg: 'bg-[#4ade80]/12', border: 'border-[#4ade80]/50' },
-  { value: 'one_slot', label: '要相談',       color: 'text-[#d97706]', bg: 'bg-[#fbbf24]/12', border: 'border-[#fbbf24]/50' },
-  { value: 'full',     label: '現在対応不可', color: 'text-[#dc2626]', bg: 'bg-[#f87171]/12', border: 'border-[#f87171]/50' },
+  { value: 'open',     label: '受付中',       icon: CheckCircle, color: 'text-[#16a34a]', bg: 'bg-[#4ade80]/12', border: 'border-[#4ade80]/50' },
+  { value: 'one_slot', label: '要相談',       icon: AlertCircle, color: 'text-[#d97706]', bg: 'bg-[#fbbf24]/12', border: 'border-[#fbbf24]/50' },
+  { value: 'full',     label: '現在対応不可', icon: XCircle,     color: 'text-[#dc2626]', bg: 'bg-[#f87171]/12', border: 'border-[#f87171]/50' },
 ]
 
-const AVAIL_MAP: Record<string, { label: string; colorCls: string; bgCls: string }> = {
-  open:     { label: '受付中',       colorCls: 'text-[#16a34a]', bgCls: 'bg-[#4ade80]/12' },
-  one_slot: { label: '要相談',       colorCls: 'text-[#d97706]', bgCls: 'bg-[#fbbf24]/12' },
-  full:     { label: '現在対応不可', colorCls: 'text-[#dc2626]', bgCls: 'bg-[#f87171]/12' },
+const AVAIL_MAP: Record<string, { label: string; colorCls: string; bgCls: string; Icon: LucideIcon }> = {
+  open:     { label: '受付中',       colorCls: 'text-[#16a34a]', bgCls: 'bg-[#4ade80]/12', Icon: CheckCircle },
+  one_slot: { label: '要相談',       colorCls: 'text-[#d97706]', bgCls: 'bg-[#fbbf24]/12', Icon: AlertCircle },
+  full:     { label: '現在対応不可', colorCls: 'text-[#dc2626]', bgCls: 'bg-[#f87171]/12', Icon: XCircle     },
 }
 
 interface Props {
@@ -53,6 +53,7 @@ export default function CreatorSearchClient({
   const [selectedAvail,  setSelectedAvail] = useState(initialAvailability)
   const [selectedSkills, setSelectedSkills] = useState<string[]>(initialSkills)
   const [page, setPage] = useState(1)
+  const [showAllSkills, setShowAllSkills] = useState(false)
 
   const pushUrl = useCallback((type: string, avail: string, q: string, id: string, skills: string[]) => {
     const params = new URLSearchParams()
@@ -234,21 +235,22 @@ export default function CreatorSearchClient({
         {/* 受付状況 */}
         <div>
           <p className="text-[12px] text-[var(--c-text-3)] font-semibold tracking-wider uppercase mb-2">受付状況</p>
-          <div className="flex flex-wrap gap-2">
+          <div className="inline-flex p-1 bg-[var(--c-surface-3)] rounded-lg gap-1">
             {AVAIL_OPTIONS.map((opt) => {
               const active = selectedAvail === opt.value
+              const IconComp = opt.icon
               return (
                 <button
                   key={opt.value}
                   type="button"
                   onClick={() => toggleAvail(opt.value)}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-semibold transition-all ${
                     active
-                      ? `border-2 ${opt.border} ${opt.bg} ${opt.color} font-bold`
-                      : 'border border-[var(--c-border-2)] bg-[var(--c-input-bg)] text-[var(--c-text-2)]'
+                      ? `bg-white shadow-sm ${opt.color}`
+                      : 'text-[var(--c-text-3)] hover:text-[var(--c-text-2)]'
                   }`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full ${active ? opt.color.replace('text-', 'bg-') : 'bg-[var(--c-text-4)]'}`} aria-hidden />
+                  <IconComp size={13} aria-hidden />
                   {opt.label}
                 </button>
               )
@@ -295,7 +297,7 @@ export default function CreatorSearchClient({
             )}
           </p>
           <div className="flex flex-wrap gap-2">
-            {SKILL_SUGGESTIONS.map((s) => {
+            {(showAllSkills ? SKILL_SUGGESTIONS : SKILL_SUGGESTIONS.slice(0, 8)).map((s) => {
               const active = selectedSkills.includes(s)
               return (
                 <button
@@ -313,6 +315,15 @@ export default function CreatorSearchClient({
               )
             })}
           </div>
+          {SKILL_SUGGESTIONS.length > 8 && (
+            <button
+              type="button"
+              onClick={() => setShowAllSkills(!showAllSkills)}
+              className="mt-2 text-[12px] text-[rgb(var(--brand-rgb))] hover:underline bg-transparent border-0 cursor-pointer p-0"
+            >
+              {showAllSkills ? '閉じる' : `+ もっと見る (残り ${SKILL_SUGGESTIONS.length - 8} 個)`}
+            </button>
+          )}
         </div>
       </div>
 
@@ -380,24 +391,30 @@ export default function CreatorSearchClient({
 
 function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: string }) {
   const avail = AVAIL_MAP[c.availability] ?? AVAIL_MAP.open
+  const AvailIcon = avail.Icon
   const initial = c.display_name?.[0]?.toUpperCase() ?? '?'
 
   return (
     <Link href={`/profile/${c.creator_id}?back=${backUrl}`} className="no-underline text-[var(--c-text)] block">
       <div className="bg-[var(--c-surface)] border border-[var(--c-border)] rounded-[20px] overflow-hidden flex flex-col hover:border-brand transition-colors">
         {/* ポートフォリオサムネ */}
-        {c.thumbnails.length > 0 && (
-          <div className={`grid gap-0.5 ${c.thumbnails.length >= 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-            {c.thumbnails.slice(0, 2).map((thumb, i) => (
-              <img
-                key={i}
-                src={thumb}
-                alt=""
-                className="w-full aspect-video object-cover block"
-              />
-            ))}
-          </div>
-        )}
+        <div className={`grid gap-0.5 ${c.thumbnails.length >= 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {c.thumbnails.length > 0
+            ? c.thumbnails.slice(0, 2).map((thumb, i) => (
+                <img
+                  key={i}
+                  src={thumb}
+                  alt=""
+                  className="w-full aspect-video object-cover block"
+                />
+              ))
+            : (
+                <div className="w-full aspect-video bg-[var(--c-surface-3)] flex items-center justify-center">
+                  <ImageIcon size={24} className="text-[var(--c-text-4)]" aria-hidden />
+                </div>
+              )
+          }
+        </div>
 
         <div className="p-4.5 flex flex-col gap-3 flex-1">
           {/* アバター + 名前 + 受付状況 */}
@@ -420,8 +437,9 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
                 )}
               </div>
             </div>
-            <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 whitespace-nowrap ${avail.colorCls} ${avail.bgCls}`}>
-              ● {avail.label}
+            <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 whitespace-nowrap flex items-center gap-1 ${avail.colorCls} ${avail.bgCls}`}>
+              <AvailIcon size={11} aria-hidden />
+              {avail.label}
             </span>
           </div>
 
