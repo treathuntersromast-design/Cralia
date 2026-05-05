@@ -3,10 +3,11 @@
 import { useState, useRef } from 'react'
 import Link from 'next/link'
 import clsx from 'clsx'
-import { Pencil, X, Plus, Star, ExternalLink, Globe, AlertTriangle, Mail } from 'lucide-react'
+import { Pencil, X, Plus, Star, ExternalLink, Globe, AlertTriangle, Mail, Megaphone } from 'lucide-react'
 import AvatarUpload from './AvatarUpload'
 import AvailabilityEditor from './AvailabilityEditor'
 import EvaluationReportModal from './EvaluationReportModal'
+import PitchModal from './PitchModal'
 import { Button } from '@/components/ui/Button'
 import {
   CREATOR_TYPES, SKILL_SUGGESTIONS,
@@ -47,6 +48,14 @@ interface Props {
   evalAsClient:  { count: number; avg: number | null }
   evalAsMember:  { count: number; avg: number | null }
   recentReviews: { id: string; rating: number; comment: string | null; created_at: string; review_type: string }[]
+  // 営業機能用
+  isClientProfile?: boolean
+  viewerIsCreator?: boolean
+  viewerCompletedCount?: number
+  viewerPortfolios?: Portfolio[]
+  viewerBio?: string | null
+  viewerSkills?: string[]
+  viewerDisplayName?: string
 }
 
 const inputCls    = 'w-full h-10 px-3.5 rounded-input border border-[var(--c-input-border)] bg-[var(--c-input-bg)] text-[var(--c-text)] text-[14px] placeholder:text-[var(--c-text-4)] focus-visible:border-brand outline-none transition-colors'
@@ -286,6 +295,14 @@ export default function ProfilePageClient(props: Props) {
 
   const avail = AVAIL_MAP[props.availability] ?? AVAIL_MAP.open
 
+  const [showPitchModal,   setShowPitchModal]   = useState(false)
+  const [showAdviceBanner, setShowAdviceBanner] = useState(false)
+
+  const handlePitchSent = () => {
+    setShowPitchModal(false)
+    if ((props.viewerCompletedCount ?? 0) === 0) setShowAdviceBanner(true)
+  }
+
   return (
     <div className="max-w-[720px] mx-auto px-6 py-10">
 
@@ -495,7 +512,16 @@ export default function ProfilePageClient(props: Props) {
                 >
                   <Pencil size={12} aria-hidden="true" /> 編集
                 </button>
-              ) : (
+              ) : props.isClientProfile && props.viewerIsCreator ? (
+                <button
+                  type="button"
+                  onClick={() => setShowPitchModal(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] bg-brand text-white text-[14px] font-bold hover:bg-brand-ink transition-colors"
+                >
+                  <Megaphone size={15} aria-hidden="true" />
+                  営業する
+                </button>
+              ) : !props.isClientProfile ? (
                 <Link
                   href={`/orders/new?creator=${props.profileId}&creatorName=${encodeURIComponent(props.displayName)}`}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] bg-brand text-white text-[14px] font-bold hover:bg-brand-ink transition-colors no-underline"
@@ -503,7 +529,7 @@ export default function ProfilePageClient(props: Props) {
                   <Mail size={15} aria-hidden="true" />
                   依頼する
                 </Link>
-              )}
+              ) : null}
             </div>
           </div>
         )}
@@ -867,6 +893,31 @@ export default function ProfilePageClient(props: Props) {
         evalAsMember={props.evalAsMember}
         recentReviews={props.recentReviews}
       />
+
+      {/* 営業モーダル */}
+      {showPitchModal && (
+        <PitchModal
+          clientId={props.profileId}
+          clientName={props.displayName}
+          viewerDisplayName={props.viewerDisplayName ?? ''}
+          onClose={() => setShowPitchModal(false)}
+          onSent={handlePitchSent}
+        />
+      )}
+
+      {/* 無実績アドバイスバナー（Phase 5 で実装） */}
+      {showAdviceBanner && (
+        <div className="fixed bottom-6 right-6 z-[9998]">
+          <div className="bg-[var(--c-surface)] border border-[var(--c-border)] rounded-card p-4 shadow-lg max-w-[300px]">
+            <p className="text-[13px] font-bold mb-1.5">ポートフォリオを充実させましょう</p>
+            <p className="text-[12px] text-[var(--c-text-3)] mb-3">実績を増やすと依頼が届きやすくなります</p>
+            <div className="flex items-center justify-between gap-2">
+              <Link href="/profile/setup" className="text-[12px] font-bold text-brand hover:underline">プロフィールを整える →</Link>
+              <button type="button" onClick={() => setShowAdviceBanner(false)} className="text-[12px] text-[var(--c-text-4)] hover:text-[var(--c-text-3)]">✕</button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )

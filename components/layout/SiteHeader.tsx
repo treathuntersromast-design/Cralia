@@ -6,7 +6,13 @@ import { MobileMenu } from './MobileMenu'
 
 export function SiteHeader() {
   return (
-    <header className="h-16 border-b border-[var(--c-border)] bg-gradient-to-b from-[#f4f7ff] to-white sticky top-0 z-30 backdrop-blur">
+    <header
+      className="h-16 border-b sticky top-0 z-30 backdrop-blur"
+      style={{
+        background: 'linear-gradient(to bottom, var(--c-header-bg-from), var(--c-header-bg-to))',
+        borderColor: 'var(--c-header-border)',
+      }}
+    >
       <Container className="h-full flex items-center justify-between">
         <Link href="/" className="text-xl font-bold text-brand no-underline">
           Cralia

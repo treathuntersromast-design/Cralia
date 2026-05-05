@@ -65,6 +65,11 @@ html[data-theme="light"] {
   --c-overlay:     rgba(11,21,48,0.55);
   --c-shadow:      rgba(11,21,48,0.10);
   --c-code-scheme: light;
+
+  /* Header */
+  --c-header-bg-from: #f4f7ff;
+  --c-header-bg-to:   #ffffff;
+  --c-header-border:  #bfdbfe;
 }
 
 /* ============================================================
@@ -129,6 +134,11 @@ html[data-theme="dark"] {
   --c-overlay:     rgba(0,0,20,0.75);
   --c-shadow:      rgba(0,0,20,0.50);
   --c-code-scheme: dark;
+
+  /* Header */
+  --c-header-bg-from: #0d1422;
+  --c-header-bg-to:   #111829;
+  --c-header-border:  rgba(255,255,255,0.08);
 }
 
 /* ============================================================
@@ -226,4 +236,19 @@ option {
   background: #ffffff;
   border: 1px solid #bfdbfe;
   box-shadow: 0 4px 14px rgba(11,21,48,0.10);
+}
+
+/* (auth) カード内はテーマに関わらずライト変数を強制 */
+.auth-card-scope {
+  --c-text:         #0b1530;
+  --c-text-2:       #1e3a8a;
+  --c-text-3:       #475569;
+  --c-text-4:       #64748b;
+  --c-text-5:       #94a3b8;
+  --c-border:       #bfdbfe;
+  --c-border-2:     #93c5fd;
+  --c-input-bg:     #ffffff;
+  --c-input-bg-2:   #f0f9ff;
+  --c-input-border: #93c5fd;
+  color: var(--c-text);
 }

@@ -20,6 +20,11 @@ CREATE TABLE IF NOT EXISTS public.projects (
                           REFERENCES public.m_project_status(value),
   -- ポートフォリオ掲載許可（クリエイターが納品物をポートフォリオに使用できるか）
   portfolio_allowed BOOLEAN NOT NULL DEFAULT false,
+  -- キャンセル申請（2ステップキャンセル用）
+  cancel_requested_by UUID        REFERENCES public.users(id),
+  cancel_prev_status  TEXT        REFERENCES public.m_project_status(value),
+  -- 営業メッセージ起点（pitch_messages.id への任意参照）
+  pitch_id            UUID        REFERENCES public.pitch_messages(id),
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
@@ -33,8 +38,11 @@ CREATE POLICY "projects_update_participant" ON public.projects FOR UPDATE USING 
 CREATE POLICY "projects_service_role"       ON public.projects FOR ALL TO service_role USING (true);
 
 -- ── コメント ─────────────────────────────────────────────────
-COMMENT ON COLUMN public.projects.order_type         IS 'FK → m_order_type.value（paid / free）';
-COMMENT ON COLUMN public.projects.status             IS 'FK → m_project_status.value（draft〜disputed）';
-COMMENT ON COLUMN public.projects.portfolio_allowed  IS 'クリエイターが納品物をポートフォリオとして公開することを依頼者が許可するか（デフォルト: false）';
+COMMENT ON COLUMN public.projects.order_type            IS 'FK → m_order_type.value（paid / free）';
+COMMENT ON COLUMN public.projects.status                IS 'FK → m_project_status.value（draft〜cancel_requested）';
+COMMENT ON COLUMN public.projects.portfolio_allowed     IS 'クリエイターが納品物をポートフォリオとして公開することを依頼者が許可するか（デフォルト: false）';
+COMMENT ON COLUMN public.projects.cancel_requested_by  IS 'キャンセル申請者の user_id（cancel_requested 状態時のみセット）';
+COMMENT ON COLUMN public.projects.cancel_prev_status   IS 'キャンセル申請前のステータス（cancel_requested 解除時に戻す先）';
+COMMENT ON COLUMN public.projects.pitch_id             IS '営業メッセージ起点の依頼の場合、元の pitch_messages.id を参照';
 
 COMMIT;

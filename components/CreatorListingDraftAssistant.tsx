@@ -1,0 +1,313 @@
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
+import { Sparkles, PenLine, Search, Info } from 'lucide-react'
+
+interface Message {
+  role:    'user' | 'assistant'
+  content: string
+}
+
+interface Props {
+  displayName:   string
+  existingDraft: string
+  onApplyDraft:  (draft: string) => void
+  sidebar?:      boolean
+}
+
+type Mode = 'create' | 'review'
+
+export default function CreatorListingDraftAssistant({ displayName, existingDraft, onApplyDraft, sidebar = false }: Props) {
+  const [open,        setOpen]        = useState(false)
+  const [mode,        setMode]        = useState<Mode | null>(null)
+  const [messages,    setMessages]    = useState<Message[]>([])
+  const [input,       setInput]       = useState('')
+  const [loading,     setLoading]     = useState(false)
+  const [error,       setError]       = useState<string | null>(null)
+  const [latestDraft, setLatestDraft] = useState<string | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [messages, loading])
+
+  const reset = () => {
+    setMode(null); setMessages([]); setInput(''); setError(null); setLatestDraft(null)
+  }
+
+  const handleApplyDraft = (draft: string) => {
+    onApplyDraft(draft)
+    if (!sidebar) setOpen(false)
+  }
+
+  const startSession = async (selectedMode: Mode) => {
+    setMode(selectedMode)
+    setLoading(true)
+    setError(null)
+
+    const res = await fetch('/api/ai/creator-listing-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages:      [],
+        mode:          selectedMode,
+        displayName,
+        existingDraft: selectedMode === 'review' ? existingDraft : undefined,
+      }),
+    })
+
+    const data = await res.json()
+    setLoading(false)
+
+    if (!res.ok) { setError(data.error ?? 'エラーが発生しました'); setMode(null); return }
+
+    const firstUserMsg: Message = selectedMode === 'review' && existingDraft
+      ? { role: 'user', content: `添削をお願いします。現在の仕事募集文は以下のとおりです。\n\n${existingDraft}` }
+      : { role: 'user', content: 'こんにちは。仕事募集文を一緒に作成していただけますか？' }
+
+    setMessages([firstUserMsg, { role: 'assistant', content: data.text }])
+    if (data.proposedDraft) setLatestDraft(data.proposedDraft)
+  }
+
+  const sendMessage = async () => {
+    const trimmed = input.trim()
+    if (!trimmed || loading) return
+
+    const userMsg: Message = { role: 'user', content: trimmed }
+    const nextMessages = [...messages, userMsg]
+    setMessages(nextMessages)
+    setInput('')
+    setLoading(true)
+    setError(null)
+
+    const res = await fetch('/api/ai/creator-listing-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages:      nextMessages,
+        mode,
+        displayName,
+        existingDraft: mode === 'review' ? existingDraft : undefined,
+      }),
+    })
+
+    const data = await res.json()
+    setLoading(false)
+
+    if (!res.ok) { setError(data.error ?? 'エラーが発生しました'); return }
+
+    setMessages([...nextMessages, { role: 'assistant', content: data.text }])
+    if (data.proposedDraft) setLatestDraft(data.proposedDraft)
+  }
+
+  function renderMessageText(text: string): string {
+    return text.replace(/```listing\n[\s\S]*?```/g, '').trim()
+  }
+
+  function extractDraftFromMessage(text: string): string | null {
+    const matches = Array.from(text.matchAll(/```listing\n([\s\S]*?)```/g))
+    if (matches.length === 0) return null
+    return matches[matches.length - 1][1].trim()
+  }
+
+  const btnBase: React.CSSProperties = {
+    padding: '10px 20px', borderRadius: '10px', fontSize: '13px',
+    fontWeight: '700', cursor: 'pointer', border: 'none',
+  }
+
+  const panelInner = (
+    <>
+      <div style={{
+        padding: '18px 20px', borderBottom: '1px solid var(--c-border)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+      }}>
+        <div>
+          <p style={{ margin: 0, fontWeight: '800', fontSize: '16px', color: 'var(--c-text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Sparkles size={16} aria-hidden /> AI 仕事募集文アシスタント
+          </p>
+          <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--c-text-3)' }}>
+            スキル・価格・納期を伝わりやすく整理します
+          </p>
+        </div>
+        {!sidebar && (
+          <button type="button" onClick={() => setOpen(false)}
+            style={{ background: 'none', border: 'none', color: 'var(--c-text-4)', fontSize: '20px', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>
+            ✕
+          </button>
+        )}
+      </div>
+
+      {!mode ? (
+        <div style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
+          <p style={{ margin: 0, fontSize: '14px', color: 'var(--c-text-2)', lineHeight: '1.7', textAlign: 'center' }}>
+            仕事募集文をどうしますか？
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <button type="button" onClick={() => startSession('create')}
+              style={{ padding: '18px', borderRadius: '14px', textAlign: 'left', border: '1px solid var(--c-border-2)', background: 'var(--c-accent-a06)', cursor: 'pointer' }}>
+              <p style={{ margin: '0 0 4px', fontWeight: '800', fontSize: '15px', color: 'rgb(var(--brand-rgb))', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <PenLine size={15} aria-hidden /> 一から作成する
+              </p>
+              <p style={{ margin: 0, fontSize: '13px', color: 'var(--c-text-3)', lineHeight: '1.6' }}>
+                スキル・価格帯・納期目安をヒアリングしながら文章を作ります
+              </p>
+            </button>
+            <button type="button" onClick={() => startSession('review')} disabled={!existingDraft.trim()}
+              style={{
+                padding: '18px', borderRadius: '14px', textAlign: 'left',
+                border: `1px solid ${existingDraft.trim() ? 'rgba(251,191,36,0.3)' : 'var(--c-surface-3)'}`,
+                background: existingDraft.trim() ? 'rgba(251,191,36,0.06)' : 'var(--c-surface-2)',
+                cursor: existingDraft.trim() ? 'pointer' : 'not-allowed', opacity: existingDraft.trim() ? 1 : 0.5,
+              }}>
+              <p style={{ margin: '0 0 4px', fontWeight: '800', fontSize: '15px', color: existingDraft.trim() ? '#fbbf24' : 'var(--c-text-3)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Search size={15} aria-hidden /> 既存の文章を添削する
+              </p>
+              <p style={{ margin: 0, fontSize: '13px', color: 'var(--c-text-3)', lineHeight: '1.6' }}>
+                {existingDraft.trim() ? '入力済みの文章を確認し、改善点を提案します' : '詳細フォームに文章を入力してから利用できます'}
+              </p>
+            </button>
+          </div>
+          <div style={{ padding: '12px 14px', borderRadius: '10px', background: 'var(--c-input-bg-2)', border: '1px solid var(--c-border)' }}>
+            <p style={{ margin: 0, fontSize: '12px', color: 'var(--c-text-4)', lineHeight: '1.7', display: 'flex', alignItems: 'flex-start', gap: '5px' }}>
+              <Info size={13} style={{ flexShrink: 0, marginTop: '2px' }} aria-hidden />
+              <span>スキル・価格・納期目安が含まれているか確認します。<br />外部連絡先への誘導は原則禁止です。</span>
+            </p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div style={{
+            padding: '8px 16px', background: 'var(--c-input-bg-2)', borderBottom: '1px solid var(--c-border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+          }}>
+            <span style={{ fontSize: '12px', color: 'var(--c-text-3)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              {mode === 'create' ? <><PenLine size={12} aria-hidden /> 作成モード</> : <><Search size={12} aria-hidden /> 添削モード</>}
+            </span>
+            <button type="button" onClick={reset}
+              style={{ background: 'none', border: 'none', color: 'var(--c-text-4)', fontSize: '12px', cursor: 'pointer' }}>
+              ← モードを変える
+            </button>
+          </div>
+
+          <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {messages.map((msg, i) => {
+              const isUser = msg.role === 'user'
+              const displayText = isUser ? msg.content : renderMessageText(msg.content)
+              const inlineDraft = isUser ? null : extractDraftFromMessage(msg.content)
+              return (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: '8px' }}>
+                  <div style={{
+                    maxWidth: '85%', padding: '10px 14px',
+                    borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                    background: isUser ? 'var(--c-accent-a20)' : 'rgba(255,255,255,0.06)',
+                    border: `1px solid ${isUser ? 'rgba(30,64,255,0.3)' : 'var(--c-surface-3)'}`,
+                    fontSize: '13px', color: 'var(--c-text)', lineHeight: '1.7', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                  }}>
+                    {displayText || (isUser ? '' : '...')}
+                  </div>
+                  {inlineDraft && (
+                    <div style={{ maxWidth: '90%', padding: '14px 16px', borderRadius: '14px', background: 'var(--c-accent-a08)', border: '1px solid var(--c-border)' }}>
+                      <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: '700', color: 'rgb(var(--brand-rgb))', letterSpacing: '0.06em' }}>
+                        仕事募集文（案）
+                      </p>
+                      <p style={{ margin: '0 0 12px', fontSize: '13px', color: 'var(--c-text)', lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        {inlineDraft}
+                      </p>
+                      <button type="button" onClick={() => handleApplyDraft(inlineDraft)}
+                        style={{ ...btnBase, background: 'rgb(var(--brand-rgb))', color: '#fff', fontSize: '13px', padding: '8px 16px' }}>
+                        この文章をフォームに使う
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+            {loading && (
+              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                <div style={{ padding: '10px 14px', borderRadius: '16px 16px 16px 4px', background: 'var(--c-input-bg)', border: '1px solid var(--c-border)', fontSize: '13px', color: 'var(--c-text-3)' }}>
+                  考え中...
+                </div>
+              </div>
+            )}
+            {error && (
+              <p style={{ fontSize: '13px', color: '#f87171', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: '10px', padding: '10px 14px', margin: 0 }}>
+                {error}
+              </p>
+            )}
+          </div>
+
+          {latestDraft && (
+            <div style={{
+              padding: '10px 16px', borderTop: '1px solid var(--c-border)', background: 'var(--c-accent-a06)', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+            }}>
+              <p style={{ margin: 0, fontSize: '12px', color: 'rgb(var(--brand-rgb))', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Sparkles size={13} aria-hidden /> 仕事募集文の案があります
+              </p>
+              <button type="button" onClick={() => handleApplyDraft(latestDraft)}
+                style={{ ...btnBase, background: 'rgb(var(--brand-rgb))', color: '#fff', fontSize: '12px', padding: '7px 14px', flexShrink: 0 }}>
+                フォームに使う
+              </button>
+            </div>
+          )}
+
+          <div style={{ padding: '12px 16px', borderTop: '1px solid var(--c-border)', display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+              placeholder="メッセージを入力... (Shift+Enter で改行)"
+              rows={2}
+              disabled={loading}
+              style={{
+                flex: 1, padding: '10px 12px', borderRadius: '10px', resize: 'none',
+                border: '1px solid var(--c-border)', background: 'var(--c-input-bg)',
+                color: 'var(--c-text)', fontSize: '14px', outline: 'none', lineHeight: '1.5',
+              }}
+            />
+            <button type="button" onClick={sendMessage} disabled={loading || !input.trim()}
+              style={{
+                ...btnBase, alignSelf: 'flex-end',
+                background: loading || !input.trim() ? 'var(--c-accent-a20)' : 'rgb(var(--brand-rgb))',
+                color: '#fff', padding: '10px 16px',
+                cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+              }}>
+              送信
+            </button>
+          </div>
+        </>
+      )}
+    </>
+  )
+
+  if (sidebar) {
+    return (
+      <div style={{ width: '100%', height: '100%', background: 'var(--c-surface-r)', border: '1px solid var(--c-border-2)', borderRadius: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {panelInner}
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <button type="button" onClick={() => { setOpen(true); reset() }}
+        style={{
+          width: '100%', padding: '13px', borderRadius: '12px', fontSize: '14px', fontWeight: '700', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+          border: '1px solid var(--c-border-2)', background: 'var(--c-accent-a08)', color: 'rgb(var(--brand-rgb))',
+        }}>
+        <Sparkles size={15} aria-hidden /> AIで仕事募集文を作成・添削する
+      </button>
+
+      {open && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setOpen(false) }}>
+          <div style={{ width: '100%', maxWidth: '640px', maxHeight: '90vh', background: 'var(--c-surface-r)', border: '1px solid var(--c-border-2)', borderRadius: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            {panelInner}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}

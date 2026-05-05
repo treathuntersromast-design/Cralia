@@ -33,4 +33,11 @@ export const VALIDATION = {
   // 評価・報告
   REVIEW_COMMENT_MAX: 500,
   REPORT_REASON_MAX:  1000,
+
+  // クリエイター仕事募集（creator_listings）
+  CREATOR_LISTING_TITLE_MAX: 100,
+  CREATOR_LISTING_DESC_MAX:  2000,
+
+  // 営業メッセージ（pitch_messages）
+  PITCH_MESSAGE_MAX: 1000,
 } as const

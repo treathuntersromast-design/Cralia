@@ -15,6 +15,7 @@ function NewOrderContent() {
   const searchParams = useSearchParams()
   const creatorId   = searchParams.get('creator') ?? ''
   const creatorName = searchParams.get('creatorName') ?? 'クリエイター'
+  const fromPitchId = searchParams.get('from_pitch') ?? ''
 
   const [title,       setTitle]       = useState('')
   const [description, setDescription] = useState('')
@@ -149,7 +150,7 @@ function NewOrderContent() {
     const res = await fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ creatorId, title, description, budget, deadline, orderType, portfolioAllowed, copyrightAgreed }),
+      body: JSON.stringify({ creatorId, title, description, budget, deadline, orderType, portfolioAllowed, copyrightAgreed, pitchId: fromPitchId || undefined }),
     })
 
     const data = await res.json()
@@ -175,6 +176,12 @@ function NewOrderContent() {
             <p className="text-[14px] text-[var(--c-text-2)]">
               依頼先：<span className="text-brand font-bold">{creatorName}</span> さん
             </p>
+            {fromPitchId && (
+              <p className="mt-2 text-[13px] text-[#16a34a] bg-[#4ade80]/10 border border-[#4ade80]/25 rounded-[8px] px-3 py-2 flex items-center gap-1.5">
+                <span className="font-bold">営業メッセージから作成中</span>
+                <span className="text-[var(--c-text-3)]">— {creatorName} さんの営業メッセージをもとにした依頼です</span>
+              </p>
+            )}
             {draftSaved && (
               <p className="text-[#16a34a] text-[12px] mt-1.5 flex items-center gap-1">
                 <Check size={12} aria-hidden />
@@ -392,7 +399,7 @@ function NewOrderContent() {
                   type="button"
                   onClick={() => setPortfolioAllowed(v => !v)}
                   role="switch"
-                  aria-checked={(portfolioAllowed ? 'true' : 'false') as 'true' | 'false'}
+                  aria-checked={portfolioAllowed}
                   aria-label="ポートフォリオへの掲載許可"
                   className={`relative shrink-0 w-[52px] h-7 rounded-full border-0 transition-colors ${portfolioAllowed ? 'bg-brand' : 'bg-[var(--c-border-2)]'}`}
                 >

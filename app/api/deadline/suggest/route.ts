@@ -96,6 +96,17 @@ async function getCreatorSchedule(creatorId: string): Promise<CreatorSchedule> {
   }
 }
 
+function calcFallbackDeadline(workDays: number, workDayNumbers: number[]): string {
+  const date = new Date()
+  date.setHours(0, 0, 0, 0)
+  let remaining = workDays
+  while (remaining > 0) {
+    date.setDate(date.getDate() + 1)
+    if (workDayNumbers.includes(date.getDay())) remaining--
+  }
+  return toDateString(date)
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -112,14 +123,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '作業日数は90日以内で指定してください' }, { status: 400 })
     }
 
-    const [accessToken, creatorSchedule] = await Promise.all([
-      getValidAccessToken(creator_id),
-      getCreatorSchedule(creator_id),
-    ])
-
+    const creatorSchedule = await getCreatorSchedule(creator_id)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const workDays = working_days_required ?? creatorSchedule.defaultWorkingDays
+
+    // カレンダー未連携でもフォールバックで結果を返す
+    let accessToken: string | null = null
+    try {
+      accessToken = await getValidAccessToken(creator_id)
+    } catch {
+      // 未連携 or トークンエラー → フォールバックへ
+    }
+
+    if (!accessToken) {
+      const deadline = calcFallbackDeadline(workDays, creatorSchedule.workDays)
+      return NextResponse.json({
+        deadline,
+        summary: `${workDays}営業日で計算した納期目安: ${deadline}（カレンダー情報なし）`,
+        skipped_calendar: 0,
+        skipped_holidays: 0,
+        working_days: workDays,
+      })
+    }
 
     const result = await calculateDeadline(accessToken, today, workDays, creatorSchedule)
 

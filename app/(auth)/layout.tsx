@@ -9,7 +9,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             Cralia
           </Link>
         </div>
-        <div className="c-card-float rounded-[20px] p-8 sm:p-10">
+        <div className="auth-card-scope c-card-float rounded-[20px] p-8 sm:p-10">
           {children}
         </div>
         <p className="text-center mt-6 text-[12px] text-[var(--c-text-3)]">

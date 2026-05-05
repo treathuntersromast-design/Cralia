@@ -6,9 +6,11 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 const DAILY_LIMITS: Record<string, number> = {
-  'ai/bio':              30,
-  'ai/request-draft':    30,
-  'ai/suggest-creators': 20,
+  'ai/bio':                     30,
+  'ai/request-draft':           30,
+  'ai/suggest-creators':        20,
+  'ai/creator-listing-draft':   30,
+  'ai/pitch-draft':             30,
 }
 
 function getDb() {

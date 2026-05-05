@@ -310,14 +310,14 @@ function ClientCard({ client: c }: { client: Client }) {
       )}
 
       {/* アクションボタン */}
-      <button
-        type="button"
-        disabled
-        className="w-full py-2.5 rounded-[12px] border border-brand/20 bg-brand-soft text-brand text-[13px] font-bold cursor-not-allowed opacity-60 mt-auto flex items-center justify-center gap-1.5"
+      <a
+        href={`/profile/${c.id}`}
+        className="w-full py-2.5 rounded-[12px] border border-brand/20 bg-brand-soft text-brand text-[13px] font-bold mt-auto flex items-center justify-center gap-1.5 no-underline hover:bg-brand/10 transition-colors"
+        onClick={(e) => e.stopPropagation()}
       >
         <Mail size={14} aria-hidden />
-        依頼を提案する（準備中）
-      </button>
+        プロフィールを見て営業する
+      </a>
     </div>
   )
 }

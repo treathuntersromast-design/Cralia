@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   try { body = await request.json() }
   catch { return NextResponse.json({ error: 'リクエストの形式が正しくありません' }, { status: 400 }) }
 
-  const { creatorId, title, description, budget, deadline, orderType, portfolioAllowed, copyrightAgreed } = body
+  const { creatorId, title, description, budget, deadline, orderType, portfolioAllowed, copyrightAgreed, pitchId } = body
 
   if (typeof creatorId !== 'string' || !creatorId) {
     return NextResponse.json({ error: '依頼先クリエイターを指定してください' }, { status: 400 })
@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '自分自身には依頼できません' }, { status: 400 })
   }
 
+  const safePitchId = typeof pitchId === 'string' && pitchId ? pitchId : null
   const parsedBudget = budget !== '' && budget != null ? parseInt(String(budget), 10) : null
   const safeBudget = parsedBudget !== null && !isNaN(parsedBudget) && parsedBudget >= 0 ? parsedBudget : null
   const safeDeadline = typeof deadline === 'string' && deadline ? deadline : null
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
     order_type:        safeOrderType,
     portfolio_allowed: safePortfolioAllowed,
     copyright_agreed:  safeCopyrightAgreed,
+    pitch_id:          safePitchId,
   }
 
   let { data: order, error } = await db
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
 
   // 未作成カラムがある場合（マイグレーション未実行）はフォールバック
   if (error?.code === '42703') {
-    const { order_type: _t, portfolio_allowed: _p, copyright_agreed: _c, ...payloadWithoutType } = insertPayload;
+    const { order_type: _t, portfolio_allowed: _p, copyright_agreed: _c, pitch_id: _pi, cancel_requested_by: _crb, cancel_prev_status: _cps, ...payloadWithoutType } = insertPayload as Record<string, unknown>;
     ({ data: order, error } = await db
       .from('projects')
       .insert(payloadWithoutType)

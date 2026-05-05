@@ -6,6 +6,7 @@ import { Check, Lock, MessageCircle, FileText } from 'lucide-react'
 import OrderActions from './OrderActions'
 import EditOrderModal from './EditOrderModal'
 import ReviewSection from '@/components/ReviewSection'
+import EstimatedDeadlineCard from '@/components/EstimatedDeadlineCard'
 import { ORDER_STATUS_MAP, ORDER_STATUS_STEPS } from '@/lib/constants/statuses'
 import { AppHeader } from '@/components/layout/AppHeader'
 import { Container } from '@/components/ui/Container'
@@ -24,6 +25,7 @@ function orderTone(status: string): 'brand' | 'ok' | 'warn' | 'danger' | 'neutra
   const map: Record<string, 'brand' | 'ok' | 'warn' | 'danger' | 'neutral'> = {
     pending: 'warn', accepted: 'ok', in_progress: 'brand', delivered: 'brand',
     completed: 'neutral', cancelled: 'neutral', disputed: 'danger',
+    cancel_requested: 'warn',
   }
   return map[status] ?? 'neutral'
 }
@@ -40,7 +42,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
   const { data: order } = await db
     .from('projects')
-    .select('id, title, description, budget, deadline, status, created_at, updated_at, client_id, creator_id, portfolio_allowed, order_type, copyright_agreed')
+    .select('id, title, description, budget, deadline, status, created_at, updated_at, client_id, creator_id, portfolio_allowed, order_type, copyright_agreed, cancel_requested_by, cancel_prev_status')
     .eq('id', params.id)
     .single()
 
@@ -59,7 +61,41 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   const isClient   = order.client_id  === user.id
   const isCreator  = order.creator_id === user.id
   const st         = ORDER_STATUS_MAP[order.status] ?? ORDER_STATUS_MAP.pending
+
+  // 想定完了日（accepted / in_progress かつ依頼者のみ）
+  let estimatedDeadline: { estimatedDate: string; reason: string } | null = null
+  if (isClient && ['accepted', 'in_progress'].includes(order.status)) {
+    const { data: completedOrders } = await db
+      .from('projects')
+      .select('created_at, updated_at')
+      .eq('creator_id', order.creator_id)
+      .eq('status', 'completed')
+      .not('id', 'eq', order.id)
+      .limit(20)
+
+    const DEFAULT_DAYS = 14
+    let avgDays = DEFAULT_DAYS
+    if (completedOrders && completedOrders.length > 0) {
+      const durations = completedOrders.map((o) => {
+        const start = new Date(o.created_at).getTime()
+        const end   = new Date(o.updated_at).getTime()
+        return Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)))
+      })
+      avgDays = Math.max(1, Math.min(90, Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)))
+    }
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const estimated = new Date(today)
+    estimated.setDate(estimated.getDate() + avgDays)
+    estimatedDeadline = {
+      estimatedDate: estimated.toISOString().split('T')[0],
+      reason: completedOrders && completedOrders.length > 0
+        ? '現在のスケジュールを考慮した目安です（変動する場合があります）'
+        : 'クリエイターの標準的な作業期間をもとにした目安です（変動する場合があります）',
+    }
+  }
   const isClosed   = ['completed', 'cancelled', 'disputed'].includes(order.status)
+  const isCancelRequested = order.status === 'cancel_requested'
   const isCompleted = order.status === 'completed'
   const isPending   = order.status === 'pending'
   const currentStep = ORDER_STATUS_STEPS.indexOf(order.status as typeof ORDER_STATUS_STEPS[number])
@@ -129,6 +165,14 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           ))}
         </div>
 
+        {/* 想定完了日（依頼者向け） */}
+        {estimatedDeadline && (
+          <EstimatedDeadlineCard
+            estimatedDate={estimatedDeadline.estimatedDate}
+            reason={estimatedDeadline.reason}
+          />
+        )}
+
         {/* 依頼詳細 */}
         <Card bordered padded className="mb-6">
           <h2 className="text-[12px] font-bold text-[var(--c-text-3)] tracking-wider uppercase mb-4">依頼内容</h2>
@@ -188,6 +232,18 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           />
         )}
 
+        {/* キャンセル申請中バナー */}
+        {isCancelRequested && (
+          <div className="mb-4 rounded-card border border-[#f97316]/40 bg-[#f97316]/8 px-5 py-4">
+            <p className="font-bold text-[14px] text-[#f97316] mb-1">キャンセルが申請されています</p>
+            <p className="text-[13px] text-[var(--c-text-2)] leading-[1.6] m-0">
+              {order.cancel_requested_by === user.id
+                ? '相手方の承認待ちです。承認されるとキャンセルが確定します。申請を取り消すこともできます。'
+                : 'キャンセルを申請されました。下のボタンから同意または拒否を選択してください。'}
+            </p>
+          </div>
+        )}
+
         {/* アクション */}
         {!isClosed && (
           <OrderActions
@@ -197,6 +253,9 @@ export default async function OrderDetailPage({ params }: { params: { id: string
             isCreator={isCreator}
             creatorId={order.creator_id}
             deadline={order.deadline ?? null}
+            cancelRequestedBy={order.cancel_requested_by ?? null}
+            cancelPrevStatus={order.cancel_prev_status ?? null}
+            currentUserId={user.id}
           />
         )}
 

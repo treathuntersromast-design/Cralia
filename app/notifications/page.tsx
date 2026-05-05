@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import {
   MessageCircle, Target, Inbox, CheckCircle2,
-  XCircle, Star, Bell, type LucideIcon,
+  XCircle, Star, Bell, Mail, type LucideIcon,
 } from 'lucide-react'
 import { AppHeader } from '@/components/layout/AppHeader'
 import { Container } from '@/components/ui/Container'
@@ -18,6 +18,8 @@ const TYPE_META: Record<string, { icon: LucideIcon; cls: string }> = {
   order_declined: { icon: XCircle,       cls: 'bg-[#f87171]/10 text-[#dc2626]'   },
   review:         { icon: Star,          cls: 'bg-[#fbbf24]/10 text-[#d97706]'   },
   system:         { icon: Bell,          cls: 'bg-[var(--c-surface-3)] text-[var(--c-text-3)]' },
+  pitch_received: { icon: Mail,          cls: 'bg-brand/10 text-brand'             },
+  pitch_replied:  { icon: MessageCircle, cls: 'bg-[#4ade80]/10 text-[#16a34a]'   },
 }
 
 export default async function NotificationsPage() {

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import ProfilePageClient from '@/components/ProfilePageClient'
 import { AppHeader } from '@/components/layout/AppHeader'
-import { activityStyleToRoles } from '@/lib/constants/activity'
+import { activityStyleToRoles, hasClientRole, hasCreatorRole } from '@/lib/constants/activity'
 import { INACTIVE_ORDER_STATUSES } from '@/lib/constants/statuses'
 
 export default async function ProfilePage({
@@ -123,6 +123,50 @@ export default async function ProfilePage({
   const entityType = userRecord?.entity_type === 'corporate' ? '法人・団体' : '個人'
   const roles: string[] = activityStyleToRoles((userRecord as Record<string, unknown>)?.activity_style_id as number | null)
 
+  // 営業機能用: ターゲットが依頼者か、閲覧者がクリエイターかを判定
+  const targetStyleId = (userRecord as Record<string, unknown>)?.activity_style_id as number | null
+  const isClientProfile = hasClientRole(targetStyleId)
+
+  // 閲覧者の情報取得（依頼者プロフィールを見るクリエイター向け）
+  let viewerIsCreator = false
+  let viewerCompletedCount = 0
+  let viewerPortfolios: { platform: string; url: string; title: string; thumbnail_url?: string }[] = []
+  let viewerBio: string | null = null
+  let viewerSkills: string[] = []
+  let viewerDisplayName = ''
+
+  if (user.id !== params.id && isClientProfile) {
+    try {
+      const admin = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+      const { data: viewerUser } = await admin
+        .from('users')
+        .select('activity_style_id')
+        .eq('id', user.id)
+        .single()
+
+      viewerIsCreator = hasCreatorRole((viewerUser as Record<string, unknown>)?.activity_style_id as number | null)
+
+      if (viewerIsCreator) {
+        const [{ data: viewerProfile }, { data: viewerPortfolioData }, { data: completedOrders }] = await Promise.all([
+          admin.from('creator_profiles').select('bio, skills, display_name').eq('creator_id', user.id).single(),
+          admin.from('portfolios').select('platform, url, title, thumbnail_url').eq('creator_id', user.id).order('display_order').limit(3),
+          admin.from('projects').select('id').eq('creator_id', user.id).eq('status', 'completed').limit(100),
+        ])
+
+        viewerBio = viewerProfile?.bio ?? null
+        viewerSkills = viewerProfile?.skills ?? []
+        viewerDisplayName = viewerProfile?.display_name ?? ''
+        viewerPortfolios = (viewerPortfolioData ?? []).map((p) => ({
+          platform: p.platform,
+          url: p.url,
+          title: p.title ?? '',
+          thumbnail_url: p.thumbnail_url ?? undefined,
+        }))
+        viewerCompletedCount = completedOrders?.length ?? 0
+      }
+    } catch { /* 取得失敗時は非表示 */ }
+  }
+
   // back パラメータは許可された内部パスのみ許可（外部リダイレクト・javascript: を防ぐ）
   const backHref = searchParams.back
   const decoded = backHref ? decodeURIComponent(backHref) : ''
@@ -189,6 +233,13 @@ export default async function ProfilePage({
         evalAsClient={evalAsClient}
         evalAsMember={evalAsMember}
         recentReviews={recentReviews}
+        isClientProfile={isClientProfile}
+        viewerIsCreator={viewerIsCreator}
+        viewerCompletedCount={viewerCompletedCount}
+        viewerPortfolios={viewerPortfolios}
+        viewerBio={viewerBio}
+        viewerSkills={viewerSkills}
+        viewerDisplayName={viewerDisplayName}
       />
     </div>
   )

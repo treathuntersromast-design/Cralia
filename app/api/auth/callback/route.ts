@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { ACTIVITY_STYLE_ID } from '@/lib/constants/activity'
 
 // Supabase Auth のコールバック処理
 // - メール確認リンクのクリック後
@@ -20,13 +21,13 @@ export async function GET(request: NextRequest) {
       if (user) {
         const { data: profile } = await supabase
           .from('users')
-          .select('roles, display_name')
+          .select('activity_style_id, display_name')
           .eq('id', user.id)
           .single()
 
-        // roles が空かつ display_name も未設定の場合のみプロフィール登録へ
+        // activity_style_id 未設定かつ display_name も未設定の場合のみプロフィール登録へ
         const needsSetup = !profile || (
-          (!profile.roles || profile.roles.length === 0) &&
+          !Object.values(ACTIVITY_STYLE_ID).includes(profile.activity_style_id as 1 | 2 | 3) &&
           !profile.display_name
         )
         if (needsSetup) {

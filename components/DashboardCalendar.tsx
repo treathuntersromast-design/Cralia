@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Calendar as CalendarIcon } from 'lucide-react'
+import { Calendar as CalendarIcon, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 interface CalendarEvent {
@@ -98,20 +98,20 @@ export default function DashboardCalendar({ calConnected }: Props) {
 
   return (
     <div className="mb-8">
-      {/* セクションヘッダー */}
-      <div className="flex items-center justify-between mb-3.5">
-        <h3 className="text-[11px] font-bold tracking-[0.08em] text-[var(--c-text-3)] uppercase m-0">
-          カレンダー
-        </h3>
-        {calConnected && (
-          <span className="text-[11px] text-[#16a34a] flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] inline-block" />
-            Googleカレンダーより取得
-          </span>
-        )}
-      </div>
+      <h3 className="text-[11px] font-bold tracking-[0.1em] text-[var(--c-text-3)] uppercase mb-3">
+        カレンダー
+      </h3>
 
-      <div className="bg-white border border-[var(--c-border)] rounded-[20px] overflow-hidden">
+      <div className="bg-white border border-[var(--c-border)] rounded-[20px] overflow-hidden shadow-sm">
+        {/* Google連携バッジ — 白カード内に配置してコントラスト確保 */}
+        {calConnected && (
+          <div className="px-5 py-2 bg-[#f0fdf4] border-b border-[#bbf7d0] flex items-center gap-1.5">
+            <CheckCircle2 size={12} className="text-[#16a34a]" aria-hidden />
+            <span className="text-[11px] font-semibold text-[#15803d]">
+              Googleカレンダーより取得
+            </span>
+          </div>
+        )}
         {/* 月ナビゲーション */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-border)]">
           <button

@@ -44,3 +44,8 @@ export function rolesToActivityStyleId(roles: string[]): ActivityStyleId {
 export function hasClientRole(styleId: number | null): boolean {
   return styleId === ACTIVITY_STYLE_ID.CLIENT || styleId === ACTIVITY_STYLE_ID.BOTH
 }
+
+/** activity_style_id がクリエイター権限を持つか */
+export function hasCreatorRole(styleId: number | null): boolean {
+  return styleId === ACTIVITY_STYLE_ID.CREATOR || styleId === ACTIVITY_STYLE_ID.BOTH
+}
