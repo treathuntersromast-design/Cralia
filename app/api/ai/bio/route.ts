@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit, sanitizeAiResponse } from '@/lib/aiGuard'
@@ -43,11 +43,27 @@ const SYSTEM_PROMPT = `あなたはクリエイターマッチングプラット
 - 修正の際も同様に囲む
 - 修正依頼にも1つずつ確認しながら対応する`
 
+const ALLOWED_ROLES = new Set(['user', 'assistant'])
+const MSG_MAX_CHARS = 2000
+const TOTAL_MAX_CHARS = 15_000
+
+function sanitizeForPrompt(str: string | null | undefined, maxLen: number): string {
+  if (!str) return ''
+  return str
+    .replace(/[\n\r]/g, ' ')
+    .replace(/[`<>|]/g, '')
+    .trim()
+    .slice(0, maxLen)
+}
+
 export async function POST(request: NextRequest) {
+  let userId: string | undefined
+
   try {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+    userId = user.id
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json({ error: 'AI機能が設定されていません（APIキー未設定）' }, { status: 503 })
@@ -61,7 +77,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    let body: { messages?: unknown; creatorTypes?: string[]; skills?: string[] }
+    let body: { messages?: unknown; creatorTypes?: unknown; skills?: unknown }
     try {
       body = await request.json()
     } catch {
@@ -76,16 +92,32 @@ export async function POST(request: NextRequest) {
     if (messages.length > 40) {
       return NextResponse.json({ error: 'メッセージ履歴が長すぎます' }, { status: 400 })
     }
+
+    let totalChars = 0
     for (const m of messages as { role?: unknown; content?: unknown }[]) {
-      if (typeof m.content !== 'string' || m.content.length > 2000) {
-        return NextResponse.json({ error: 'メッセージが長すぎます（1件2000文字以内）' }, { status: 400 })
+      if (!ALLOWED_ROLES.has(m.role as string)) {
+        return NextResponse.json({ error: 'role は user または assistant のみ指定できます' }, { status: 400 })
       }
+      if (typeof m.content !== 'string' || m.content.length > MSG_MAX_CHARS) {
+        return NextResponse.json({ error: `メッセージが長すぎます（1件${MSG_MAX_CHARS}文字以内）` }, { status: 400 })
+      }
+      totalChars += m.content.length
+    }
+    if (totalChars > TOTAL_MAX_CHARS) {
+      return NextResponse.json({ error: '会話の合計文字数が上限を超えています' }, { status: 400 })
     }
 
-    // コンテキスト情報をシステムプロンプトに追加
+    // context文字列をサニタイズしてから system prompt に埋め込む
+    const safeTypes  = Array.isArray(creatorTypes)
+      ? (creatorTypes as unknown[]).filter(t => typeof t === 'string').map(t => sanitizeForPrompt(t as string, 50))
+      : []
+    const safeSkills = Array.isArray(skills)
+      ? (skills as unknown[]).filter(s => typeof s === 'string').map(s => sanitizeForPrompt(s as string, 50))
+      : []
+
     const contextNote = [
-      creatorTypes?.length ? `ユーザーのクリエイタータイプ: ${creatorTypes.join('、')}` : '',
-      skills?.length ? `登録済みスキル: ${skills.join('、')}` : '',
+      safeTypes.length  ? `ユーザーのクリエイタータイプ: ${safeTypes.join('、')}` : '',
+      safeSkills.length ? `登録済みスキル: ${safeSkills.join('、')}` : '',
     ].filter(Boolean).join('\n')
 
     const systemWithContext = contextNote
@@ -97,7 +129,6 @@ export async function POST(request: NextRequest) {
       content: m.content,
     }))
 
-    // 初回（空配列）の場合はトリガー用メッセージを追加
     if (apiMessages.length === 0) {
       apiMessages.push({ role: 'user', content: 'はじめまして。自己紹介文を作るのを手伝ってください。' })
     }
@@ -112,8 +143,7 @@ export async function POST(request: NextRequest) {
     const rawText = response.content[0].type === 'text' ? response.content[0].text : ''
     const { sanitized: text } = sanitizeAiResponse(rawText)
 
-    // ```bio ... ``` ブロックを抽出
-    const bioMatch = text.match(/```bio\n([\s\S]*?)```/)
+    const bioMatch    = text.match(/```bio\n([\s\S]*?)```/)
     const proposedBio = bioMatch ? bioMatch[1].trim() : null
 
     return NextResponse.json({ text, proposedBio })
@@ -121,7 +151,7 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     const message = e instanceof Error ? e.message : '予期しないエラーが発生しました'
     const stack   = e instanceof Error ? e.stack   : undefined
-    await logError({ endpoint: 'ai/bio', message, stack })
-    return NextResponse.json({ error: message }, { status: 500 })
+    await logError({ endpoint: 'ai/bio', message, stack, userId })
+    return NextResponse.json({ error: 'エラーが発生しました。時間をおいて再試みください。' }, { status: 500 })
   }
 }

@@ -92,7 +92,7 @@ export default async function ProjectPage({ params }: { params: { id: string } }
     .map((r) => ({ userId: r.assigned_user_id!, name: r.assigned_user_name! }))
     .filter((v, i, arr) => arr.findIndex((x) => x.userId === v.userId) === i)
 
-  let boardReviews: { id: string; rating: number; comment: string | null; created_at: string; reviewer_id: string; reviewee_id: string }[] = []
+  let boardReviews: { id: string; rating: number; comment: string | null; created_at: string; is_mine: boolean; reviewee_id: string }[] = []
   if (isCompleted) {
     const db = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -103,7 +103,10 @@ export default async function ProjectPage({ params }: { params: { id: string } }
       .select('id, rating, comment, created_at, reviewer_id, reviewee_id')
       .eq('project_board_id', params.id)
       .order('created_at', { ascending: false })
-    boardReviews = data ?? []
+    boardReviews = (data ?? []).map(({ reviewer_id, ...r }) => ({
+      ...r,
+      is_mine: reviewer_id === user.id,
+    }))
   }
 
   return (

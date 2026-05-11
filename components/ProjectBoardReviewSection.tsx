@@ -11,7 +11,7 @@ type Review = {
   rating: number
   comment: string | null
   created_at: string
-  reviewer_id: string
+  is_mine: boolean
   reviewee_id: string
 }
 
@@ -44,7 +44,7 @@ export default function ProjectBoardReviewSection({
   const otherMembers = members.filter((m) => m.userId !== currentUserId)
 
   // 自分が既に投稿済みかチェック
-  const hasReviewed = initialReviews.some((r) => r.reviewer_id === currentUserId)
+  const hasReviewed = initialReviews.some((r) => r.is_mine)
   const canReview   = isCompleted && otherMembers.length > 0 && !hasReviewed
 
   // 各メンバーへの評価フォームを初期化

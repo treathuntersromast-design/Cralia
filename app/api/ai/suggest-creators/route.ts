@@ -47,10 +47,13 @@ function getDb() {
 }
 
 export async function POST(request: NextRequest) {
+  let userId: string | undefined
+
   try {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+    userId = user.id
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json({ error: 'AI機能が設定されていません（APIキー未設定）' }, { status: 503 })
@@ -98,7 +101,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '依頼内容が長すぎます（3000文字以内）' }, { status: 400 })
     }
 
-    const userMessage = `依頼タイトル: ${title.trim()}\n\n依頼内容:\n${description.trim()}`
+    const safeTitle       = title.trim().replace(/[`<>|]/g, '').slice(0, 200)
+    const safeDescription = description.trim().replace(/[`<>|]/g, '').slice(0, 3000)
+    const userMessage = `依頼タイトル: ${safeTitle}\n\n依頼内容:\n${safeDescription}`
 
     const response = await anthropic.messages.create({
       model:      'claude-haiku-4-5-20251001',
@@ -138,7 +143,7 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     const message = e instanceof Error ? e.message : '予期しないエラーが発生しました'
     const stack   = e instanceof Error ? e.stack   : undefined
-    await logError({ endpoint: 'ai/suggest-creators', message, stack })
-    return NextResponse.json({ error: message }, { status: 500 })
+    await logError({ endpoint: 'ai/suggest-creators', message, stack, userId })
+    return NextResponse.json({ error: 'エラーが発生しました。時間をおいて再試みください。' }, { status: 500 })
   }
 }

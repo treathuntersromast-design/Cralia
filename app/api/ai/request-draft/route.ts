@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit, sanitizeAiResponse } from '@/lib/aiGuard'
@@ -73,11 +73,36 @@ const SYSTEM_PROMPT = `あなたはクリエイターマッチングプラット
 - 敬語を使い、丁寧な印象を保つ
 - 外部リンクや連絡先情報は含めない`
 
+const ALLOWED_ROLES = new Set(['user', 'assistant'])
+const MSG_MAX_CHARS = 3000
+const TOTAL_MAX_CHARS = 20_000
+
+function sanitizeForPrompt(str: string | null | undefined, maxLen: number): string {
+  if (!str) return ''
+  return str
+    .replace(/[\n\r]/g, ' ')
+    .replace(/[`<>|]/g, '')
+    .trim()
+    .slice(0, maxLen)
+}
+
+function sanitizeMultilineForPrompt(str: string | null | undefined, maxLen: number): string {
+  if (!str) return ''
+  return str
+    .replace(/`/g, "'")
+    .replace(/[<>|]/g, '')
+    .trim()
+    .slice(0, maxLen)
+}
+
 export async function POST(request: NextRequest) {
+  let userId: string | undefined
+
   try {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+    userId = user.id
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json({ error: 'AI機能が設定されていません（APIキー未設定）' }, { status: 503 })
@@ -93,10 +118,10 @@ export async function POST(request: NextRequest) {
 
     let body: {
       messages?:      unknown
-      mode?:          'create' | 'review'
-      displayName?:   string
-      existingDraft?: string
-      creatorName?:   string
+      mode?:          unknown
+      displayName?:   unknown
+      existingDraft?: unknown
+      creatorName?:   unknown
     }
     try {
       body = await request.json()
@@ -106,23 +131,40 @@ export async function POST(request: NextRequest) {
 
     const { messages, mode, displayName, existingDraft, creatorName } = body
 
+    if (mode !== undefined && mode !== 'create' && mode !== 'review') {
+      return NextResponse.json({ error: '不正なモード指定です' }, { status: 400 })
+    }
+
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: '不正なリクエストです' }, { status: 400 })
     }
     if (messages.length > 40) {
       return NextResponse.json({ error: 'メッセージ履歴が長すぎます' }, { status: 400 })
     }
+
+    let totalChars = 0
     for (const m of messages as { role?: unknown; content?: unknown }[]) {
-      if (typeof m.content !== 'string' || m.content.length > 3000) {
-        return NextResponse.json({ error: 'メッセージが長すぎます（1件3000文字以内）' }, { status: 400 })
+      if (!ALLOWED_ROLES.has(m.role as string)) {
+        return NextResponse.json({ error: 'role は user または assistant のみ指定できます' }, { status: 400 })
       }
+      if (typeof m.content !== 'string' || m.content.length > MSG_MAX_CHARS) {
+        return NextResponse.json({ error: `メッセージが長すぎます（1件${MSG_MAX_CHARS}文字以内）` }, { status: 400 })
+      }
+      totalChars += m.content.length
+    }
+    if (totalChars > TOTAL_MAX_CHARS) {
+      return NextResponse.json({ error: '会話の合計文字数が上限を超えています' }, { status: 400 })
     }
 
+    const safeDisplayName   = typeof displayName   === 'string' ? sanitizeForPrompt(displayName, 60)   : null
+    const safeCreatorName   = typeof creatorName   === 'string' ? sanitizeForPrompt(creatorName, 60)   : null
+    const safeExistingDraft = typeof existingDraft === 'string' ? sanitizeMultilineForPrompt(existingDraft, 2000) : null
+
     const contextLines: string[] = []
-    if (mode)          contextLines.push(`現在のモード: ${mode === 'create' ? '作成モード（ゼロから依頼文を作る）' : '添削モード（既存の依頼文を改善する）'}`)
-    if (displayName)   contextLines.push(`依頼者の名前: ${displayName}`)
-    if (creatorName)   contextLines.push(`依頼先クリエイター: ${creatorName}`)
-    if (existingDraft) contextLines.push(`現在の依頼文（添削対象）:\n---\n${existingDraft}\n---`)
+    if (mode)                contextLines.push(`現在のモード: ${mode === 'create' ? '作成モード（ゼロから依頼文を作る）' : '添削モード（既存の依頼文を改善する）'}`)
+    if (safeDisplayName)     contextLines.push(`依頼者の名前: ${safeDisplayName}`)
+    if (safeCreatorName)     contextLines.push(`依頼先クリエイター: ${safeCreatorName}`)
+    if (safeExistingDraft)   contextLines.push(`現在の依頼文（添削対象）:\n---\n${safeExistingDraft}\n---`)
 
     const systemWithContext = contextLines.length > 0
       ? `${SYSTEM_PROMPT}\n\n## 現在のセッション情報\n${contextLines.join('\n')}`
@@ -134,10 +176,10 @@ export async function POST(request: NextRequest) {
     }))
 
     if (apiMessages.length === 0) {
-      if (mode === 'review' && existingDraft) {
+      if (mode === 'review' && safeExistingDraft) {
         apiMessages.push({
           role: 'user',
-          content: `添削をお願いします。現在の依頼文は以下のとおりです。\n\n${existingDraft}`,
+          content: `添削をお願いします。現在の依頼文は以下のとおりです。\n\n${safeExistingDraft}`,
         })
       } else {
         apiMessages.push({
@@ -165,7 +207,7 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     const message = e instanceof Error ? e.message : '予期しないエラーが発生しました'
     const stack   = e instanceof Error ? e.stack   : undefined
-    await logError({ endpoint: 'ai/request-draft', message, stack })
-    return NextResponse.json({ error: message }, { status: 500 })
+    await logError({ endpoint: 'ai/request-draft', message, stack, userId })
+    return NextResponse.json({ error: 'エラーが発生しました。時間をおいて再試みください。' }, { status: 500 })
   }
 }

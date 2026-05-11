@@ -49,7 +49,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   if (!order) notFound()
   if (order.client_id !== user.id && order.creator_id !== user.id) notFound()
 
-  const [{ data: clientUser }, { data: creatorUser }, { data: reviews }] = await Promise.all([
+  const [{ data: clientUser }, { data: creatorUser }, { data: rawReviews }] = await Promise.all([
     db.from('users').select('display_name, avatar_url').eq('id', order.client_id).single(),
     db.from('users').select('display_name, avatar_url').eq('id', order.creator_id).single(),
     db.from('reviews')
@@ -57,6 +57,10 @@ export default async function OrderDetailPage({ params }: { params: { id: string
       .eq('project_id', params.id)
       .order('created_at', { ascending: false }),
   ])
+  const reviews = (rawReviews ?? []).map(({ reviewer_id, ...r }) => ({
+    ...r,
+    is_mine: reviewer_id === user.id,
+  }))
 
   const isClient   = order.client_id  === user.id
   const isCreator  = order.creator_id === user.id
@@ -283,7 +287,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           currentUserId={user.id}
           clientId={order.client_id}
           creatorId={order.creator_id}
-          initialReviews={(reviews ?? []) as { id: string; rating: number; comment: string | null; created_at: string; reviewer_id: string; reviewee_id: string; review_type: string }[]}
+          initialReviews={reviews}
         />
       </Container>
     </div>

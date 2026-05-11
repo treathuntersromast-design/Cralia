@@ -6,6 +6,7 @@ import AvatarUpload from '@/components/AvatarUpload'
 import { activityStyleToLabel } from '@/lib/constants/activity'
 import { ORDER_STATUS_MAP, PROJECT_STATUS_MAP, INACTIVE_ORDER_STATUSES } from '@/lib/constants/statuses'
 import DashboardCalendar from '@/components/DashboardCalendar'
+import DashboardChatBot from '@/components/DashboardChatBot'
 import UpcomingMeetBanner from '@/components/UpcomingMeetBanner'
 import { AppHeader } from '@/components/layout/AppHeader'
 import { Container } from '@/components/ui/Container'
@@ -436,6 +437,7 @@ export default async function DashboardPage() {
           </div>
         </div>
       </Container>
+      <DashboardChatBot />
     </div>
   )
 }

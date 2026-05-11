@@ -24,6 +24,10 @@ export async function GET(request: NextRequest) {
   const orderId = searchParams.get('orderId')
   if (!orderId) return NextResponse.json({ error: 'orderId は必須です' }, { status: 400 })
 
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+
   const db = getDb()
   const { data, error } = await db
     .from('reviews')
@@ -32,7 +36,11 @@ export async function GET(request: NextRequest) {
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: '取得に失敗しました' }, { status: 500 })
-  return NextResponse.json({ reviews: data ?? [] })
+  const reviews = (data ?? []).map(({ reviewer_id, ...r }) => ({
+    ...r,
+    is_mine: reviewer_id === user.id,
+  }))
+  return NextResponse.json({ reviews })
 }
 
 export async function POST(request: NextRequest) {

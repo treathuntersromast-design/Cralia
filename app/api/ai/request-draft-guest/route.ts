@@ -46,6 +46,28 @@ const SYSTEM_PROMPT = `あなたはクリエイターマッチングプラット
 - 長すぎず短すぎない（目安: 200〜600文字程度）
 - 敬語を使い、丁寧な印象を保つ`
 
+const ALLOWED_ROLES = new Set(['user', 'assistant'])
+const MSG_MAX_CHARS = 3000
+const TOTAL_MAX_CHARS = 15_000
+
+function sanitizeForPrompt(str: string | null | undefined, maxLen: number): string {
+  if (!str) return ''
+  return str
+    .replace(/[\n\r]/g, ' ')
+    .replace(/[`<>|]/g, '')
+    .trim()
+    .slice(0, maxLen)
+}
+
+function sanitizeMultilineForPrompt(str: string | null | undefined, maxLen: number): string {
+  if (!str) return ''
+  return str
+    .replace(/`/g, "'")
+    .replace(/[<>|]/g, '')
+    .trim()
+    .slice(0, maxLen)
+}
+
 function getClientIp(request: NextRequest): string {
   return (
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
@@ -71,11 +93,11 @@ export async function POST(request: NextRequest) {
 
     let body: {
       messages?:      unknown
-      mode?:          'create' | 'review'
-      existingDraft?: string
-      budget?:        string
-      deadline?:      string
-      orderType?:     string
+      mode?:          unknown
+      existingDraft?: unknown
+      budget?:        unknown
+      deadline?:      unknown
+      orderType?:     unknown
     }
     try {
       body = await request.json()
@@ -85,26 +107,42 @@ export async function POST(request: NextRequest) {
 
     const { messages, mode, existingDraft, budget, deadline, orderType } = body
 
+    if (mode !== undefined && mode !== 'create' && mode !== 'review') {
+      return NextResponse.json({ error: '不正なモード指定です' }, { status: 400 })
+    }
+
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: '不正なリクエストです' }, { status: 400 })
     }
     if (messages.length > 20) {
       return NextResponse.json({ error: 'メッセージ履歴が長すぎます' }, { status: 400 })
     }
+
+    let totalChars = 0
     for (const m of messages as { role?: unknown; content?: unknown }[]) {
-      if (typeof m.content !== 'string' || m.content.length > 3000) {
-        return NextResponse.json({ error: 'メッセージが長すぎます（1件3000文字以内）' }, { status: 400 })
+      if (!ALLOWED_ROLES.has(m.role as string)) {
+        return NextResponse.json({ error: 'role は user または assistant のみ指定できます' }, { status: 400 })
       }
+      if (typeof m.content !== 'string' || m.content.length > MSG_MAX_CHARS) {
+        return NextResponse.json({ error: `メッセージが長すぎます（1件${MSG_MAX_CHARS}文字以内）` }, { status: 400 })
+      }
+      totalChars += m.content.length
+    }
+    if (totalChars > TOTAL_MAX_CHARS) {
+      return NextResponse.json({ error: '会話の合計文字数が上限を超えています' }, { status: 400 })
     }
 
-    const contextLines: string[] = [
-      '利用者: ゲスト（未登録ユーザー）',
-    ]
-    if (mode)          contextLines.push(`現在のモード: ${mode === 'create' ? '作成モード' : '添削モード'}`)
-    if (orderType)     contextLines.push(`報酬: ${orderType === 'paid' ? '有償' : '無償'}`)
-    if (budget)        contextLines.push(`予算: ${budget}`)
-    if (deadline)      contextLines.push(`希望納期: ${deadline}`)
-    if (existingDraft) contextLines.push(`現在の依頼文（添削対象）:\n---\n${existingDraft}\n---`)
+    const safeExistingDraft = typeof existingDraft === 'string' ? sanitizeMultilineForPrompt(existingDraft, 2000) : null
+    const safeBudget        = typeof budget        === 'string' ? sanitizeForPrompt(budget, 100)                  : null
+    const safeDeadline      = typeof deadline      === 'string' ? sanitizeForPrompt(deadline, 100)                : null
+    const safeOrderType     = orderType === 'paid' || orderType === 'free' ? orderType : null
+
+    const contextLines: string[] = ['利用者: ゲスト（未登録ユーザー）']
+    if (mode)               contextLines.push(`現在のモード: ${mode === 'create' ? '作成モード' : '添削モード'}`)
+    if (safeOrderType)      contextLines.push(`報酬: ${safeOrderType === 'paid' ? '有償' : '無償'}`)
+    if (safeBudget)         contextLines.push(`予算: ${safeBudget}`)
+    if (safeDeadline)       contextLines.push(`希望納期: ${safeDeadline}`)
+    if (safeExistingDraft)  contextLines.push(`現在の依頼文（添削対象）:\n---\n${safeExistingDraft}\n---`)
 
     const systemWithContext = `${SYSTEM_PROMPT}\n\n## 現在のセッション情報\n${contextLines.join('\n')}`
 
@@ -114,10 +152,10 @@ export async function POST(request: NextRequest) {
     }))
 
     if (apiMessages.length === 0) {
-      if (mode === 'review' && existingDraft) {
+      if (mode === 'review' && safeExistingDraft) {
         apiMessages.push({
           role: 'user',
-          content: `添削をお願いします。現在の依頼文は以下のとおりです。\n\n${existingDraft}`,
+          content: `添削をお願いします。現在の依頼文は以下のとおりです。\n\n${safeExistingDraft}`,
         })
       } else {
         apiMessages.push({
@@ -151,6 +189,6 @@ export async function POST(request: NextRequest) {
     const message = e instanceof Error ? e.message : '予期しないエラーが発生しました'
     const stack   = e instanceof Error ? e.stack   : undefined
     await logError({ endpoint: 'ai/request-draft-guest', message, stack })
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json({ error: 'エラーが発生しました。時間をおいて再試みください。' }, { status: 500 })
   }
 }

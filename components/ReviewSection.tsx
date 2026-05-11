@@ -11,7 +11,7 @@ type Review = {
   rating: number
   comment: string | null
   created_at: string
-  reviewer_id: string
+  is_mine: boolean
   reviewee_id: string
   review_type: string
 }
@@ -50,7 +50,7 @@ export default function ReviewSection({
   const myRevieweeId = isClient ? creatorId : clientId
 
   const hasReviewed = reviews.some(
-    (r) => r.reviewer_id === currentUserId && r.review_type === myReviewType
+    (r) => r.is_mine && r.review_type === myReviewType
   )
   const canReview = isCompleted && (isClient || isCreator) && !hasReviewed
 

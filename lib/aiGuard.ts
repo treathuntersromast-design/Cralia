@@ -11,6 +11,8 @@ const DAILY_LIMITS: Record<string, number> = {
   'ai/suggest-creators':        20,
   'ai/creator-listing-draft':   30,
   'ai/pitch-draft':             30,
+  'ai/dashboard-chat':          20,
+  'support/inquiry':             5,
 }
 
 function getDb() {

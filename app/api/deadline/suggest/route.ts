@@ -9,24 +9,25 @@
  * }
  *
  * response: {
- *   deadline: string          // "YYYY-MM-DD"
- *   summary: string           // 人間向けの説明文
- *   skipped_calendar: number  // カレンダーでスキップした日数
- *   skipped_holidays: number
+ *   deadline: string     // "YYYY-MM-DD"
+ *   summary: string      // 人間向けの説明文（カレンダー詳細は含まない）
+ *   working_days: number
  * }
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import {
   calculateDeadline,
   toDateString,
   type CreatorSchedule,
 } from '@/lib/calculateDeadline'
+import { ORDER_STATUS } from '@/lib/constants/statuses'
 
 export const dynamic = 'force-dynamic'
 
 async function getValidAccessToken(creatorId: string): Promise<string> {
-  const supabase = createClient(
+  const supabase = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
@@ -65,7 +66,7 @@ async function getValidAccessToken(creatorId: string): Promise<string> {
 }
 
 async function getCreatorSchedule(creatorId: string): Promise<CreatorSchedule> {
-  const supabase = createClient(
+  const supabase = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
@@ -80,14 +81,12 @@ async function getCreatorSchedule(creatorId: string): Promise<CreatorSchedule> {
 
   let workDays: number[]
   if (rawDays.length > 0 && typeof rawDays[0] === 'number') {
-    // DBには数値配列で保存されている（0=日, 1=月, ..., 6=土）
     workDays = rawDays as number[]
   } else if (rawDays.length > 0 && typeof rawDays[0] === 'string') {
-    // 日本語曜日名の場合
     const dayMap: Record<string, number> = { 日: 0, 月: 1, 火: 2, 水: 3, 木: 4, 金: 5, 土: 6 }
     workDays = (rawDays as string[]).map((d) => dayMap[d]).filter((n): n is number => n !== undefined)
   } else {
-    workDays = [1, 2, 3, 4, 5] // デフォルト平日
+    workDays = [1, 2, 3, 4, 5]
   }
 
   return {
@@ -108,6 +107,11 @@ function calcFallbackDeadline(workDays: number, workDayNumbers: number[]): strin
 }
 
 export async function POST(req: NextRequest) {
+  // 1. 認証チェック
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+
   try {
     const body = await req.json()
     const { creator_id, working_days_required } = body
@@ -123,6 +127,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '作業日数は90日以内で指定してください' }, { status: 400 })
     }
 
+    // 2. 認可チェック: 進行中の受注関係（pending / accepted / in_progress）のみ許可
+    //    completed / delivered / cancelled / disputed 等は対象外
+    const db = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: relations } = await db
+      .from('projects')
+      .select('id')
+      .eq('client_id', user.id)
+      .eq('creator_id', creator_id)
+      .in('status', [ORDER_STATUS.PENDING, ORDER_STATUS.ACCEPTED, ORDER_STATUS.IN_PROGRESS])
+      .limit(1)
+
+    if (!relations || relations.length === 0) {
+      return NextResponse.json({ error: 'アクセス権がありません' }, { status: 403 })
+    }
+
+    // 3. 認証・認可チェック後にクリエイター情報を取得
     const creatorSchedule = await getCreatorSchedule(creator_id)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -140,28 +163,17 @@ export async function POST(req: NextRequest) {
       const deadline = calcFallbackDeadline(workDays, creatorSchedule.workDays)
       return NextResponse.json({
         deadline,
-        summary: `${workDays}営業日で計算した納期目安: ${deadline}（カレンダー情報なし）`,
-        skipped_calendar: 0,
-        skipped_holidays: 0,
+        summary: `${workDays}営業日で計算した納期目安: ${deadline}`,
         working_days: workDays,
       })
     }
 
     const result = await calculateDeadline(accessToken, today, workDays, creatorSchedule)
-
-    const skippedCalendar = result.skippedDays.filter((s) => s.reason === 'calendar_event').length
-    const skippedHolidays = result.skippedDays.filter((s) => s.reason === 'holiday').length
     const deadline = toDateString(result.deadline)
-
-    let summary = `${workDays}営業日で計算した納期目安: ${deadline}`
-    if (skippedHolidays > 0) summary += `（祝日${skippedHolidays}日スキップ）`
-    if (skippedCalendar > 0) summary += `（カレンダーの不在${skippedCalendar}日スキップ）`
 
     return NextResponse.json({
       deadline,
-      summary,
-      skipped_calendar: skippedCalendar,
-      skipped_holidays: skippedHolidays,
+      summary: `${workDays}営業日で計算した納期目安: ${deadline}`,
       working_days: workDays,
     })
   } catch (err: unknown) {

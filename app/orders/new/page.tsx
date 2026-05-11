@@ -59,11 +59,12 @@ function NewOrderContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title, description, budget, deadline, orderType])
 
-  const [calConnected,    setCalConnected]    = useState(false)
-  const [suggesting,      setSuggesting]      = useState(false)
-  const [suggestion,      setSuggestion]      = useState<{ deadline: string; summary: string } | null>(null)
-  const [suggestError,    setSuggestError]    = useState<string | null>(null)
-  const [workingDays,     setWorkingDays]     = useState(10)
+  const [calConnected,       setCalConnected]       = useState(false)
+  const [suggesting,         setSuggesting]         = useState(false)
+  const [suggestion,         setSuggestion]         = useState<{ deadline: string; summary: string } | null>(null)
+  const [suggestError,       setSuggestError]       = useState<string | null>(null)
+  const [suggestUnavailable, setSuggestUnavailable] = useState(false)
+  const [workingDays,        setWorkingDays]        = useState(10)
 
   const [deadlineWarning, setDeadlineWarning] = useState<{
     level: 'danger' | 'caution'
@@ -128,7 +129,11 @@ function NewOrderContent() {
     setSuggesting(false)
 
     if (!res.ok) {
-      setSuggestError(data.error ?? '提案の取得に失敗しました')
+      if (res.status === 403) {
+        setSuggestUnavailable(true)
+      } else {
+        setSuggestError(data.error ?? '提案の取得に失敗しました')
+      }
       return
     }
 
@@ -350,38 +355,47 @@ function NewOrderContent() {
                   </div>
                 </div>
 
-                {suggestError && (
-                  <p className="text-[#dc2626] text-[13px] mb-2.5 bg-[#dc2626]/8 rounded-[8px] px-3 py-2">
-                    {suggestError}
-                  </p>
-                )}
-
-                {suggestion && (
-                  <div className="bg-[#4ade80]/10 border border-[#4ade80]/25 rounded-[10px] p-3.5 mb-3">
-                    <p className="text-[#16a34a] font-bold text-[15px] mb-1">
-                      提案納期: {new Date(suggestion.deadline).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </p>
-                    <p className="text-[var(--c-text-3)] text-[12px] mb-3">{suggestion.summary}</p>
-                    <button
-                      type="button"
-                      onClick={applyDeadline}
-                      className="px-4 py-2 rounded-[8px] border-0 bg-[#4ade80] text-[#0a3d2b] text-[13px] font-bold cursor-pointer"
-                    >
-                      この日程を使う
-                    </button>
+                {suggestUnavailable ? (
+                  <div className="flex items-start gap-2 text-[13px] text-[var(--c-text-3)] bg-[var(--c-surface-3)] border border-[var(--c-border)] rounded-[8px] px-3 py-2.5">
+                    <Info size={14} className="shrink-0 mt-0.5 text-[var(--c-text-4)]" aria-hidden />
+                    <span>初回の依頼では自動納期提案はご利用いただけません。希望納期は直接入力してください。</span>
                   </div>
-                )}
+                ) : (
+                  <>
+                    {suggestError && (
+                      <p className="text-[#dc2626] text-[13px] mb-2.5 bg-[#dc2626]/8 rounded-[8px] px-3 py-2">
+                        {suggestError}
+                      </p>
+                    )}
 
-                {!suggestion && (
-                  <button
-                    type="button"
-                    onClick={handleSuggestDeadline}
-                    disabled={suggesting}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-[14px] font-bold border border-[#4ade80]/40 bg-[#4ade80]/10 text-[#16a34a] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed transition-colors hover:bg-[#4ade80]/15"
-                  >
-                    <Calendar size={15} aria-hidden />
-                    {suggesting ? '計算中...' : '納期を提案してもらう'}
-                  </button>
+                    {suggestion && (
+                      <div className="bg-[#4ade80]/10 border border-[#4ade80]/25 rounded-[10px] p-3.5 mb-3">
+                        <p className="text-[#16a34a] font-bold text-[15px] mb-1">
+                          提案納期: {new Date(suggestion.deadline).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                        <p className="text-[var(--c-text-3)] text-[12px] mb-3">{suggestion.summary}</p>
+                        <button
+                          type="button"
+                          onClick={applyDeadline}
+                          className="px-4 py-2 rounded-[8px] border-0 bg-[#4ade80] text-[#0a3d2b] text-[13px] font-bold cursor-pointer"
+                        >
+                          この日程を使う
+                        </button>
+                      </div>
+                    )}
+
+                    {!suggestion && (
+                      <button
+                        type="button"
+                        onClick={handleSuggestDeadline}
+                        disabled={suggesting}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-[14px] font-bold border border-[#4ade80]/40 bg-[#4ade80]/10 text-[#16a34a] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed transition-colors hover:bg-[#4ade80]/15"
+                      >
+                        <Calendar size={15} aria-hidden />
+                        {suggesting ? '計算中...' : '納期を提案してもらう'}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             )}
