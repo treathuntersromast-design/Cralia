@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS public.users (
   ai_suggestion_enabled  BOOLEAN     NOT NULL DEFAULT true,
   -- 利用規約への同意日時
   terms_agreed_at        TIMESTAMPTZ,
+  -- 評価の外部公開設定（false=5件未満は自動非表示、true=件数に関わらず公開）
+  show_rating_publicly   BOOLEAN     NOT NULL DEFAULT false,
   created_at             TIMESTAMPTZ DEFAULT NOW(),
   updated_at             TIMESTAMPTZ DEFAULT NOW()
 );
@@ -38,8 +40,9 @@ CREATE POLICY "users_update_own"   ON public.users FOR UPDATE USING (auth.uid() 
 CREATE POLICY "users_service_role" ON public.users FOR ALL TO service_role USING (true);
 
 -- ── コメント ─────────────────────────────────────────────────
-COMMENT ON COLUMN public.users.activity_style_id IS 'FK → m_activity_style.code（1: クリエイター, 2: 依頼者, 3: 両方）';
-COMMENT ON COLUMN public.users.entity_type       IS 'FK → m_entity_type.value（individual / corporate）';
-COMMENT ON COLUMN public.users.client_type       IS '依頼者タイプ（m_client_type.value の複数選択）';
+COMMENT ON COLUMN public.users.activity_style_id    IS 'FK → m_activity_style.code（1: クリエイター, 2: 依頼者, 3: 両方）';
+COMMENT ON COLUMN public.users.entity_type           IS 'FK → m_entity_type.value（individual / corporate）';
+COMMENT ON COLUMN public.users.client_type           IS '依頼者タイプ（m_client_type.value の複数選択）';
+COMMENT ON COLUMN public.users.show_rating_publicly  IS 'true: 受注件数に関わらず評価を外部公開。false(デフォルト): order_to_creator レビューが REVIEW_DISPLAY_THRESHOLD 件未満の場合は非表示';
 
 COMMIT;

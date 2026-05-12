@@ -7,6 +7,7 @@ import ProfilePageClient from '@/components/ProfilePageClient'
 import { AppHeader } from '@/components/layout/AppHeader'
 import { activityStyleToRoles, hasClientRole, hasCreatorRole } from '@/lib/constants/activity'
 import { INACTIVE_ORDER_STATUSES } from '@/lib/constants/statuses'
+import { VALIDATION } from '@/lib/constants/validation'
 
 export default async function ProfilePage({
   params,
@@ -29,7 +30,7 @@ export default async function ProfilePage({
   ] = await Promise.all([
     supabase.from('creator_profiles').select('*').eq('creator_id', params.id).single(),
     supabase.from('portfolios').select('*').eq('creator_id', params.id).order('display_order'),
-    supabase.from('users').select('sns_links, entity_type, avatar_url, activity_style_id').eq('id', params.id).single(),
+    supabase.from('users').select('sns_links, entity_type, avatar_url, activity_style_id, show_rating_publicly').eq('id', params.id).single(),
   ])
 
   if (!creator) notFound()
@@ -116,6 +117,11 @@ export default async function ProfilePage({
     evalAsMember  = calcStat(allReviews, 'project_member')
     recentReviews = (allReviews ?? []).slice(0, 5)
   } catch { /* 取得失敗時は非表示 */ }
+
+  // 評価の外部公開可否を決定
+  // true: 外部に表示, false: 外部に非表示（オーナー自身は常に閲覧可）
+  const showRatingPublicly = !!(userRecord as Record<string, unknown>)?.show_rating_publicly
+  const showRating = showRatingPublicly || evalAsCreator.count >= VALIDATION.REVIEW_DISPLAY_THRESHOLD
 
   // creatorTypesの正規化（「その他（xxx）」→ 表示用にそのまま渡す）
   const creatorTypes: string[] = creator.creator_type ?? []
@@ -233,6 +239,8 @@ export default async function ProfilePage({
         evalAsClient={evalAsClient}
         evalAsMember={evalAsMember}
         recentReviews={recentReviews}
+        showRating={showRating}
+        showRatingPublicly={showRatingPublicly}
         isClientProfile={isClientProfile}
         viewerIsCreator={viewerIsCreator}
         viewerCompletedCount={viewerCompletedCount}

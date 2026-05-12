@@ -48,6 +48,8 @@ interface Props {
   evalAsClient:  { count: number; avg: number | null }
   evalAsMember:  { count: number; avg: number | null }
   recentReviews: { id: string; rating: number; comment: string | null; created_at: string; review_type: string }[]
+  showRating: boolean
+  showRatingPublicly: boolean
   // 営業機能用
   isClientProfile?: boolean
   viewerIsCreator?: boolean
@@ -892,6 +894,8 @@ export default function ProfilePageClient(props: Props) {
         evalAsClient={props.evalAsClient}
         evalAsMember={props.evalAsMember}
         recentReviews={props.recentReviews}
+        showRating={props.showRating}
+        showRatingPublicly={props.showRatingPublicly}
       />
 
       {/* 営業モーダル */}
@@ -931,14 +935,20 @@ function EvaluationSection({
   evalAsClient,
   evalAsMember,
   recentReviews,
+  showRating,
+  showRatingPublicly,
 }: {
   isOwner: boolean
   evalAsCreator: { count: number; avg: number | null }
   evalAsClient:  { count: number; avg: number | null }
   evalAsMember:  { count: number; avg: number | null }
   recentReviews: { id: string; rating: number; comment: string | null; created_at: string; review_type: string }[]
+  showRating: boolean
+  showRatingPublicly: boolean
 }) {
   const [reportReviewId, setReportReviewId] = useState<string | null>(null)
+  const [toggling, setToggling] = useState(false)
+  const [currentlyPublic, setCurrentlyPublic] = useState(showRatingPublicly)
 
   const hasAnyEval = evalAsCreator.count > 0 || evalAsClient.count > 0 || evalAsMember.count > 0
 
@@ -952,6 +962,32 @@ function EvaluationSection({
     type === 'order_to_creator' ? 'クリエイターとして受けた評価'
     : type === 'order_to_client' ? '依頼者として受けた評価'
     : 'プロジェクトメンバーとして受けた評価'
+
+  async function toggleRatingPublic() {
+    setToggling(true)
+    try {
+      await fetch('/api/profile/update', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ showRatingPublicly: !currentlyPublic }),
+      })
+      setCurrentlyPublic((prev) => !prev)
+    } finally {
+      setToggling(false)
+    }
+  }
+
+  // 外部訪問者かつ評価非表示の場合はプレースホルダーのみ表示
+  if (!isOwner && !showRating) {
+    return (
+      <div className="rounded-card border border-[var(--c-border)] bg-[var(--c-surface)] p-6 mb-5">
+        <h2 className="text-[11px] font-bold text-[var(--c-text-3)] tracking-widest uppercase mb-4">評価</h2>
+        <p className="text-[13px] text-[var(--c-text-3)]">
+          評価は5件以上の受注完了後に表示されます
+        </p>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -1010,6 +1046,50 @@ function EvaluationSection({
 
         {!hasAnyEval && (
           <p className="text-[14px] text-[var(--c-text-3)]">まだ評価がありません</p>
+        )}
+
+        {/* オーナー向け：評価公開設定バナー */}
+        {isOwner && !showRating && (
+          <div className="mt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-[10px] border border-amber-200 bg-amber-50 px-4 py-3">
+            <div>
+              <p className="text-[12px] font-semibold text-amber-800">
+                現在、外部訪問者には評価が表示されていません
+              </p>
+              <p className="text-[11px] text-amber-700 mt-0.5">
+                受注完了5件以上で自動公開されます。今すぐ公開することもできます。
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={toggleRatingPublic}
+              disabled={toggling}
+              className="shrink-0 text-[12px] font-semibold px-3.5 py-1.5 rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors disabled:opacity-50"
+            >
+              {toggling ? '処理中…' : '今すぐ公開する'}
+            </button>
+          </div>
+        )}
+
+        {/* オーナー向け：自主公開中バナー（手動でONにしている場合） */}
+        {isOwner && showRating && currentlyPublic && (
+          <div className="mt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-[10px] border border-sky-200 bg-sky-50 px-4 py-3">
+            <div>
+              <p className="text-[12px] font-semibold text-sky-800">
+                評価を外部に公開中（手動設定）
+              </p>
+              <p className="text-[11px] text-sky-700 mt-0.5">
+                受注完了5件未満でも外部に評価が表示されています。
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={toggleRatingPublic}
+              disabled={toggling}
+              className="shrink-0 text-[12px] font-semibold px-3.5 py-1.5 rounded-lg border border-sky-300 bg-white text-sky-700 hover:bg-sky-50 transition-colors disabled:opacity-50"
+            >
+              {toggling ? '処理中…' : '非公開に戻す'}
+            </button>
+          </div>
         )}
       </div>
 

@@ -25,7 +25,7 @@ export async function PATCH(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'リクエストの形式が正しくありません' }, { status: 400 })
   }
-  const { displayName, creatorTypes, bio, skills, priceMin, priceNote, deliveryDays, snsLinks } = body
+  const { displayName, creatorTypes, bio, skills, priceMin, priceNote, deliveryDays, snsLinks, showRatingPublicly } = body
 
   // users テーブルの更新
   const userPatch: Record<string, unknown> = { updated_at: new Date().toISOString() }
@@ -33,6 +33,10 @@ export async function PATCH(request: NextRequest) {
     if (typeof displayName !== 'string' || !displayName.trim()) return NextResponse.json({ error: '表示名を入力してください' }, { status: 400 })
     if (displayName.trim().length > VALIDATION.DISPLAY_NAME_MAX) return NextResponse.json({ error: `表示名は${VALIDATION.DISPLAY_NAME_MAX}文字以内にしてください` }, { status: 400 })
     userPatch.display_name = displayName.trim()
+  }
+  if (showRatingPublicly !== undefined) {
+    if (typeof showRatingPublicly !== 'boolean') return NextResponse.json({ error: '不正なリクエストです' }, { status: 400 })
+    userPatch.show_rating_publicly = showRatingPublicly
   }
   if (snsLinks !== undefined) {
     if (!Array.isArray(snsLinks)) return NextResponse.json({ error: '不正なリクエストです' }, { status: 400 })

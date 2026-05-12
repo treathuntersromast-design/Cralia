@@ -43,4 +43,7 @@ export const VALIDATION = {
 
   // 決済
   MIN_PROJECT_BUDGET: 500,
+
+  // 評価表示の最低件数（クリエイターとして受注したレビューがこの件数未満は非表示）
+  REVIEW_DISPLAY_THRESHOLD: 5,
 } as const
