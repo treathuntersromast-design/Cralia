@@ -8,6 +8,7 @@ import EditOrderModal from './EditOrderModal'
 import ReviewSection from '@/components/ReviewSection'
 import EstimatedDeadlineCard from '@/components/EstimatedDeadlineCard'
 import { ORDER_STATUS_MAP, ORDER_STATUS_STEPS } from '@/lib/constants/statuses'
+import PaymentButton from '@/components/PaymentButton'
 import { AppHeader } from '@/components/layout/AppHeader'
 import { Container } from '@/components/ui/Container'
 import { Card } from '@/components/ui/Card'
@@ -49,18 +50,28 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   if (!order) notFound()
   if (order.client_id !== user.id && order.creator_id !== user.id) notFound()
 
-  const [{ data: clientUser }, { data: creatorUser }, { data: rawReviews }] = await Promise.all([
+  const [{ data: clientUser }, { data: creatorUser }, { data: rawReviews }, { data: activePayments }] = await Promise.all([
     db.from('users').select('display_name, avatar_url').eq('id', order.client_id).single(),
     db.from('users').select('display_name, avatar_url').eq('id', order.creator_id).single(),
     db.from('reviews')
-      .select('id, rating, comment, created_at, reviewer_id, reviewee_id, review_type')
+      .select('id, rating, comment, created_at, reviewer_id, reviewee_id, review_type'),
+    // active payment 優先取得（expired/failed 以外で最新のもの）
+    db.from('payments')
+      .select('id, status, stripe_checkout_session_id')
       .eq('project_id', params.id)
-      .order('created_at', { ascending: false }),
+      .not('status', 'in', '(expired,failed)')
+      .order('created_at', { ascending: false })
+      .limit(1),
   ])
-  const reviews = (rawReviews ?? []).map(({ reviewer_id, ...r }) => ({
-    ...r,
-    is_mine: reviewer_id === user.id,
-  }))
+  const reviews = (rawReviews ?? []).map((row: {
+    id: string; rating: number; comment: string | null; created_at: string
+    reviewer_id: string; reviewee_id: string; review_type: string
+  }) => {
+    const { reviewer_id, ...r } = row
+    return { ...r, is_mine: reviewer_id === user.id }
+  })
+
+  const activePayment = activePayments?.[0] ?? null
 
   const isClient   = order.client_id  === user.id
   const isCreator  = order.creator_id === user.id
@@ -215,6 +226,14 @@ export default async function OrderDetailPage({ params }: { params: { id: string
             )}
           </div>
         </Card>
+
+        {/* プラットフォーム預かり決済（有償依頼かつ依頼者のみ） */}
+        {isClient && order.order_type !== 'free' && (
+          <Card bordered padded className="mb-4">
+            <h2 className="text-[12px] font-bold text-[var(--c-text-3)] tracking-wider uppercase mb-3">検収後支払い</h2>
+            <PaymentButton projectId={order.id} payment={activePayment} />
+          </Card>
+        )}
 
         {/* メッセージスレッドリンク */}
         <Link

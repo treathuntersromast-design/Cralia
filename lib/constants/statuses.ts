@@ -65,6 +65,42 @@ export const PROJECT_STATUS_MAP: Record<string, { label: string; color: string; 
   [PROJECT_STATUS.CANCELLED]:   { label: 'キャンセル',     color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
 }
 
+// ── 決済ステータス ────────────────────────────────────────────
+export const PAYMENT_STATUS = {
+  PENDING:            'pending',
+  HELD:               'held',
+  PAYOUT_PENDING:     'payout_pending',
+  PAYOUT_PAID:        'payout_paid',
+  REFUNDED:           'refunded',
+  PARTIALLY_REFUNDED: 'partially_refunded',
+  EXPIRED:            'expired',
+  REFUND_PENDING:     'refund_pending',
+  PAYMENT_MISMATCH:   'payment_mismatch',
+  DISPUTED:           'disputed',
+  FAILED:             'failed',
+} as const
+
+export type PaymentStatus = typeof PAYMENT_STATUS[keyof typeof PAYMENT_STATUS]
+
+export const PAYMENT_STATUS_MAP: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  [PAYMENT_STATUS.PENDING]:            { label: '決済待ち',         color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', border: 'rgba(148,163,184,0.25)' },
+  [PAYMENT_STATUS.HELD]:               { label: 'お預かり中',       color: '#60a5fa', bg: 'rgba(96,165,250,0.10)',  border: 'rgba(96,165,250,0.25)'  },
+  [PAYMENT_STATUS.PAYOUT_PENDING]:     { label: '支払確定済み',     color: '#a78bfa', bg: 'rgba(167,139,250,0.10)', border: 'rgba(167,139,250,0.25)' },
+  [PAYMENT_STATUS.PAYOUT_PAID]:        { label: '振込済み',         color: '#4ade80', bg: 'rgba(74,222,128,0.10)',  border: 'rgba(74,222,128,0.25)'  },
+  [PAYMENT_STATUS.REFUNDED]:           { label: '全額返金済み',     color: '#f87171', bg: 'rgba(248,113,113,0.10)', border: 'rgba(248,113,113,0.25)' },
+  [PAYMENT_STATUS.PARTIALLY_REFUNDED]: { label: '部分返金済み',     color: '#fb923c', bg: 'rgba(251,146,60,0.10)',  border: 'rgba(251,146,60,0.25)'  },
+  [PAYMENT_STATUS.EXPIRED]:            { label: '期限切れ',         color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', border: 'rgba(148,163,184,0.25)' },
+  [PAYMENT_STATUS.REFUND_PENDING]:     { label: '返金処理中',       color: '#fbbf24', bg: 'rgba(251,191,36,0.10)',  border: 'rgba(251,191,36,0.25)'  },
+  [PAYMENT_STATUS.PAYMENT_MISMATCH]:   { label: '要確認',           color: '#f87171', bg: 'rgba(248,113,113,0.10)', border: 'rgba(248,113,113,0.25)' },
+  [PAYMENT_STATUS.DISPUTED]:           { label: '異議申し立て中',   color: '#f87171', bg: 'rgba(248,113,113,0.10)', border: 'rgba(248,113,113,0.25)' },
+  [PAYMENT_STATUS.FAILED]:             { label: '決済失敗',         color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', border: 'rgba(148,163,184,0.25)' },
+}
+
+/** 返金可能な状態か */
+export function isRefundable(status: PaymentStatus): boolean {
+  return status === PAYMENT_STATUS.HELD || status === PAYMENT_STATUS.PARTIALLY_REFUNDED
+}
+
 // ── タスクステータス ──────────────────────────────────────────
 export const TASK_STATUS = {
   TODO:        'todo',

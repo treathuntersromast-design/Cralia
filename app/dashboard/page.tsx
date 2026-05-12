@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { isAdmin } from '@/lib/isAdmin'
 import AvatarUpload from '@/components/AvatarUpload'
 import { activityStyleToLabel } from '@/lib/constants/activity'
 import { ORDER_STATUS_MAP, PROJECT_STATUS_MAP, INACTIVE_ORDER_STATUSES } from '@/lib/constants/statuses'
@@ -17,7 +18,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { QuickActions } from '@/components/dashboard/QuickActions'
 import {
   CheckCircle2, Target, Inbox, Send, Calendar,
-  Star, Wallet, AlertTriangle, User, Settings,
+  Star, Wallet, AlertTriangle, User, Settings, Clock,
 } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -84,6 +85,8 @@ export default async function DashboardPage() {
     { data: calTokenRows },
     { data: completedAsCreator },
     { data: myTasksRaw },
+    { data: creatorPayouts },
+    { data: pendingPayoutRows },
   ] = await Promise.all([
     supabase.from('users').select('activity_style_id, display_name, avatar_url').eq('id', user.id).limit(1),
     supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).is('read_at', null),
@@ -116,6 +119,17 @@ export default async function DashboardPage() {
       .neq('status', 'done')
       .order('due_date', { ascending: true, nullsFirst: false })
       .limit(10),
+    // 振込済みの受取履歴（クリエイター）
+    db.from('creator_payouts')
+      .select('id, amount, paid_at')
+      .eq('creator_id', user.id)
+      .order('paid_at', { ascending: false })
+      .limit(5),
+    // 支払確定済み（振込待ち）のペイメント（projects join で creator_id を絞る）
+    db.from('payments')
+      .select('id, amount, fee, refunded_amount, projects!inner(creator_id)')
+      .eq('status', 'payout_pending')
+      .eq('projects.creator_id', user.id),
   ])
 
   const completedIds = (completedAsCreator ?? []).map((p) => p.id)
@@ -181,6 +195,14 @@ export default async function DashboardPage() {
     ? Math.round((ratings.reduce((s, r) => s + r, 0) / ratings.length) * 10) / 10 : null
   const isCreatorRole  = [1, 3].includes(profile.activity_style_id as number)
 
+  const totalPaidOut = (creatorPayouts ?? []).reduce((sum, p) => sum + ((p.amount as number) ?? 0), 0)
+  const pendingPayout = (pendingPayoutRows ?? []).reduce((sum, p) => {
+    const amount   = (p.amount as number) ?? 0
+    const fee      = (p.fee as number | null) ?? 0
+    const refunded = (p.refunded_amount as number) ?? 0
+    return sum + Math.max(0, amount - fee - refunded)
+  }, 0)
+
   const todayStr   = new Date().toISOString().slice(0, 10)
   const todayTasks = myTasks.filter((t) => t.due_date != null && t.due_date <= todayStr).slice(0, 3)
 
@@ -188,7 +210,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[var(--c-bg)]">
-      <AppHeader unreadNotifications={unreadCount} />
+      <AppHeader unreadNotifications={unreadCount} isAdminUser={isAdmin(user.id)} isDashboard />
 
       <Container className="py-5">
         {/* ウェルカムバー */}
@@ -425,6 +447,33 @@ export default async function DashboardPage() {
                       最初の案件を完了すると、ここに実績が表示されます
                     </p>
                   )}
+                </Card>
+              </section>
+            )}
+
+            {/* 検収後支払い（クリエイター向け） */}
+            {isCreatorRole && (totalPaidOut > 0 || pendingPayout > 0) && (
+              <section>
+                <h2 className={sectionLabel}>検収後支払い</h2>
+                <Card padded bordered className="bg-white">
+                  <div className="grid grid-cols-2 divide-x divide-[var(--c-border)]">
+                    <div className="pr-4">
+                      <div className="flex items-center gap-2 text-[var(--c-text-3)] text-xs mb-1">
+                        <Wallet size={14} aria-hidden />振込済み合計
+                      </div>
+                      <div className="text-2xl font-bold text-[var(--c-text)]">
+                        {totalPaidOut > 0 ? `¥${totalPaidOut.toLocaleString()}` : '—'}
+                      </div>
+                    </div>
+                    <div className="pl-4">
+                      <div className="flex items-center gap-2 text-[var(--c-text-3)] text-xs mb-1">
+                        <Clock size={14} aria-hidden />振込待ち
+                      </div>
+                      <div className="text-2xl font-bold text-[var(--c-text)]">
+                        {pendingPayout > 0 ? `¥${pendingPayout.toLocaleString()}` : '—'}
+                      </div>
+                    </div>
+                  </div>
                 </Card>
               </section>
             )}

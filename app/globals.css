@@ -252,3 +252,14 @@ option {
   --c-input-border: #93c5fd;
   color: var(--c-text);
 }
+
+/* ============================================================
+   CHAT TYPING ANIMATION
+   ============================================================ */
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30%            { opacity: 1;   transform: translateY(-2px); }
+}
+.animate-typing-dot {
+  animation: typing-dot 1.2s ease-in-out infinite;
+}

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { ShieldCheck, ChevronLeft } from 'lucide-react'
 import { Container } from '@/components/ui/Container'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -12,9 +13,11 @@ import { MobileMenu } from './MobileMenu'
 interface AppHeaderProps {
   unreadNotifications?: number
   unreadMessages?: number
+  isAdminUser?: boolean
+  isDashboard?: boolean
 }
 
-export function AppHeader({ unreadNotifications = 0, unreadMessages = 0 }: AppHeaderProps) {
+export function AppHeader({ unreadNotifications = 0, unreadMessages = 0, isAdminUser = false, isDashboard = false }: AppHeaderProps) {
   return (
     <header
       className="h-16 border-b sticky top-0 z-30 backdrop-blur"
@@ -24,9 +27,20 @@ export function AppHeader({ unreadNotifications = 0, unreadMessages = 0 }: AppHe
       }}
     >
       <Container className="h-full flex items-center justify-between">
-        <Link href="/dashboard" className="text-xl font-bold text-brand no-underline">
-          Cralia
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/dashboard" className="text-xl font-bold text-brand no-underline">
+            Cralia
+          </Link>
+          {!isDashboard && (
+            <Link
+              href="/dashboard"
+              className="hidden sm:flex items-center gap-0.5 text-xs text-[var(--c-text-3)] hover:text-brand no-underline transition-colors"
+            >
+              <ChevronLeft size={13} aria-hidden />
+              ダッシュボード
+            </Link>
+          )}
+        </div>
 
         <div className="flex items-center gap-1">
           {/* 通知・メッセージは常時表示 */}
@@ -58,6 +72,13 @@ export function AppHeader({ unreadNotifications = 0, unreadMessages = 0 }: AppHe
 
           {/* PC 専用 */}
           <div className="hidden md:flex items-center gap-1">
+            {isAdminUser && (
+              <Link href="/admin">
+                <Button variant="ghost" size="sm" className="min-w-0 px-2.5" aria-label="管理者メニュー">
+                  <ShieldCheck size={18} aria-hidden />
+                </Button>
+              </Link>
+            )}
             <Link href="/settings">
               <Button variant="ghost" size="sm" className="min-w-0 px-2.5" aria-label="設定">
                 <Icon name="Settings" size={18} aria-hidden />
@@ -68,7 +89,7 @@ export function AppHeader({ unreadNotifications = 0, unreadMessages = 0 }: AppHe
           </div>
 
           {/* モバイル専用 */}
-          <MobileMenu isLoggedIn />
+          <MobileMenu isLoggedIn isAdminUser={isAdminUser} isDashboard={isDashboard} />
         </div>
       </Container>
     </header>
