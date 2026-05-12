@@ -28,8 +28,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .single()
 
   if (!payment) return NextResponse.json({ error: '決済が見つかりません' }, { status: 404 })
-  if (payment.status === PAYMENT_STATUS.PAYOUT_PAID) {
-    return NextResponse.json({ error: '振込済みのためステータス変更できません' }, { status: 409 })
+
+  const disputeableStatuses = [
+    PAYMENT_STATUS.HELD,
+    PAYMENT_STATUS.PARTIALLY_REFUNDED,
+    PAYMENT_STATUS.PAYOUT_PENDING,
+    PAYMENT_STATUS.PAYMENT_MISMATCH,
+  ]
+  if (!disputeableStatuses.includes(payment.status as typeof disputeableStatuses[number])) {
+    return NextResponse.json(
+      { error: `ステータス（${payment.status}）では要確認操作は行えません` },
+      { status: 409 }
+    )
   }
 
   const { error } = await db

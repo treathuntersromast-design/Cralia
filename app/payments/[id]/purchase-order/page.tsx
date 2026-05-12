@@ -2,7 +2,8 @@ import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { isAdmin } from '@/lib/isAdmin'
-import PrintButton from './PrintButton'
+import { PAYMENT_STATUS } from '@/lib/constants/statuses'
+import PrintButton from '@/components/ui/PrintButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,9 +42,15 @@ export default async function PurchaseOrderPage({ params }: { params: { id: stri
   // 依頼者または管理者のみアクセス可
   if (proj.client_id !== user.id && !isAdmin(user.id)) redirect('/dashboard')
 
-  // 入金確認済み以降のみ発行可
-  const allowed = ['held', 'payout_pending', 'payout_paid', 'refunded', 'partially_refunded', 'disputed']
-  if (!allowed.includes(payment.status)) return notFound()
+  const allowed = [
+    PAYMENT_STATUS.HELD,
+    PAYMENT_STATUS.PAYOUT_PENDING,
+    PAYMENT_STATUS.PAYOUT_PAID,
+    PAYMENT_STATUS.REFUNDED,
+    PAYMENT_STATUS.PARTIALLY_REFUNDED,
+    PAYMENT_STATUS.DISPUTED,
+  ]
+  if (!allowed.includes(payment.status as typeof allowed[number])) return notFound()
 
   // メールアドレス取得
   const { data: clientAuth } = await db.auth.admin.getUserById(proj.client_id)

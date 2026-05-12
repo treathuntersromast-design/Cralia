@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Fragment } from 'react'
 import Link from 'next/link'
 import { ChevronDown, ChevronUp, Mail, ExternalLink } from 'lucide-react'
 import { PAYMENT_STATUS, PAYMENT_STATUS_MAP } from '@/lib/constants/statuses'
+import { TRANSFER_FEE } from '@/lib/stripe'
 
 type Adjustment = {
   id: string
@@ -105,21 +106,21 @@ export default function AdminPaymentsPage() {
   }
 
   function payoutAmount(p: Payment) {
-    return p.amount - (p.fee ?? 0) - (p.refunded_amount ?? 0)
+    return p.amount - (p.fee ?? 0) - TRANSFER_FEE - (p.refunded_amount ?? 0)
   }
 
   function maxRefundable(p: Payment) {
-    return p.amount - (p.refunded_amount ?? 0)
+    return Math.max(0, p.amount - (p.refunded_amount ?? 0))
   }
 
   function statusBadge(status: string) {
-    const info = PAYMENT_STATUS_MAP[status]
+    const info = PAYMENT_STATUS_MAP[status] ?? { label: status, color: '#888', bg: 'rgba(136,136,136,0.1)', border: 'rgba(136,136,136,0.25)' }
     return (
       <span
         className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border"
-        style={{ color: info?.color, background: info?.bg, borderColor: info?.border }}
+        style={{ color: info.color, background: info.bg, borderColor: info.border }}
       >
-        {info?.label ?? status}
+        {info.label}
       </span>
     )
   }
@@ -162,8 +163,8 @@ export default function AdminPaymentsPage() {
           </thead>
           <tbody>
             {payments.map(p => (
-              <>
-                <tr key={p.id} className="border-b border-[var(--c-border)] hover:bg-[var(--c-surface-2)]">
+              <Fragment key={p.id}>
+                <tr className="border-b border-[var(--c-border)] hover:bg-[var(--c-surface-2)]">
                   <td className="py-3 px-3 max-w-[160px]">
                     <div className="truncate text-[var(--c-text-2)]">{p.projects?.title ?? '-'}</div>
                     <Link href={`/projects/${p.project_id}`} className="text-[10px] text-brand hover:underline flex items-center gap-0.5" target="_blank">
@@ -308,7 +309,7 @@ export default function AdminPaymentsPage() {
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             ))}
           </tbody>
         </table>
@@ -402,6 +403,7 @@ export default function AdminPaymentsPage() {
                     value={modal.note}
                     onChange={e => setModal({ ...modal, note: e.target.value })}
                     rows={3}
+                    title="管理者メモ"
                     placeholder="例：依頼者から「納品物が仕様と異なる」との申し立て。調査中。"
                     className="w-full c-input rounded-lg p-3 text-sm resize-none"
                   />
@@ -442,6 +444,8 @@ export default function AdminPaymentsPage() {
                       onChange={e => setModal({ ...modal, reason: e.target.value })}
                       rows={2}
                       maxLength={500}
+                      title="調整理由"
+                      placeholder="例：依頼者との合意による追加費用"
                       className="w-full c-input rounded-lg p-3 text-sm resize-none"
                     />
                   </div>

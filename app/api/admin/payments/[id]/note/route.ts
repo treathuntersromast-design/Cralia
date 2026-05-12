@@ -20,6 +20,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   try { body = await req.json() } catch { /* noop */ }
 
   const db = getDb()
+  const { data: existing } = await db
+    .from('payments').select('id').eq('id', params.id).single()
+  if (!existing) return NextResponse.json({ error: '決済が見つかりません' }, { status: 404 })
+
   const { error } = await db
     .from('payments')
     .update({

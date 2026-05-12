@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { isAdmin } from '@/lib/isAdmin'
 import { TRANSFER_FEE } from '@/lib/stripe'
-import PrintButton from './PrintButton'
+import { PAYMENT_STATUS } from '@/lib/constants/statuses'
+import PrintButton from '@/components/ui/PrintButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,14 +43,13 @@ export default async function CreatorReceiptPage({ params }: { params: { id: str
   // クリエイターまたは管理者のみアクセス可
   if (proj.creator_id !== user.id && !isAdmin(user.id)) redirect('/dashboard')
 
-  // 振込済みのみ発行可
-  if (payment.status !== 'payout_paid') return notFound()
+  if (payment.status !== PAYMENT_STATUS.PAYOUT_PAID) return notFound()
 
-  // payout 情報取得
   const { data: payout } = await db
     .from('creator_payouts')
     .select('id, amount, paid_at')
     .eq('payment_id', payment.id)
+    .eq('creator_id', isAdmin(user.id) ? proj.creator_id : user.id)
     .single()
 
   if (!payout) return notFound()

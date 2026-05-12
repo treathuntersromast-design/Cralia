@@ -46,7 +46,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     )
   }
 
-  // payout_amount = amount - 事務手数料(fee) - 振込手数料(TRANSFER_FEE) - refunded_amount
+  if (!payment.amount || payment.amount <= 0) {
+    return NextResponse.json({ error: '決済金額が無効です' }, { status: 400 })
+  }
+
   const payoutAmount = payment.amount - (payment.fee ?? 0) - TRANSFER_FEE - (payment.refunded_amount ?? 0)
   if (payoutAmount <= 0) {
     return NextResponse.json(
@@ -91,11 +94,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     })
   }
 
-  // payment.status → payout_paid
-  await db.from('payments').update({
+  const { error: updateErr } = await db.from('payments').update({
     status: PAYMENT_STATUS.PAYOUT_PAID,
     updated_at: new Date().toISOString(),
-  }).eq('id', payment.id)
+  })
+    .eq('id', payment.id)
+    .eq('status', PAYMENT_STATUS.PAYOUT_PENDING)
+
+  if (updateErr) {
+    return NextResponse.json({ error: '決済ステータスの更新に失敗しました' }, { status: 500 })
+  }
 
   return NextResponse.json({ ok: true, payout_amount: payoutAmount })
 }
