@@ -40,4 +40,7 @@ export const VALIDATION = {
 
   // 営業メッセージ（pitch_messages）
   PITCH_MESSAGE_MAX: 1000,
+
+  // 決済
+  MIN_PROJECT_BUDGET: 500,
 } as const

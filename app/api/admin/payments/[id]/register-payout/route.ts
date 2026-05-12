@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { isAdmin } from '@/lib/isAdmin'
 import { PAYMENT_STATUS } from '@/lib/constants/statuses'
+import { TRANSFER_FEE } from '@/lib/stripe'
 
 function getDb() {
   return createServiceClient(
@@ -45,11 +46,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     )
   }
 
-  // payout_amount 計算: amount - fee - refunded_amount
-  const payoutAmount = payment.amount - (payment.fee ?? 0) - (payment.refunded_amount ?? 0)
+  // payout_amount = amount - 事務手数料(fee) - 振込手数料(TRANSFER_FEE) - refunded_amount
+  const payoutAmount = payment.amount - (payment.fee ?? 0) - TRANSFER_FEE - (payment.refunded_amount ?? 0)
   if (payoutAmount <= 0) {
     return NextResponse.json(
-      { error: '返金後の支払額が 0 以下のため振込登録できません' },
+      { error: '手数料・振込手数料控除後の支払額が 0 以下のため振込登録できません' },
       { status: 400 }
     )
   }

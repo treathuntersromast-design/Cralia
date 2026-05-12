@@ -1,6 +1,7 @@
 import StripeLib from 'stripe'
 
-export const PLATFORM_FEE_RATE = 0.10
+export const PLATFORM_FEE_RATE = 0.05
+export const TRANSFER_FEE = 200
 export const CHECKOUT_TTL_SECONDS = 30 * 60
 export const STALE_PROCESSING_MINUTES = 5
 

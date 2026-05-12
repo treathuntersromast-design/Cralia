@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
-import { getStripe, PLATFORM_FEE_RATE, CHECKOUT_TTL_SECONDS } from '@/lib/stripe'
+import { getStripe, PLATFORM_FEE_RATE, CHECKOUT_TTL_SECONDS, TRANSFER_FEE } from '@/lib/stripe'
 import { PAYMENT_STATUS } from '@/lib/constants/statuses'
+import { VALIDATION } from '@/lib/constants/validation'
 
 function getDb() {
   return createServiceClient(
@@ -40,6 +41,12 @@ export async function POST(req: NextRequest) {
   const projectAmount = project.budget
   if (!projectAmount || projectAmount <= 0) {
     return NextResponse.json({ error: '依頼の金額が設定されていません' }, { status: 400 })
+  }
+  if (projectAmount < VALIDATION.MIN_PROJECT_BUDGET) {
+    return NextResponse.json(
+      { error: `依頼金額は最低${VALIDATION.MIN_PROJECT_BUDGET}円以上に設定してください（振込手数料${TRANSFER_FEE}円のため）` },
+      { status: 400 }
+    )
   }
 
   // 二重決済防止: active payment が存在するか確認

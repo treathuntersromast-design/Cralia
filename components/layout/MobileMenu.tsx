@@ -3,15 +3,17 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Menu, X, Settings, Sun, Moon, LogOut } from 'lucide-react'
+import { Menu, X, Settings, Sun, Moon, LogOut, ShieldCheck, LayoutDashboard } from 'lucide-react'
 import { useTheme } from '@/lib/theme/ThemeContext'
 import { createClient } from '@/lib/supabase/client'
 
 interface Props {
   isLoggedIn?: boolean
+  isAdminUser?: boolean
+  isDashboard?: boolean
 }
 
-export function MobileMenu({ isLoggedIn = false }: Props) {
+export function MobileMenu({ isLoggedIn = false, isAdminUser = false, isDashboard = false }: Props) {
   const [open, setOpen] = useState(false)
   const { theme, toggle } = useTheme()
   const ref = useRef<HTMLDivElement>(null)
@@ -47,6 +49,24 @@ export function MobileMenu({ isLoggedIn = false }: Props) {
 
       {open && (
         <div className="absolute right-0 top-full mt-2 w-56 c-card-float rounded-[12px] py-2 z-40">
+          {isLoggedIn && !isDashboard && (
+            <Link
+              href="/dashboard"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--c-text)] no-underline hover:bg-[var(--c-surface-3)] transition-colors"
+            >
+              <LayoutDashboard size={16} aria-hidden /> ダッシュボード
+            </Link>
+          )}
+          {isLoggedIn && isAdminUser && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-[14px] text-[var(--c-text)] no-underline hover:bg-[var(--c-surface-3)] transition-colors"
+            >
+              <ShieldCheck size={16} aria-hidden /> 管理者メニュー
+            </Link>
+          )}
           {isLoggedIn && (
             <Link
               href="/settings"

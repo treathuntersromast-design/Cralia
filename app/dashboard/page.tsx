@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { isAdmin } from '@/lib/isAdmin'
 import AvatarUpload from '@/components/AvatarUpload'
 import { activityStyleToLabel } from '@/lib/constants/activity'
 import { ORDER_STATUS_MAP, PROJECT_STATUS_MAP, INACTIVE_ORDER_STATUSES } from '@/lib/constants/statuses'
@@ -209,7 +210,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[var(--c-bg)]">
-      <AppHeader unreadNotifications={unreadCount} />
+      <AppHeader unreadNotifications={unreadCount} isAdminUser={isAdmin(user.id)} isDashboard />
 
       <Container className="py-5">
         {/* ウェルカムバー */}

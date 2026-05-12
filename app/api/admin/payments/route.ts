@@ -18,23 +18,74 @@ export async function GET() {
 
   const db = getDb()
 
-  const { data: payments, error } = await db
-    .from('payments')
-    .select(`
-      id, project_id, amount, fee, status, refunded_amount, currency,
-      paid_at, admin_note, created_at, updated_at,
-      stripe_payment_intent_id, stripe_checkout_session_id,
-      projects!inner(id, title, client_id, creator_id,
-        client:users!projects_client_id_fkey(id, display_name),
-        creator:users!projects_creator_id_fkey(id, display_name)
-      )
-    `)
-    .order('created_at', { ascending: false })
-    .limit(200)
+  const [{ data: payments, error }, { data: adjustmentsRaw }] = await Promise.all([
+    db
+      .from('payments')
+      .select(`
+        id, project_id, amount, fee, status, refunded_amount, currency,
+        paid_at, admin_note, created_at, updated_at,
+        stripe_payment_intent_id, stripe_checkout_session_id,
+        projects!inner(id, title, client_id, creator_id,
+          client:users!projects_client_id_fkey(id, display_name),
+          creator:users!projects_creator_id_fkey(id, display_name)
+        )
+      `)
+      .order('created_at', { ascending: false })
+      .limit(200),
+    db
+      .from('payment_adjustments')
+      .select('id, payment_id, admin_id, amount, reason, created_at')
+      .order('created_at', { ascending: false }),
+  ])
 
   if (error) {
-    return NextResponse.json({ error: 'データ取得に失敗しました' }, { status: 500 })
+    console.error('[admin/payments] Supabase error:', error)
+    return NextResponse.json({ error: `データ取得に失敗しました: ${error.message}` }, { status: 500 })
   }
 
-  return NextResponse.json({ payments: payments ?? [] })
+  // ユーザーIDを収集してメールアドレスを一括取得
+  const userIds = new Set<string>()
+  for (const p of payments ?? []) {
+    const proj = p.projects as unknown as { client_id?: string; creator_id?: string }
+    if (proj?.client_id)  userIds.add(proj.client_id)
+    if (proj?.creator_id) userIds.add(proj.creator_id)
+  }
+  for (const a of adjustmentsRaw ?? []) userIds.add(a.admin_id)
+
+  const emailMap: Record<string, string> = {}
+  await Promise.all(
+    Array.from(userIds).map(async (id) => {
+      const { data } = await db.auth.admin.getUserById(id)
+      if (data?.user?.email) emailMap[id] = data.user.email
+    })
+  )
+
+  type EnrichedAdjustment = { id: string; payment_id: string; admin_id: string; amount: number; reason: string; created_at: string; admin_email: string }
+
+  // 調整履歴を payment_id でグループ化
+  const adjustmentsByPayment: Record<string, EnrichedAdjustment[]> = {}
+  for (const a of adjustmentsRaw ?? []) {
+    if (!adjustmentsByPayment[a.payment_id]) adjustmentsByPayment[a.payment_id] = []
+    adjustmentsByPayment[a.payment_id]!.push({
+      ...a,
+      admin_email: emailMap[a.admin_id] ?? a.admin_id,
+    })
+  }
+
+  // payments にメールと調整履歴を付与
+  const enriched = (payments ?? []).map((p) => {
+    const proj = p.projects as unknown as {
+      id: string; title: string; client_id: string; creator_id: string
+      client: { id: string; display_name: string }
+      creator: { id: string; display_name: string }
+    }
+    return {
+      ...p,
+      client_email:   emailMap[proj?.client_id]  ?? null,
+      creator_email:  emailMap[proj?.creator_id] ?? null,
+      adjustments:    adjustmentsByPayment[p.id] ?? [],
+    }
+  })
+
+  return NextResponse.json({ payments: enriched })
 }
