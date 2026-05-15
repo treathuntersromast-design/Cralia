@@ -75,7 +75,7 @@ export default async function AdminMenuPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?next=/admin')
-  if (!isAdmin(user.id)) redirect('/dashboard')
+  if (!isAdmin(user.id, user.email)) redirect('/dashboard')
 
   const db = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

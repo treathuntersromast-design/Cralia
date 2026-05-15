@@ -14,7 +14,7 @@ export default async function AdminFeesPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
-  if (!isAdmin(user.id)) redirect('/dashboard')
+  if (!isAdmin(user.id, user.email)) redirect('/dashboard')
 
   const rows = [
     {

@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { VALIDATION } from '@/lib/constants/validation'
+import { sendEmail, reviewPostedEmail } from '@/lib/sendEmail'
 
 export const dynamic = 'force-dynamic'
 
@@ -105,5 +106,38 @@ export async function POST(request: NextRequest) {
   })
 
   if (error) return NextResponse.json({ error: '投稿に失敗しました' }, { status: 500 })
+
+  // 被評価者に通知 + メール送信
+  try {
+    const { data: reviewer } = await db.from('users').select('display_name').eq('id', user.id).single()
+    const reviewerName = reviewer?.display_name ?? 'ユーザー'
+
+    await db.from('notifications').insert({
+      user_id: revieweeId,
+      type:    'review_posted',
+      title:   `${reviewerName} さんが評価を投稿しました`,
+      body:    typeof comment === 'string' && comment.trim()
+                 ? comment.trim().slice(0, 80) + (comment.length > 80 ? '...' : '')
+                 : `評価: ${r}/5`,
+      read_at: null,
+    })
+  } catch { /* 通知失敗は無視 */ }
+
+  try {
+    const { data: revieweeAuth } = await db.auth.admin.getUserById(revieweeId)
+    const revieweeEmail = revieweeAuth?.user?.email
+    const { data: revieweeUser } = await db.from('users').select('display_name').eq('id', revieweeId).single()
+    const { data: reviewer } = await db.from('users').select('display_name').eq('id', user.id).single()
+    if (revieweeEmail) {
+      await sendEmail(reviewPostedEmail({
+        recipientEmail: revieweeEmail,
+        recipientName:  revieweeUser?.display_name ?? 'ユーザー',
+        recipientId:    revieweeId,
+        reviewerName:   reviewer?.display_name ?? 'ユーザー',
+        orderId:        orderId,
+      }))
+    }
+  } catch { /* メール送信失敗は無視 */ }
+
   return NextResponse.json({ ok: true })
 }

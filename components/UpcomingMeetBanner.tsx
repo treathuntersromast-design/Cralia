@@ -41,18 +41,19 @@ export default function UpcomingMeetBanner({ calConnected }: Props) {
           const timeLabel = new Date(m.start).toLocaleTimeString('ja-JP', {
             hour: '2-digit', minute: '2-digit',
           })
+          const safeLink = m.hangoutLink.startsWith('https://meet.google.com/') ? m.hangoutLink : '#'
           return (
             <div key={m.id} style={{
               display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap',
             }}>
-              <span style={{ fontSize: '13px', color: 'var(--c-text-2)', flexShrink: 0, minWidth: '40px' }}>
+              <span style={{ fontSize: '13px', color: '#a9a8c0', flexShrink: 0, minWidth: '40px' }}>
                 {timeLabel}
               </span>
-              <span style={{ fontSize: '14px', color: 'var(--c-text)', flex: 1 }}>
+              <span style={{ fontSize: '14px', color: '#f0eff8', flex: 1 }}>
                 {m.title}
               </span>
               <a
-                href={m.hangoutLink}
+                href={safeLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{

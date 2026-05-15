@@ -41,7 +41,7 @@ export default async function CreatorReceiptPage({ params }: { params: { id: str
   }
 
   // クリエイターまたは管理者のみアクセス可
-  if (proj.creator_id !== user.id && !isAdmin(user.id)) redirect('/dashboard')
+  if (proj.creator_id !== user.id && !isAdmin(user.id, user.email)) redirect('/dashboard')
 
   if (payment.status !== PAYMENT_STATUS.PAYOUT_PAID) return notFound()
 
@@ -49,7 +49,7 @@ export default async function CreatorReceiptPage({ params }: { params: { id: str
     .from('creator_payouts')
     .select('id, amount, paid_at')
     .eq('payment_id', payment.id)
-    .eq('creator_id', isAdmin(user.id) ? proj.creator_id : user.id)
+    .eq('creator_id', isAdmin(user.id, user.email) ? proj.creator_id : user.id)
     .single()
 
   if (!payout) return notFound()

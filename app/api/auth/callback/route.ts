@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { ACTIVITY_STYLE_ID } from '@/lib/constants/activity'
 
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim()).filter(Boolean)
+
 // Supabase Auth のコールバック処理
 // - メール確認リンクのクリック後
 // - Google/X OAuth ログイン後
@@ -19,6 +21,12 @@ export async function GET(request: NextRequest) {
       // プロフィール登録済みか確認
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
+        // 管理者メールの場合は OTP 認証ページへ（nextパラメータが明示的に指定されている場合を除く）
+        const isAdmin = ADMIN_EMAILS.length > 0 && ADMIN_EMAILS.includes(user.email ?? '')
+        if (isAdmin && next === '/dashboard') {
+          return NextResponse.redirect(`${origin}/admin/otp`)
+        }
+
         const { data: profile } = await supabase
           .from('users')
           .select('activity_style_id, display_name')

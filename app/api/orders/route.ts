@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { sendEmail, orderReceivedEmail } from '@/lib/sendEmail'
 
 export async function POST(request: NextRequest) {
   const supabase = createClient()
@@ -105,6 +106,21 @@ export async function POST(request: NextRequest) {
     title: '新しい依頼が届きました',
     body: `${clientName} さんから「${title.trim()}」の依頼が届きました。`,
   })
+
+  // メール通知
+  try {
+    const { data: { user: creatorAuth } } = await db.auth.admin.getUserById(creatorId)
+    if (creatorAuth?.email) {
+      await sendEmail(orderReceivedEmail({
+        creatorEmail:  creatorAuth.email,
+        creatorName:   creator.display_name ?? 'クリエイター',
+        clientName,
+        orderTitle:    title.trim(),
+        orderId:       order.id,
+        creatorUserId: creatorId,
+      }))
+    }
+  } catch { /* メール失敗は非致命的 */ }
 
   return NextResponse.json({ id: order.id })
 }

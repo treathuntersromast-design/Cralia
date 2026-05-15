@@ -11,7 +11,7 @@ export default async function NewEventPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?next=/admin/events/new')
-  if (!isAdmin(user.id)) redirect('/dashboard')
+  if (!isAdmin(user.id, user.email)) redirect('/dashboard')
 
   return (
     <div className="min-h-screen bg-[var(--c-bg)]">

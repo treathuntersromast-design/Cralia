@@ -40,7 +40,7 @@ export default async function PurchaseOrderPage({ params }: { params: { id: stri
   }
 
   // 依頼者または管理者のみアクセス可
-  if (proj.client_id !== user.id && !isAdmin(user.id)) redirect('/dashboard')
+  if (proj.client_id !== user.id && !isAdmin(user.id, user.email)) redirect('/dashboard')
 
   const allowed = [
     PAYMENT_STATUS.HELD,

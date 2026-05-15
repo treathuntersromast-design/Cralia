@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { NOTIFICATION_TYPE } from '@/lib/constants/statuses'
 import { VALIDATION } from '@/lib/constants/validation'
+import { sendEmail, pitchRepliedEmail } from '@/lib/sendEmail'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,7 +58,7 @@ export async function POST(
   // 依頼者の表示名取得
   const { data: clientUser } = await db.from('users').select('display_name').eq('id', user.id).single()
 
-  // クリエイターに通知
+  // クリエイターに通知 + メール送信
   try {
     await db.from('notifications').insert({
       user_id: pitch.creator_id,
@@ -67,6 +68,21 @@ export async function POST(
       read_at: null,
     })
   } catch { /* 通知失敗は無視 */ }
+
+  try {
+    const { data: creatorAuth } = await db.auth.admin.getUserById(pitch.creator_id)
+    const creatorEmail = creatorAuth?.user?.email
+    const { data: creatorUser } = await db.from('users').select('display_name').eq('id', pitch.creator_id).single()
+    if (creatorEmail) {
+      await sendEmail(pitchRepliedEmail({
+        recipientEmail: creatorEmail,
+        recipientName:  creatorUser?.display_name ?? 'クリエイター',
+        recipientId:    pitch.creator_id,
+        clientName:     clientUser?.display_name ?? '依頼者',
+        pitchId:        params.id,
+      }))
+    }
+  } catch { /* メール送信失敗は無視 */ }
 
   return NextResponse.json({ ok: true })
 }

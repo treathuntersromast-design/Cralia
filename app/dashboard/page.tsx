@@ -210,7 +210,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[var(--c-bg)]">
-      <AppHeader unreadNotifications={unreadCount} isAdminUser={isAdmin(user.id)} isDashboard />
+      <AppHeader unreadNotifications={unreadCount} isAdminUser={isAdmin(user.id, user.email)} isDashboard />
 
       <Container className="py-5">
         {/* ウェルカムバー */}

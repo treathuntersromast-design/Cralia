@@ -17,7 +17,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
-  if (!isAdmin(user.id)) return NextResponse.json({ error: '権限がありません' }, { status: 403 })
+  if (!isAdmin(user.id, user.email)) return NextResponse.json({ error: '権限がありません' }, { status: 403 })
 
   const db = getDb()
   const { data: payment } = await db

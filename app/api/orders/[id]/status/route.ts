@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { sendEmail, orderStatusChangedEmail } from '@/lib/sendEmail'
+import type { EmailType } from '@/lib/sendEmail'
 
 export const dynamic = 'force-dynamic'
 
@@ -120,6 +122,23 @@ export async function PATCH(
       })
     } catch { /* 通知失敗は無視 */ }
 
+    // メール通知
+    try {
+      const { data: { user: recipientAuth } } = await db.auth.admin.getUserById(notifyUserId)
+      if (recipientAuth?.email) {
+        const { data: recipientProfile } = await db.from('users').select('display_name').eq('id', notifyUserId).single()
+        await sendEmail(orderStatusChangedEmail({
+          recipientEmail: recipientAuth.email,
+          recipientName:  recipientProfile?.display_name ?? 'ユーザー',
+          recipientId:    notifyUserId,
+          orderTitle:     order.title,
+          orderId:        params.id,
+          statusLabel:    actionLabel,
+          type:           'order_accepted',
+        }))
+      }
+    } catch { /* メール失敗は非致命的 */ }
+
     return NextResponse.json({ success: true })
   }
 
@@ -174,6 +193,28 @@ export async function PATCH(
       read_at: null,
     })
   } catch { /* 通知失敗は無視 */ }
+
+  // メール通知
+  try {
+    const { data: { user: recipientAuth } } = await db.auth.admin.getUserById(notifyUserId)
+    if (recipientAuth?.email) {
+      const { data: recipientProfile } = await db.from('users').select('display_name').eq('id', notifyUserId).single()
+      const emailType: EmailType = nextStatus === 'accepted' ? 'order_accepted'
+        : nextStatus === 'completed' ? 'order_completed'
+        : nextStatus === 'delivered' ? 'order_delivered'
+        : nextStatus === 'cancelled' ? 'order_cancelled'
+        : 'order_accepted'
+      await sendEmail(orderStatusChangedEmail({
+        recipientEmail: recipientAuth.email,
+        recipientName:  recipientProfile?.display_name ?? 'ユーザー',
+        recipientId:    notifyUserId,
+        orderTitle:     order.title,
+        orderId:        params.id,
+        statusLabel:    actionLabel,
+        type:           emailType,
+      }))
+    }
+  } catch { /* メール失敗は非致命的 */ }
 
   return NextResponse.json({ success: true })
 }

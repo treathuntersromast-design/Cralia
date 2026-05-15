@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { sendEmail, messageReceivedEmail } from '@/lib/sendEmail'
 
 export const dynamic = 'force-dynamic'
 
@@ -119,6 +120,23 @@ export async function POST(request: NextRequest) {
       body:    `${senderUser?.display_name ?? 'ユーザー'} さんからメッセージが届きました`,
     })
   } catch { /* notification failure is non-fatal */ }
+
+  // メール通知
+  try {
+    const { data: { user: recipientAuth } } = await db.auth.admin.getUserById(recipientId)
+    if (recipientAuth?.email) {
+      const { data: recipientProfile } = await db.from('users').select('display_name').eq('id', recipientId).single()
+      const { data: projectInfo } = await db.from('projects').select('title').eq('id', projectId).single()
+      await sendEmail(messageReceivedEmail({
+        recipientEmail: recipientAuth.email,
+        recipientName:  recipientProfile?.display_name ?? 'ユーザー',
+        recipientId,
+        senderName:     senderUser?.display_name ?? 'ユーザー',
+        orderTitle:     projectInfo?.title,
+        projectId,
+      }))
+    }
+  } catch { /* メール失敗は非致命的 */ }
 
   return NextResponse.json({ message: msg })
 }

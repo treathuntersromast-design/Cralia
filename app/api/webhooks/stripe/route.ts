@@ -104,7 +104,8 @@ async function handleCheckoutCompleted(db: ReturnType<typeof getDb>, session: Ch
     return
   }
 
-  const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : null
+  const pi = session.payment_intent
+  const paymentIntentId = typeof pi === 'string' ? pi : (pi && typeof pi === 'object' ? pi.id : null)
 
   await db.from('payments').update({
     status: PAYMENT_STATUS.HELD,
@@ -127,7 +128,8 @@ async function handleCheckoutExpired(db: ReturnType<typeof getDb>, session: Chec
 }
 
 async function handleRefundCreated(db: ReturnType<typeof getDb>, refund: StripeRefund) {
-  const paymentIntentId = typeof refund.payment_intent === 'string' ? refund.payment_intent : null
+  const rpi = refund.payment_intent
+  const paymentIntentId = typeof rpi === 'string' ? rpi : (rpi && typeof rpi === 'object' ? rpi.id : null)
   if (!paymentIntentId) return
 
   const { data: payment } = await db

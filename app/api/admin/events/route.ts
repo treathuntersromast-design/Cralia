@@ -14,7 +14,7 @@ const db = () => createServiceClient(
 export async function GET() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user || !isAdmin(user.id)) return NextResponse.json({ error: '権限がありません' }, { status: 403 })
+  if (!user || !isAdmin(user.id, user.email)) return NextResponse.json({ error: '権限がありません' }, { status: 403 })
 
   const { data, error } = await db()
     .from('events')
@@ -29,7 +29,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user || !isAdmin(user.id)) return NextResponse.json({ error: '権限がありません' }, { status: 403 })
+  if (!user || !isAdmin(user.id, user.email)) return NextResponse.json({ error: '権限がありません' }, { status: 403 })
 
   const body = await req.json()
   const {

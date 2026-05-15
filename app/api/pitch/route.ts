@@ -11,6 +11,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { hasCreatorRole, hasClientRole } from '@/lib/constants/activity'
 import { VALIDATION } from '@/lib/constants/validation'
 import { NOTIFICATION_TYPE } from '@/lib/constants/statuses'
+import { sendEmail, pitchReceivedEmail } from '@/lib/sendEmail'
 
 export const dynamic = 'force-dynamic'
 
@@ -97,6 +98,21 @@ export async function POST(request: NextRequest) {
       read_at: null,
     })
   } catch { /* 通知失敗はサイレント */ }
+
+  // メール通知
+  try {
+    const { data: { user: recipientAuth } } = await db.auth.admin.getUserById(clientId)
+    if (recipientAuth?.email) {
+      const { data: recipientProfile } = await db.from('users').select('display_name').eq('id', clientId).single()
+      await sendEmail(pitchReceivedEmail({
+        recipientEmail: recipientAuth.email,
+        recipientName:  recipientProfile?.display_name ?? 'ユーザー',
+        recipientId:    clientId,
+        creatorName:    userData?.display_name ?? 'クリエイター',
+        pitchId:        pitch.id,
+      }))
+    }
+  } catch { /* メール失敗は非致命的 */ }
 
   return NextResponse.json({ id: pitch.id }, { status: 201 })
 }
