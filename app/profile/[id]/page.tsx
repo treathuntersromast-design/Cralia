@@ -130,8 +130,9 @@ export default async function ProfilePage({
   const roles: string[] = activityStyleToRoles((userRecord as Record<string, unknown>)?.activity_style_id as number | null)
 
   // 営業機能用: ターゲットが依頼者か、閲覧者がクリエイターかを判定
+  // クリエイター役も持つ「両方」アカウントは isClientProfile = false → 「依頼する」ボタンを表示
   const targetStyleId = (userRecord as Record<string, unknown>)?.activity_style_id as number | null
-  const isClientProfile = hasClientRole(targetStyleId)
+  const isClientProfile = hasClientRole(targetStyleId) && !hasCreatorRole(targetStyleId)
 
   // 閲覧者の情報取得（依頼者プロフィールを見るクリエイター向け）
   let viewerIsCreator = false
