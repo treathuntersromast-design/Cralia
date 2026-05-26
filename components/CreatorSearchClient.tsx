@@ -154,14 +154,14 @@ export default function CreatorSearchClient({
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="max-w-[1000px] mx-auto px-6 py-10">
+    <div className="max-w-[1000px] mx-auto px-6 py-8">
 
       {/* タイトル */}
-      <div className="mb-8">
-        <h1 className="text-[28px] font-bold mb-1.5">クリエイターを探す</h1>
-        <p className="text-[14px] text-[var(--c-text-3)]">
+      <div className="mb-6">
+        <h1 className="text-[28px] font-bold mb-1 text-[var(--c-text)]">クリエイターを探す</h1>
+        <p className="text-[14px] text-[var(--c-text-2)]">
           {filtered.length} 人のクリエイターが見つかりました
-          {totalPages > 1 && <span className="ml-2">（{page} / {totalPages} ページ）</span>}
+          {totalPages > 1 && <span className="ml-2 text-[var(--c-text-3)]">（{page} / {totalPages} ページ）</span>}
         </p>
       </div>
 
@@ -336,7 +336,7 @@ export default function CreatorSearchClient({
         />
       ) : (
         <>
-          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
+          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
             {paged.map((c) => (
               <CreatorCard key={c.creator_id} creator={c} backUrl={backUrl} />
             ))}
@@ -397,38 +397,39 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
   return (
     <Link href={`/profile/${c.creator_id}?back=${backUrl}`} className="no-underline text-[var(--c-text)] block">
       <div className="bg-[var(--c-surface)] border border-[var(--c-border)] rounded-[20px] overflow-hidden flex flex-col hover:border-brand transition-colors">
-        {/* ポートフォリオサムネ */}
-        <div className={`grid gap-0.5 ${c.thumbnails.length >= 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-          {c.thumbnails.length > 0
-            ? c.thumbnails.slice(0, 2).map((thumb, i) => (
-                <img
-                  key={i}
-                  src={thumb}
-                  alt={`${c.display_name ?? 'クリエイター'} のポートフォリオ ${i + 1}`}
-                  className="w-full aspect-video object-cover block"
-                />
-              ))
-            : (
-                <div className="w-full aspect-video bg-[var(--c-surface-3)] flex items-center justify-center">
-                  <ImageIcon size={24} className="text-[var(--c-text-4)]" aria-hidden />
-                </div>
-              )
-          }
-        </div>
+        {/* ポートフォリオサムネ（有りの場合のみ表示） */}
+        {c.thumbnails.length > 0 && (
+          <div className={`grid gap-0.5 aspect-[5/2] ${c.thumbnails.length >= 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {c.thumbnails.slice(0, 2).map((thumb, i) => (
+              <img
+                key={i}
+                src={thumb}
+                alt={`${c.display_name ?? 'クリエイター'} のポートフォリオ ${i + 1}`}
+                className="w-full h-full object-cover block"
+              />
+            ))}
+          </div>
+        )}
 
-        <div className="p-4.5 flex flex-col gap-3 flex-1">
+        <div className="p-4 flex flex-col gap-3 flex-1">
           {/* アバター + 名前 + 受付状況 */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-11 h-11 rounded-full shrink-0 overflow-hidden bg-brand flex items-center justify-center text-[17px] font-bold text-white">
+          <div className="flex items-start gap-2.5">
+            <div className="w-12 h-12 rounded-full shrink-0 overflow-hidden bg-gradient-to-br from-[rgb(var(--brand-rgb))] to-[rgb(var(--brand-ink-rgb))] flex items-center justify-center text-[17px] font-bold text-white">
               {c.avatar_url
                 ? <img src={c.avatar_url} alt={`${c.display_name ?? 'クリエイター'} のプロフィール画像`} className="w-full h-full object-cover" />
                 : initial}
             </div>
-            <div className="overflow-hidden flex-1">
-              <div className="font-bold text-[15px] overflow-hidden text-ellipsis whitespace-nowrap">
-                {c.display_name}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <div className="font-bold text-[14px] truncate flex-1 min-w-0">
+                  {c.display_name}
+                </div>
+                <span className={`shrink-0 text-[10px] px-1.5 py-0 rounded-full font-bold flex items-center gap-1 whitespace-nowrap ${avail.colorCls} ${avail.bgCls}`}>
+                  <AvailIcon size={10} aria-hidden />
+                  {avail.label}
+                </span>
               </div>
-              <div className="text-[11px] text-[var(--c-text-3)] mt-px flex gap-1.5 items-center">
+              <div className="text-[11px] text-[var(--c-text-3)] flex gap-1.5 items-center">
                 <span>{c.entity_type === 'corporate' ? '法人・団体' : '個人'}</span>
                 {c.display_id && (
                   <span className="font-mono tracking-wider text-[var(--c-text-4)]">
@@ -437,22 +438,18 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
                 )}
               </div>
             </div>
-            <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 whitespace-nowrap flex items-center gap-1 ${avail.colorCls} ${avail.bgCls}`}>
-              <AvailIcon size={11} aria-hidden />
-              {avail.label}
-            </span>
           </div>
 
           {/* クリエイタータイプ */}
           {(c.creator_type ?? []).length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {(c.creator_type ?? []).slice(0, 3).map((t) => (
-                <span key={t} className="px-2.5 py-0.5 rounded-full text-[12px] bg-brand-soft text-brand font-semibold">
+                <span key={t} className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#dbeafe] text-[#1535d4]">
                   {t}
                 </span>
               ))}
               {(c.creator_type ?? []).length > 3 && (
-                <span className="text-[var(--c-text-3)] text-[12px] self-center">
+                <span className="text-[var(--c-text-3)] text-[11px] self-center">
                   +{(c.creator_type ?? []).length - 3}
                 </span>
               )}
@@ -463,12 +460,12 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
           {(c.skills ?? []).length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {(c.skills ?? []).slice(0, 4).map((s) => (
-                <span key={s} className="px-2.5 py-0.5 rounded-full text-[12px] border border-[var(--c-border-2)] text-[var(--c-text-2)]">
+                <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border border-[var(--c-border-2)] text-[var(--c-text-2)] bg-white">
                   {s}
                 </span>
               ))}
               {(c.skills ?? []).length > 4 && (
-                <span className="text-[var(--c-text-3)] text-[12px] self-center">
+                <span className="text-[var(--c-text-3)] text-[11px] self-center">
                   +{(c.skills ?? []).length - 4}
                 </span>
               )}
@@ -477,16 +474,16 @@ function CreatorCard({ creator: c, backUrl }: { creator: Creator; backUrl: strin
 
           {/* bio */}
           {c.bio && (
-            <p className="text-[var(--c-text-2)] text-[13px] leading-[1.6] m-0 line-clamp-2">
+            <p className="text-[var(--c-text-2)] text-[12.5px] leading-[1.55] m-0 line-clamp-2">
               {c.bio}
             </p>
           )}
 
           {/* 価格 */}
           {c.price_min != null && c.price_min >= 0 && (
-            <div className="pt-2 border-t border-[var(--c-border)] mt-auto">
-              <span className="text-[var(--c-text-3)] text-[12px]">希望単価 </span>
-              <span className="text-[var(--c-text)] text-[14px] font-semibold">
+            <div className="pt-2.5 border-t border-[var(--c-border)] mt-auto">
+              <span className="text-[var(--c-text-3)] text-[11.5px]">希望単価 </span>
+              <span className="text-[var(--c-text)] text-[13.5px] font-bold">
                 ¥{c.price_min.toLocaleString()} 〜
               </span>
             </div>

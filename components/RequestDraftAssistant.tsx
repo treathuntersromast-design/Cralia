@@ -197,13 +197,13 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
               disabled={!existingDraft.trim()}
               style={{
                 padding: '18px', borderRadius: '14px', textAlign: 'left',
-                border: `1px solid ${existingDraft.trim() ? 'rgba(251,191,36,0.3)' : 'var(--c-surface-3)'}`,
-                background: existingDraft.trim() ? 'rgba(251,191,36,0.06)' : 'var(--c-surface-2)',
+                border: `1px solid ${existingDraft.trim() ? '#fcd34d' : 'var(--c-border)'}`,
+                background: existingDraft.trim() ? '#fffbeb' : 'var(--c-surface-2)',
                 cursor: existingDraft.trim() ? 'pointer' : 'not-allowed',
                 opacity: existingDraft.trim() ? 1 : 0.5,
               }}
             >
-              <p style={{ margin: '0 0 4px', fontWeight: '800', fontSize: '15px', color: existingDraft.trim() ? '#fbbf24' : 'var(--c-text-3)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <p style={{ margin: '0 0 4px', fontWeight: '800', fontSize: '15px', color: existingDraft.trim() ? '#d97706' : 'var(--c-text-3)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Search size={15} aria-hidden /> 既存の依頼文を添削する
               </p>
               <p style={{ margin: 0, fontSize: '13px', color: 'var(--c-text-3)', lineHeight: '1.6' }}>
@@ -259,9 +259,9 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
                 <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: '8px' }}>
                   <div style={{
                     maxWidth: '85%', padding: '10px 14px', borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                    background: isUser ? 'var(--c-accent-a20)' : 'rgba(255,255,255,0.06)',
-                    border: `1px solid ${isUser ? 'rgba(30,64,255,0.3)' : 'var(--c-surface-3)'}`,
-                    fontSize: '13px', color: 'var(--c-text)', lineHeight: '1.7', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                    background: isUser ? 'rgb(var(--brand-rgb))' : 'var(--c-surface-3)',
+                    border: `1px solid ${isUser ? 'transparent' : 'var(--c-border)'}`,
+                    fontSize: '13px', color: isUser ? '#ffffff' : 'var(--c-text)', lineHeight: '1.7', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                   }}>
                     {displayText || (isUser ? '' : '...')}
                   </div>
@@ -298,7 +298,7 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
               <div style={{ display: 'flex', alignItems: 'flex-start' }}>
                 <div style={{
                   padding: '10px 14px', borderRadius: '16px 16px 16px 4px',
-                  background: 'var(--c-input-bg)', border: '1px solid var(--c-border)',
+                  background: 'var(--c-surface-3)', border: '1px solid var(--c-border)',
                   fontSize: '13px', color: 'var(--c-text-3)',
                 }}>
                   考え中...
@@ -307,7 +307,7 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
             )}
 
             {error && (
-              <p style={{ fontSize: '13px', color: '#f87171', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: '10px', padding: '10px 14px', margin: 0 }}>
+              <p style={{ fontSize: '13px', color: '#b91c1c', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '10px 14px', margin: 0 }}>
                 {error}
               </p>
             )}
@@ -382,9 +382,9 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
     return (
       <div style={{
         width: '100%', height: '100%',
-        background: 'var(--c-surface-r)', border: '1px solid var(--c-border-2)',
+        background: 'var(--c-surface)', border: '1px solid var(--c-border)',
         borderRadius: '20px', display: 'flex', flexDirection: 'column',
-        overflow: 'hidden',
+        overflow: 'hidden', boxShadow: '0 4px 14px rgba(11,21,48,0.10)',
       }}>
         {panelInner}
       </div>
@@ -421,9 +421,9 @@ export default function RequestDraftAssistant({ creatorName, displayName, existi
         >
           <div style={{
             width: '100%', maxWidth: '640px', maxHeight: '90vh',
-            background: 'var(--c-surface-r)', border: '1px solid var(--c-border-2)',
+            background: 'var(--c-surface)', border: '1px solid var(--c-border)',
             borderRadius: '20px', display: 'flex', flexDirection: 'column',
-            overflow: 'hidden',
+            overflow: 'hidden', boxShadow: '0 12px 32px rgba(11,21,48,0.14)',
           }}>
             {panelInner}
           </div>

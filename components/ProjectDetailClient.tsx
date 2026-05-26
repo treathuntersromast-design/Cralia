@@ -2,10 +2,19 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
+import { ChevronDown } from 'lucide-react'
 import type { ProjectBoard, ProjectRole, ProjectTask } from '@/app/projects/[id]/page'
 import { PROJECT_STATUS_MAP, TASK_STATUS_MAP, PROJECT_STATUS } from '@/lib/constants/statuses'
+import { Card } from '@/components/ui/Card'
 
 const PROJECT_STATUSES = Object.values(PROJECT_STATUS) as string[]
+
+const STATUS_PILL: Record<string, { text: string; bg: string; border: string; label: string }> = {
+  recruiting:  { text: '#15803d', bg: '#dcfce7', border: '#86efac', label: 'メンバー募集中' },
+  in_progress: { text: '#1e40ff', bg: '#dbeafe', border: '#93c5fd', label: '進行中' },
+  completed:   { text: '#475569', bg: '#f1f5f9', border: '#cbd5e1', label: '完了' },
+  cancelled:   { text: '#b91c1c', bg: '#fef2f2', border: '#fecaca', label: 'キャンセル' },
+}
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px', borderRadius: '10px',
@@ -195,14 +204,16 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
   const totalTasks = tasks.length
   const donePct = totalTasks > 0 ? Math.round((doneTasks.length / totalTasks) * 100) : 0
 
+  const pill = STATUS_PILL[project_.status] ?? STATUS_PILL.recruiting
+
   return (
     <div style={{ maxWidth: '860px', margin: '0 auto', padding: '40px 24px' }}>
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
+      <Card padded bordered className="mb-8">
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '8px' }}>
-              <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0 }}>{project_.title}</h1>
+              <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0, color: 'var(--c-text)' }}>{project_.title}</h1>
               {project_.category && (
                 <span style={{ padding: '3px 12px', borderRadius: '20px', fontSize: '13px', background: 'var(--c-accent-a15)', color: 'rgb(var(--brand-rgb))', fontWeight: '600' }}>
                   {project_.category}
@@ -219,37 +230,39 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
             </p>
           </div>
 
-          {/* Status */}
-          <div style={{ position: 'relative' }}>
+          {/* Status pill */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
             <button
               onClick={() => isOwner && setShowStatusMenu((v) => !v)}
               disabled={statusLoading}
               style={{
-                padding: '8px 18px', borderRadius: '20px', fontSize: '13px', fontWeight: '700',
-                color: st.color, background: st.bg,
-                border: `1px solid ${st.color}40`,
-                cursor: isOwner ? 'pointer' : 'default',
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                padding: '7px 14px', borderRadius: '999px', fontSize: '13px', fontWeight: '600',
+                color: pill.text, background: pill.bg, border: `1px solid ${pill.border}`,
+                cursor: isOwner ? 'pointer' : 'default', transition: 'opacity 0.15s',
               }}>
-              {st.label} {isOwner && '▾'}
+              {pill.label}
+              {isOwner && <ChevronDown size={13} aria-hidden />}
             </button>
             {showStatusMenu && isOwner && (
               <div style={{
                 position: 'absolute', top: '110%', right: 0, zIndex: 100,
-                background: '#1e1e2e', border: '1px solid var(--c-border)',
+                background: '#ffffff', border: '1px solid #e2e8f0',
                 borderRadius: '12px', padding: '6px', minWidth: '160px',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                boxShadow: '0 8px 24px rgba(11,21,48,0.14)',
               }}>
                 {PROJECT_STATUSES.map((s) => {
-                  const m = PROJECT_STATUS_MAP[s]
+                  const p = STATUS_PILL[s] ?? STATUS_PILL.recruiting
                   return (
                     <button key={s} onClick={() => changeStatus(s)}
                       style={{
                         display: 'block', width: '100%', textAlign: 'left',
                         padding: '8px 12px', borderRadius: '8px', border: 'none',
-                        background: project_.status === s ? 'var(--c-accent-a15)' : 'transparent',
-                        color: m.color, fontSize: '13px', cursor: 'pointer',
+                        background: project_.status === s ? p.bg : 'transparent',
+                        color: p.text, fontSize: '13px', cursor: 'pointer',
+                        fontWeight: project_.status === s ? '600' : '400',
                       }}>
-                      {m.label}
+                      {p.label}
                     </button>
                   )
                 })}
@@ -257,15 +270,15 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
             )}
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Roles Section */}
       <section style={{ marginBottom: '40px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0 }}>メンバー構成</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: '800', margin: 0, color: 'var(--c-text)' }}>メンバー構成</h2>
           {isOwner && !editingRoles && (
             <button onClick={startEditRoles}
-              style={{ padding: '6px 16px', borderRadius: '10px', border: '1px solid var(--c-border-2)', background: 'transparent', color: 'rgb(var(--brand-rgb))', fontSize: '13px', cursor: 'pointer' }}>
+              style={{ padding: '6px 16px', borderRadius: '10px', border: '1px solid #93c5fd', background: '#ffffff', color: 'rgb(var(--brand-rgb))', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}>
               役職を編集
             </button>
           )}
@@ -382,10 +395,10 @@ export default function ProjectDetailClient({ project, roles: initialRoles, task
       {/* Tasks Section */}
       <section>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0 }}>タスク</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: '800', margin: 0, color: 'var(--c-text)' }}>タスク</h2>
           {isOwner && !editingTasks && (
             <button onClick={startEditTasks}
-              style={{ padding: '6px 16px', borderRadius: '10px', border: '1px solid var(--c-border-2)', background: 'transparent', color: 'rgb(var(--brand-rgb))', fontSize: '13px', cursor: 'pointer' }}>
+              style={{ padding: '6px 16px', borderRadius: '10px', border: '1px solid #93c5fd', background: '#ffffff', color: 'rgb(var(--brand-rgb))', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}>
               タスクを編集
             </button>
           )}

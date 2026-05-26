@@ -6,6 +6,7 @@ import { AppHeader } from '@/components/layout/AppHeader'
 import { Container } from '@/components/ui/Container'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 
 export const dynamic = 'force-dynamic'
@@ -39,14 +40,12 @@ export default async function ProjectsPage() {
         <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
           <div>
             <h1 className="text-[28px] font-bold mb-1">マイプロジェクト</h1>
-            <p className="text-[14px] text-[var(--c-text-3)]">あなたが主催するプロジェクト</p>
+            <p className="text-[14px] text-[#1e3a8a]">あなたが主催するプロジェクト</p>
           </div>
-          <Link
-            href="/projects/create"
-            className="inline-flex items-center gap-2 h-10 px-5 rounded-[8px] bg-brand text-white text-[14px] font-semibold no-underline hover:bg-brand-ink transition-colors"
-          >
-            <Plus size={16} aria-hidden />
-            プロジェクトを作成
+          <Link href="/projects/create" className="no-underline">
+            <Button variant="primary" size="md" leftIcon={<Plus size={16} aria-hidden />}>
+              プロジェクトを作成
+            </Button>
           </Link>
         </div>
 
@@ -56,12 +55,10 @@ export default async function ProjectsPage() {
             title="まだプロジェクトがありません"
             description="メンバーを集めてプロジェクトを立ち上げましょう"
             action={
-              <Link
-                href="/projects/create"
-                className="inline-flex items-center gap-2 h-9 px-4 rounded-[6px] bg-brand text-white text-[13px] font-medium no-underline hover:bg-brand-ink transition-colors"
-              >
-                <Plus size={14} aria-hidden />
-                最初のプロジェクトを作成
+              <Link href="/projects/create" className="no-underline">
+                <Button variant="primary" size="sm" leftIcon={<Plus size={14} aria-hidden />}>
+                  最初のプロジェクトを作成
+                </Button>
               </Link>
             }
           />

@@ -526,7 +526,8 @@ export default function ProfilePageClient(props: Props) {
               ) : !props.isClientProfile ? (
                 <Link
                   href={`/orders/new?creator=${props.profileId}&creatorName=${encodeURIComponent(props.displayName)}`}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] bg-brand text-white text-[14px] font-bold hover:bg-brand-ink transition-colors no-underline"
+                  style={{ background: 'rgb(var(--brand-rgb))', color: '#ffffff', textDecoration: 'none' }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-[14px] font-bold transition-colors"
                 >
                   <Mail size={15} aria-hidden="true" />
                   依頼する

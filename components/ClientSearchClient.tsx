@@ -117,14 +117,14 @@ export default function ClientSearchClient({ clients, initialEntity, initialQ }:
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div className="max-w-[1000px] mx-auto px-6 py-10">
+    <div className="max-w-[1000px] mx-auto px-6 py-8">
 
       {/* タイトル */}
-      <div className="mb-8">
-        <h1 className="text-[28px] font-bold mb-1.5">お仕事募集中の依頼者</h1>
-        <p className="text-[14px] text-[var(--c-text-3)]">
+      <div className="mb-6">
+        <h1 className="text-[28px] font-bold mb-1 text-[var(--c-text)]">お仕事募集中の依頼者</h1>
+        <p className="text-[14px] text-[var(--c-text-2)]">
           {filtered.length} 人の依頼者が見つかりました
-          {totalPages > 1 && <span className="ml-2">（{page} / {totalPages} ページ）</span>}
+          {totalPages > 1 && <span className="ml-2 text-[var(--c-text-3)]">（{page} / {totalPages} ページ）</span>}
         </p>
       </div>
 
@@ -183,7 +183,7 @@ export default function ClientSearchClient({ clients, initialEntity, initialQ }:
         />
       ) : (
         <>
-          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
+          <div className="grid gap-5 grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
             {paged.map((c) => <ClientCard key={c.id} client={c} />)}
           </div>
 
@@ -248,8 +248,8 @@ function ClientCard({ client: c }: { client: Client }) {
             ? <img src={c.avatar_url} alt={`${c.display_name ?? '依頼者'} のプロフィール画像`} className="w-full h-full object-cover" />
             : initial}
         </div>
-        <div className="flex-1 overflow-hidden">
-          <div className="font-bold text-[15px] overflow-hidden text-ellipsis whitespace-nowrap">
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-[15px] truncate">
             {c.display_name}
           </div>
           <div className="text-[11px] text-[var(--c-text-3)] mt-0.5">

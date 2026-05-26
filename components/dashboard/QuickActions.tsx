@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   Search, Briefcase, FolderKanban, MessageCircle,
-  Megaphone, Handshake, Bell, Users, ChevronDown,
+  Megaphone, Handshake, Bell, Users, ChevronDown, ChevronUp,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -28,10 +28,10 @@ function buildMoreActions(unreadCount: number): QA[] {
 }
 
 const actionLinkCls = `
-  flex items-center gap-2 p-3 rounded-card
-  border border-[var(--c-border-2)] bg-[var(--c-surface)]
-  text-[13px] font-semibold text-[var(--c-text)] no-underline
-  hover:border-[rgb(var(--brand-rgb))] hover:text-[rgb(var(--brand-rgb))] transition-colors
+  flex items-center gap-2.5 px-3.5 py-2.5 rounded-[10px]
+  border border-[var(--c-border)] bg-white
+  text-[13.5px] font-semibold text-[var(--c-text)] no-underline
+  hover:bg-[var(--c-surface-3)] transition-colors
 `.replace(/\s+/g, ' ').trim()
 
 interface QuickActionsProps {
@@ -48,20 +48,20 @@ export function QuickActions({ unreadCount = 0 }: QuickActionsProps) {
         クイックアクション
       </h2>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-1.5">
         {primaryActions.map(({ href, icon: IconComp, label }) => (
           <Link key={href} href={href} className={actionLinkCls}>
-            <IconComp size={14} className="shrink-0" aria-hidden />
+            <IconComp size={16} className="text-[var(--c-text-3)] shrink-0" aria-hidden />
             <span className="truncate">{label}</span>
           </Link>
         ))}
       </div>
 
       {showMore && (
-        <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-[var(--c-border)]">
+        <div className="grid grid-cols-1 gap-1.5 mt-1.5 pt-1.5 border-t border-[var(--c-border)]">
           {moreActions.map(({ href, icon: IconComp, label }) => (
             <Link key={href} href={href} className={actionLinkCls}>
-              <IconComp size={14} className="shrink-0" aria-hidden />
+              <IconComp size={16} className="text-[var(--c-text-3)] shrink-0" aria-hidden />
               <span className="truncate">{label}</span>
             </Link>
           ))}
@@ -71,14 +71,13 @@ export function QuickActions({ unreadCount = 0 }: QuickActionsProps) {
       <button
         type="button"
         onClick={() => setShowMore(!showMore)}
-        className="mt-3 w-full text-xs text-[var(--c-text-3)] hover:text-[rgb(var(--brand-rgb))] flex items-center justify-center gap-1 transition-colors"
+        className="w-full mt-2 py-2 text-[12px] text-[var(--c-text-3)] hover:text-brand transition-colors flex items-center justify-center gap-1"
       >
         {showMore ? '閉じる' : 'その他のメニュー'}
-        <ChevronDown
-          size={14}
-          aria-hidden
-          className={showMore ? 'rotate-180 transition-transform' : 'transition-transform'}
-        />
+        {showMore
+          ? <ChevronUp size={12} aria-hidden />
+          : <ChevronDown size={12} aria-hidden />
+        }
       </button>
     </section>
   )
